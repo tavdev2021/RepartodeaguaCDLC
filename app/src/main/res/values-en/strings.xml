@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    //Nombre de la App
+    <string name="app_name">Water Delivery CDLC</string>
+
+    //Mensajes de carga
+    <string name="loading_iniciar_sesion">Logging in...</string>
+    <string name="loading_registrar_usuario">Registering user...</string>
+    <string name="loading_cerrar_sesion">Signing out...</string>
+
+    //Textos de LoginScreen
+    <string name="bienvenido_login">Welcome</string>
+    <string name="inicia_sesion">Please log in</string>
+    <string name="correo_electronico">Email</string>
+    <string name="contrasena">Password</string>
+    <string name="button_login">Login</string>
+    <string name="no_tienes_cuenta">Do not have an account? Sign up here.</string>
+
+    //Textos de RegisterScreen
+    <string name="appbar_crearcuenta_register">Create Account</string>
+    <string name="bienvenido_register">Register</string>
+    <string name="ingresa_datos_register">Please enter your details</string>
+    <string name="nombre_completo_register">Full Name</string>
+    <string name="email_register">Email</string>
+    <string name="contrasena_register">Password</string>
+    <string name="confirmar_contrasena">Confirm Password</string>
+    <string name="button_register">Register</string>>
+    <string name="ya_tienes_cuenta">Already have an account? Sign in</string>
+
+    //Textos de HomeScreen
+    <string name="name_hello">Hello,</string>
+    <string name="searchbar_buscar_clientes">Search client...</string>
+    <string name="funcion_qr_searchbar">QR function in development</string>
+    <string name="button_logout">Logout</string>
+
+</resources>

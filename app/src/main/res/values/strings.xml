@@ -1,0 +1,34 @@
+<resources>
+    //Nombre de la App
+    <string name="app_name">Reparto de agua CDLC</string>
+
+    //Mensajes de carga
+    <string name="loading_iniciar_sesion">Iniciando sesión...</string>
+    <string name="loading_registrar_usuario">Registrando usuario...</string>
+    <string name="loading_cerrar_sesion">Cerrando sesión...</string>
+
+    //Textos de LoginScreen
+    <string name="bienvenido_login">Bienvenido</string>
+    <string name="inicia_sesion">Por favor inicia sesión</string>
+    <string name="correo_electronico">Correo electrónico</string>
+    <string name="contrasena">Contraseña</string>
+    <string name="button_login">Iniciar Sesión</string>
+    <string name="no_tienes_cuenta">No tienes una cuenta? Registrate aqui</string>
+
+    //Textos de RegisterScreen
+    <string name="appbar_crearcuenta_register">Crear Cuenta</string>
+    <string name="bienvenido_register">Registrate</string>
+    <string name="ingresa_datos_register">Por favor ingresa tus datos</string>
+    <string name="nombre_completo_register">Nombre Completo</string>
+    <string name="email_register">Correo electrónico</string>
+    <string name="contrasena_register">Contraseña</string>
+    <string name="confirmar_contrasena">Confirmar Contraseña</string>
+    <string name="button_register">Registrar</string>>
+    <string name="ya_tienes_cuenta">Ya tienes una cuenta? Inicia sesión</string>
+
+    //Textos de HomeScreen
+    <string name="name_hello">Hola,</string>
+    <string name="searchbar_buscar_clientes">Buscar cliente...</string>
+<string name="funcion_qr_searchbar">Funcion QR en desarrollo</string>
+    <string name="button_logout">Cerrar Sesión</string>
+</resources>

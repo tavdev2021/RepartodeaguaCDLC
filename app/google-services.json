@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1047637806109",
+    "project_id": "reparto-de-agua-3bb1a",
+    "storage_bucket": "reparto-de-agua-3bb1a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1047637806109:android:e76c581ff98573c8da4af4",
+        "android_client_info": {
+          "package_name": "com.example.repartodeaguacdlc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgje0N2bKId5br7xRXNQOZCnAtvQ6OgKo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
