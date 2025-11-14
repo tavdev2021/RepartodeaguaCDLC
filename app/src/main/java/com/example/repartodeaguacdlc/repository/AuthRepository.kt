@@ -1,4 +1,4 @@
-package com.example.repartodeaguacdlc.model
+package com.example.repartodeaguacdlc.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest

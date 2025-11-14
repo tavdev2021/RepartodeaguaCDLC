@@ -3,7 +3,7 @@ package com.example.repartodeaguacdlc.viewmodel
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.repartodeaguacdlc.model.AuthRepository
+import com.example.repartodeaguacdlc.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

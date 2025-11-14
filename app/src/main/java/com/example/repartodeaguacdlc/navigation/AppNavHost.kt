@@ -11,10 +11,14 @@ import com.example.repartodeaguacdlc.view.SplashScreen
 import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.example.repartodeaguacdlc.view.AddNewClient
+import com.example.repartodeaguacdlc.view.ClientesList
+import com.example.repartodeaguacdlc.view.PedidosList
+import com.example.repartodeaguacdlc.view.SettingsApp
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 
 @Composable
-fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: ClientesViewModel = ClientesViewModel()) {
+fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: ClientesViewModel = ClientesViewModel()){
 
     val navController = rememberNavController()
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
@@ -42,7 +46,8 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
             LoginScreen(
                 viewModel,
                 onLoginSuccess = { navController.navigate("home") {
-                    popUpTo ("login") {inclusive = true} } },
+                    popUpTo ("login") {inclusive = true} 
+                    launchSingleTop = true } },
                 onNavigateToRegister = { navController.navigate("register") {
                     popUpTo ("login") {inclusive = true} }
                 }
@@ -53,20 +58,43 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
             RegisterScreen(
                 viewModel,
                 onRegisterSuccess = { navController.navigate("home") {
-                    popUpTo ("register") {inclusive = true} } },
+                    popUpTo ("register") {inclusive = true}
+                    launchSingleTop = true } },
                 onNavigateToLogin = { navController.navigate("login") {
-                    popUpTo ("register") {inclusive = true} }
-                }
+                    popUpTo ("register") {inclusive = true} } }
             )
         }
 
         composable("home") {
-            HomeScreen(viewModel, clientesViewModel,
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true } }
-                }
+            HomeScreen(
+                viewModel, clientesViewModel,
+                onLogout = { navController.navigate("login") {
+                        popUpTo("home") { inclusive = true } } },
+                onAddNewClient = {
+                    navController.navigate("addnewclient") },
+                onPedidos = {
+                    navController.navigate("pedidos") },
+                onClientes = {
+                    navController.navigate("clientes") },
+                onSettings = {
+                    navController.navigate("settings")}
             )
+        }
+
+        composable("addnewclient") {
+            AddNewClient()
+        }
+
+        composable("pedidos") {
+            PedidosList()
+        }
+
+        composable("clientes") {
+            ClientesList()
+        }
+
+        composable("settings") {
+            SettingsApp()
         }
     }
 }
