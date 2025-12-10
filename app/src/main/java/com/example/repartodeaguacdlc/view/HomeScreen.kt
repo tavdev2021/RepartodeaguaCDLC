@@ -71,6 +71,7 @@ import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: AuthViewModel,
+            // 1. Inyecta tu ClientesViewModel
                clientesViewModel: ClientesViewModel,
                onAddNewClient:() -> Unit,
                onPedidos:() -> Unit,
@@ -82,7 +83,9 @@ fun HomeScreen(viewModel: AuthViewModel,
     val user by viewModel.currentUser.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    val clientes by clientesViewModel.clientes.collectAsState()
+    // 2. Recolecta los estados del ViewModel
+    val searchText by clientesViewModel.searchText.collectAsState()
+    val searchResults by clientesViewModel.searchResults.collectAsState()
 
 
     //Contexto de la App
@@ -90,17 +93,9 @@ fun HomeScreen(viewModel: AuthViewModel,
     val messageqr = stringResource(R.string.funcion_qr_searchbar)
 
     //Estados de SearchBar sin ViewModel
-    var query by remember { mutableStateOf("") }
+    //var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
 
-    // Lista de ejemplo para la búsqueda
-    val searchResults = remember(query, clientes) {
-        if (query.isBlank()) {
-            clientes
-        } else {
-            clientes.filter { it.nombre.contains(query, ignoreCase = true) }
-        }
-    }
     val acciones = listOf(
         AccionRapida(Icons.Default.Add, "Nuevo Cliente",onAddNewClient),
         AccionRapida(Icons.AutoMirrored.Filled.List, "Ver Pedidos", onPedidos),
@@ -217,8 +212,12 @@ fun HomeScreen(viewModel: AuthViewModel,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            query = query,
-                            onQueryChange = { query = it },
+                            query = searchText,
+                            onQueryChange = { newText ->
+                                // 3. Llama a la función del ViewModel para actualizar la búsqueda
+                                clientesViewModel.onSearchTextChanged(newText)
+
+                            },
                             onSearch = {
                                 // Aquí puedes manejar la acción de búsqueda (ej. navegar a otra pantalla)
                                 active = false
@@ -246,6 +245,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                         ) {
                             // Contenido que se muestra cuando el SearchBar está activo
                             LazyColumn {
+                                // 4. Itera sobre los resultados de búsqueda del ViewModel
                                 items(searchResults) { cliente ->
                                     ListItem(
                                         headlineContent = { Text(cliente.nombre)},
