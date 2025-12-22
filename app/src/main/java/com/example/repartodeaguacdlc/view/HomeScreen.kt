@@ -1,6 +1,6 @@
 package com.example.repartodeaguacdlc.view
 
-import android.widget.Toast
+import android.icu.util.Calendar
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -26,36 +25,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.twotone.AccountCircle
-import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,14 +55,12 @@ import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.AccionRapida
 import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
-import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import java.text.DateFormat
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: AuthViewModel,
-            // 1. Inyecta tu ClientesViewModel
-               clientesViewModel: ClientesViewModel,
                onAddNewClient:() -> Unit,
                onPedidos:() -> Unit,
                onClientes:() -> Unit,
@@ -83,18 +71,9 @@ fun HomeScreen(viewModel: AuthViewModel,
     val user by viewModel.currentUser.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    // 2. Recolecta los estados del ViewModel
-    val searchText by clientesViewModel.searchText.collectAsState()
-    val searchResults by clientesViewModel.searchResults.collectAsState()
-
-
-    //Contexto de la App
-    val context = LocalContext.current
-    val messageqr = stringResource(R.string.funcion_qr_searchbar)
-
-    //Estados de SearchBar sin ViewModel
-    //var query by remember { mutableStateOf("") }
-    var active by remember { mutableStateOf(false) }
+    //Obtener el dia y fecha del sistema
+    val calendar = Calendar.getInstance().time
+    val dateFormat = DateFormat.getDateInstance(DateFormat.FULL).format(calendar)
 
     val acciones = listOf(
         AccionRapida(Icons.Default.Add, "Nuevo Cliente",onAddNewClient),
@@ -131,35 +110,10 @@ fun HomeScreen(viewModel: AuthViewModel,
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 40.dp, bottom = 10.dp, start = 10.dp, end = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                            .padding(top = 40.dp, start = 10.dp),
+                        horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
-                        Column {
-
-                            Text(
-                                stringResource(R.string.name_hello),
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Light,
-                                    fontSize = 20.sp
-                                ),
-                                color = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
-
-                            Text(
-                                firebaseUser.displayName?.split(" ")
-                                    ?.firstOrNull()
-                                    ?: "No disponible",
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 20.sp
-                                ),
-                                color = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
-                        }
 
                         //Foto de perfil
                         //val imageUrl = firebaseUser.photoUrl
@@ -169,7 +123,6 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 model = imageUrl,
                                 contentDescription = "Imagen de perfil",
                                 modifier = Modifier
-                                    .padding(end = 16.dp)
                                     .size(60.dp)
                                     .clip(CircleShape)
                                     .border(
@@ -185,10 +138,40 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 imageVector = Icons.Default.AccountCircle,
                                 contentDescription = "Imagen de perfil",
                                 modifier = Modifier
-                                    .size(100.dp),
+                                    .size(50.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
+                        }
+
+                        Column(
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Top
+
+                        ) {
+
+                            Text(
+                                (stringResource(R.string.name_hello) + " " + firebaseUser.displayName?.split(
+                                    " "
+                                )
+                                    ?.firstOrNull()),
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 18.sp
+                                ),
+                                color = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+
+                            Text(
+                                stringResource(R.string.name_route),
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontWeight = FontWeight.Light,
+                                    fontSize = 16.sp
+                                ),
+                                color = MaterialTheme.colorScheme.surface,
+                                modifier = Modifier.padding(start = 8.dp, top = 0.dp)
+                            )
                         }
                     }
                 }
@@ -204,82 +187,117 @@ fun HomeScreen(viewModel: AuthViewModel,
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
 
+                        Text(
+                            "$dateFormat",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Light,
+                                fontSize = 16.sp
+                            ),
+                            color = Color.Black,
+                            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                        )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    //Implementacion de Cards para datos rapidos
+
+                    Row(modifier = Modifier
+                        .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly) {
+                        Card(
+                            modifier = Modifier
+                                .width(160.dp)
+                                .height(160.dp)
+                                .clickable(onClick = { }),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxSize()
+                                    .padding(start = 16.dp),
+                                horizontalAlignment = Alignment.Start,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Icono de ventas",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    "Ventas de hoy",
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodySmall
+
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "42",
+                                    fontSize = 32.sp,
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+
+                                )
+                            }
+                        }
+
+                        Card(
+                            modifier = Modifier
+                                .width(160.dp)
+                                .height(160.dp)
+                                .clickable(onClick = { }),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxSize()
+                                    .padding(start = 16.dp),
+                                horizontalAlignment = Alignment.Start,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Icono de ventas",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    "Ingresos de hoy",
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodySmall
+
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "$3,450",
+                                    fontSize = 32.sp,
+                                    textAlign = TextAlign.Center,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+
+                                )
+                            }
+                        }
+                    }
+
                     // --- Implementación del SearchBar ---
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        SearchBar(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            query = searchText,
-                            onQueryChange = { newText ->
-                                // 3. Llama a la función del ViewModel para actualizar la búsqueda
-                                clientesViewModel.onSearchTextChanged(newText)
 
-                            },
-                            onSearch = {
-                                // Aquí puedes manejar la acción de búsqueda (ej. navegar a otra pantalla)
-                                active = false
-                            },
-                            active = active,
-                            onActiveChange = { active = it },
-                            placeholder = { Text(stringResource(R.string.searchbar_buscar_clientes)) },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Search,
-                                    contentDescription = "Icono de búsqueda"
-                                )
-                            },
-                            trailingIcon = {
-
-                                IconButton(onClick = {
-                                    Toast.makeText(context, messageqr, Toast.LENGTH_SHORT).show() })
-                                {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.qr_code),
-                                        contentDescription = "Icono Qr scan"
-                                    )
-                                }
-                            }
-                        ) {
-                            // Contenido que se muestra cuando el SearchBar está activo
-                            LazyColumn {
-                                // 4. Itera sobre los resultados de búsqueda del ViewModel
-                                items(searchResults) { cliente ->
-                                    ListItem(
-                                        headlineContent = { Text(cliente.nombre)},
-                                        modifier = Modifier
-                                            .padding(horizontal = 16.dp)
-                                            .clickable(
-                                                // Navegar a la pantalla de detalles del cliente
-                                                onClick = {
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Cliente seleccionado: ${cliente.nombre}",
-                                                        Toast.LENGTH_SHORT)
-                                                        .show()
-                                                }
-                                            ),
-                                        leadingContent = {
-                                            Icon(
-                                                Icons.TwoTone.AccountCircle,
-                                                contentDescription = "Icono de cliente"
-                                            )
-                                        },
-                                        trailingContent = {
-                                            Icon(
-                                               Icons.TwoTone.Star,
-                                                contentDescription = "Icono de favorito"
-
-                                            )
-                                        },
-                                        tonalElevation = 4.dp,
-                                        shadowElevation = 4.dp
-                                    )
-                                }
-                            }
-                        }
 
                         // --- (NUEVO) IMPLEMENTACIÓN DE LAZYROW CON CARDS ---
                         Column {

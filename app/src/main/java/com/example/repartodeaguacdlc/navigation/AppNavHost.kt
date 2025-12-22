@@ -67,7 +67,7 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
 
         composable("home") {
             HomeScreen(
-                viewModel, clientesViewModel,
+                viewModel,
                 onLogout = { navController.navigate("login") {
                         popUpTo("home") { inclusive = true } } },
                 onAddNewClient = {
@@ -90,7 +90,7 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
         }
 
         composable("clientes") {
-            ClientesList()
+            ClientesList(clientesViewModel)
         }
 
         composable("settings") {

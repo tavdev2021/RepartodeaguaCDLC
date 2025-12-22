@@ -28,6 +28,7 @@
 
     //Textos de HomeScreen
     <string name="name_hello">Hola,</string>
+    <string name="name_route">Ruta Norte #4</string>
     <string name="searchbar_buscar_clientes">Buscar cliente...</string>
 <string name="funcion_qr_searchbar">Funcion QR en desarrollo</string>
     <string name="button_logout">Cerrar Sesión</string>
