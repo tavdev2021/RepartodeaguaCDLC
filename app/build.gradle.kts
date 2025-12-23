@@ -53,7 +53,7 @@ dependencies {
     implementation(libs.firebase.auth)
 
     // Jetpack Compose y navegación
-    implementation("androidx.compose.ui:ui:1.9.4")
+    implementation("androidx.compose.ui:ui:1.10.0")
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation("androidx.navigation:navigation-compose:2.9.5")
 

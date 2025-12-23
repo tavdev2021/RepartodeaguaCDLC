@@ -1,7 +1,6 @@
 package com.example.repartodeaguacdlc.view
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.clickable
@@ -11,16 +10,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.twotone.AccountCircle
-import androidx.compose.material.icons.twotone.ArrowForward
-import androidx.compose.material.icons.twotone.Star
+import androidx.compose.material.icons.automirrored.twotone.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -143,7 +139,7 @@ fun ClientesList(// 1. Inyecta tu ClientesViewModel
                                 ) {
                                     // Asumiendo que tu objeto `cliente` tiene una propiedad `imageUrl` con la URL de la imagen.
                                     AsyncImage(
-                                        model = "https://i.pravatar.cc/300", // Reemplaza con la URL de la imagen del cliente
+                                        model = cliente.imageUrl, // Reemplaza con la URL de la imagen del cliente
                                         contentDescription = "Imagen del Cliente",
                                         modifier = Modifier
                                             .size(40.dp)
@@ -168,7 +164,7 @@ fun ClientesList(// 1. Inyecta tu ClientesViewModel
                                     }
                                     // Ejemplo de icono adicional a la derecha
                                     Icon(
-                                        imageVector = Icons.TwoTone.ArrowForward,
+                                        imageVector = Icons.AutoMirrored.TwoTone.ArrowForward,
                                         contentDescription = "Icono de Favorito",
                                         tint = MaterialTheme.colorScheme.secondary
                                     )

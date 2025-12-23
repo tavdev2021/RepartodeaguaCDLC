@@ -293,12 +293,12 @@ fun HomeScreen(viewModel: AuthViewModel,
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     // --- Implementación del SearchBar ---
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
-
-
                         // --- (NUEVO) IMPLEMENTACIÓN DE LAZYROW CON CARDS ---
                         Column {
                             Text(
@@ -306,6 +306,25 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Card(modifier = Modifier.fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .height(100.dp)
+                                .clickable(onClick = { }),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(4.dp)
+                            ) {
+                                Text("Realizar Venta",
+                                style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+
+                            }
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth(),
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
