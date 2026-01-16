@@ -11,17 +11,25 @@ import com.example.repartodeaguacdlc.view.SplashScreen
 import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
 import com.example.repartodeaguacdlc.view.AddNewClient
+import com.example.repartodeaguacdlc.view.ClientDetail
 import com.example.repartodeaguacdlc.view.ClientesList
 import com.example.repartodeaguacdlc.view.PedidosList
 import com.example.repartodeaguacdlc.view.SettingsApp
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 
 @Composable
-fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: ClientesViewModel = ClientesViewModel()){
-
+fun AppNavHost()
+{
     val navController = rememberNavController()
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+
+    val authViewModel: AuthViewModel = viewModel()
+
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
     val startDestination = if (isAuthenticated) "home" else "login"
 
@@ -29,7 +37,7 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
 
         composable("splash") {
             SplashScreen(
-                viewModel,
+                authViewModel,
                 onNavigateToHome = {
                     navController.navigate("home") {
                         popUpTo("splash") { inclusive = true }
@@ -44,7 +52,7 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
 
         composable("login") {
             LoginScreen(
-                viewModel,
+                authViewModel,
                 onLoginSuccess = { navController.navigate("home") {
                     popUpTo ("login") {inclusive = true} 
                     launchSingleTop = true } },
@@ -56,7 +64,7 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
 
         composable("register") {
             RegisterScreen(
-                viewModel,
+                authViewModel,
                 onRegisterSuccess = { navController.navigate("home") {
                     popUpTo ("register") {inclusive = true}
                     launchSingleTop = true } },
@@ -67,11 +75,12 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
 
         composable("home") {
             HomeScreen(
-                viewModel,
+                authViewModel,
                 onLogout = { navController.navigate("login") {
                         popUpTo("home") { inclusive = true } } },
                 onAddNewClient = {
-                    navController.navigate("addnewclient") },
+                    navController.navigate("addnewclient") {
+                        popUpTo("home") { inclusive = true } } },
                 onPedidos = {
                     navController.navigate("pedidos") },
                 onClientes = {
@@ -82,7 +91,11 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
         }
 
         composable("addnewclient") {
-            AddNewClient()
+            AddNewClient(
+                onNavigateToHomeFromAddNewClient = {
+                    navController.navigate("home") {
+                    popUpTo ("addnewclient") {inclusive = true} } }
+            )
         }
 
         composable("pedidos") {
@@ -90,7 +103,35 @@ fun AppNavHost(viewModel: AuthViewModel = AuthViewModel(), clientesViewModel: Cl
         }
 
         composable("clientes") {
-            ClientesList(clientesViewModel)
+            ClientesList(
+                onAddNewClient = {
+                    navController.navigate("addnewclient") {
+                        popUpTo("clientes") { inclusive = true }
+                    }
+                },
+
+                onClientClick = { clienteId ->
+                    navController.navigate("clienteDetails/$clienteId")
+                }
+            )
+        }
+
+        composable("clienteDetails/{clienteId}",
+            arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
+        ){ backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
+            val context = androidx.compose.ui.platform.LocalContext.current
+
+            // 1. Instanciar el ViewModel usando el Factory
+            val clientesViewModel: ClientesViewModel = viewModel(
+                factory = ClientesViewModelFactory(context)
+            )
+
+            ClientDetail(
+                clienteId = id,
+                clientesViewModel = clientesViewModel,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable("settings") {

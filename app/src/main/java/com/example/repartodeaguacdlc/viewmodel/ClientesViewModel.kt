@@ -1,67 +1,93 @@
 package com.example.repartodeaguacdlc.viewmodel
 
+import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repartodeaguacdlc.model.Clientes
-import com.example.repartodeaguacdlc.repository.ClientesRepository
+import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.stateIn
 
-class ClientesViewModel: ViewModel() {
+class ClientesViewModel(
+    val clientesRepository: ClientesRepositoryRoom
+): ViewModel() {
 
-    private val clientesRepository = ClientesRepository()
-
-    // 1. Mantenemos la lista COMPLETA de clientes en un StateFlow privado.
-    // Esta será nuestra "fuente de la verdad".
-    private val _allClientes = MutableStateFlow<List<Clientes>>(emptyList())
-
-    // 2. (NUEVO) StateFlow para guardar el texto de búsqueda que el usuario escribe.
+    // 2. Texto de búsqueda.
     private val _searchText = MutableStateFlow("")
     val searchText: StateFlow<String> = _searchText
 
-    // 3. (MODIFICADO) Este StateFlow ahora contendrá la lista FILTRADA de clientes.
-    // La UI observará este `searchResults` en lugar del StateFlow original.
-    private val _searchResults = MutableStateFlow<List<Clientes>>(emptyList())
-    val searchResults: StateFlow<List<Clientes>> = _searchResults
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
-    init {
-        // Cargamos la lista completa de clientes al iniciar el ViewModel.
-        loadClientes()
-
-        // 4. (NUEVO) Usamos `combine` para reaccionar a los cambios en la búsqueda o en la lista de clientes.
-        // viewModelScope se asegura de que esta corrutina se cancele cuando el ViewModel se destruya.
-        viewModelScope.launch {
-            // `combine` se ejecutará cada vez que `_searchText` o `_allClientes` emitan un nuevo valor.
-            combine(_searchText, _allClientes) { text, clientes ->
-                if (text.isBlank()) {
-                    // Si la búsqueda está vacía, mostramos la lista completa.
-                    clientes
-                } else {
-                    // Si hay texto, filtramos la lista de clientes.
-                    // La búsqueda no distingue mayúsculas/minúsculas.
-                    clientes.filter { cliente ->
-                        cliente.nombre.contains(text, ignoreCase = true)
-                        // Puedes añadir más campos a la búsqueda si quieres:
-                        // || cliente.direccion.contains(text, ignoreCase = true)
-                    }
-                }
-            }.collect { clientesFiltrados ->
-                // Actualizamos el StateFlow de resultados con la lista filtrada.
-                _searchResults.value = clientesFiltrados
+    // 3. RESULTADOS FILTRADOS:
+    // Usamos 'combine' directamente para exponer el StateFlow.
+    // Si 'searchText' está vacío, devolverá 'allClientes' (la lista completa).
+    val searchResults: StateFlow<List<Clientes>> = combine(_searchText, clientesRepository.allClientes) { text, clientes ->
+        if (text.isBlank()) {
+            // Si la búsqueda está vacía, mostramos la lista completa.
+            clientes
+        } else {
+            // Si hay texto, filtramos la lista de clientes
+            // La búsqueda no distingue mayúsculas/minúsculas.
+            clientes.filter { cliente ->
+                cliente.nombre.contains(text, ignoreCase = true)
+                // Opcional: || cliente.direccion.contains(text, ignoreCase = true)
             }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000), // Mantiene el flujo activo 5s tras cerrar la pantalla
+        initialValue = emptyList()
+    )
+
+    // Función que llamarás desde el OutlinedTextField / SearchBar en tu UI
+    fun onSearchTextChanged(text: String) {
+        _searchText.value = text
+    }
+
+    suspend fun getClienteById(id: Int): Clientes? {
+        _isLoading.value = true
+        delay(500)
+        return try {
+            _isLoading.value = false
+            clientesRepository.getClienteById(id)
+        } catch (
+            e: Exception
+        ) {
+            // Manejar errores
+            null
         }
     }
 
-    private fun loadClientes() {
-        // Carga los clientes desde el repositorio a nuestra lista interna.
-        _allClientes.value = clientesRepository.clientes
-    }
+    /**
+     * Inicia el escáner de Google Play Services para obtener un código QR.
+     * @parametro context El contexto de la Activity/Composable necesario para el scanner.
+     */
+    fun startQRScanner(context: Context) {
+        val scanner = GmsBarcodeScanning.getClient(context)
 
-    // 5. (NUEVO) Función para ser llamada desde la UI cuando el texto de búsqueda cambia.
-    fun onSearchTextChanged(text: String) {
-        // Actualiza el StateFlow con el nuevo texto de búsqueda.
-        _searchText.value = text
+        scanner.startScan()
+            .addOnSuccessListener { barcode ->
+                // barcode.rawValue contiene el texto del código QR
+                val qrContent = barcode.rawValue
+                if (!qrContent.isNullOrBlank()) {
+                    // Actualizamos el texto de búsqueda con el contenido del QR
+                    onSearchTextChanged(qrContent)
+                    Toast.makeText(context, "QR Escaneado: $qrContent", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Error al escanear: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+            .addOnCanceledListener {
+                // El usuario canceló el escaneo
+                Toast.makeText(context, "Escaneo cancelado", Toast.LENGTH_SHORT).show()
+            }
     }
 }

@@ -1,7 +1,125 @@
 package com.example.repartodeaguacdlc.view
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.example.repartodeaguacdlc.R
+import com.example.repartodeaguacdlc.model.Clientes
+import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClientDetail(clienteId: Int,
+                 clientesViewModel: ClientesViewModel,
+                 onBack: () -> Unit) {
+    val isLoading by clientesViewModel.isLoading.collectAsState()
+
+    // 1. Buscamos el cliente en la base de datos usando el ID
+    // Usamos produceState o collectAsState para observar el resultado
+    val cliente by produceState<Clientes?>(initialValue = null, clienteId) {
+        value = clientesViewModel.getClienteById(id = clienteId)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = cliente?.nombre ?: stringResource(R.string.appbar_title_details)) },
+                navigationIcon = {
+                    IconButton(onClick = { onBack() }) { // <--- AQUÍ SE USA onBack
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (cliente == null) {
+
+                // Overlay con blur elegante
+                LoadingOverlay(
+                    visible = isLoading,
+                    message = stringResource(R.string.loading_cargar_cliente)
+                )
+            } else {
+                // 2. Diseño del contenido del detalle
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Ejemplo de visualización de datos
+                    Text(text = "Información del Cliente", style = MaterialTheme.typography.headlineMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    AsyncImage(
+                        model = cliente!!.imagenUrl,
+                        contentDescription = "Imagen del Cliente",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape),// Hace la imagen circular
+                        contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
+                        placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
+                        error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    DetailRow(label = "Teléfono:", value = cliente!!.telefono)
+                    DetailRow(label = "Ubicación:", value = cliente!!.ubicacion)
+                    DetailRow(label = "Notas:", value = cliente!!.notas)
+                }
+            }
+        }
+    }
+}
 
 @Composable
-fun ClientDetail() {
+fun DetailRow(label: String, value: String) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 8.dp)) {
+        Text(text = label, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(text = value, style = MaterialTheme.typography.bodyLarge)
+    }
 }

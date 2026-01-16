@@ -23,7 +23,7 @@ val onTertiaryContainerLight = Color(0xFF1B5E20)
 val backgroundLight = Color(0xFFFDFDFD)   // Blanco casi puro
 val onBackgroundLight = Color(0xFF1A1C1E)
 
-val surfaceLight = Color(0xFFFFFFFF)      // Superficies limpias
+val surfaceLight = Color(0xFFFFFFFF) // Superficies limpias
 val onSurfaceLight = Color(0xFF1A1C1E)
 
 val errorLight = Color(0xFFB3261E)

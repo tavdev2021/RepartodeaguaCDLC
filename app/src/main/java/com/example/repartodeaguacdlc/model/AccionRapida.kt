@@ -1,9 +1,11 @@
 package com.example.repartodeaguacdlc.model
 
+import android.media.Image
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class AccionRapida (
-    val icon: ImageVector,
+    @DrawableRes val icon: Int,
     val text: String,
-    val action:() -> Unit
+    val action: () -> Unit
 )

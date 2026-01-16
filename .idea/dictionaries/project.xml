@@ -5,9 +5,13 @@
       <w>addnewclient</w>
       <w>cliente</w>
       <w>clientes</w>
+      <w>direccion</w>
+      <w>fecha</w>
       <w>nombre</w>
+      <w>notas</w>
       <w>pedidos</w>
       <w>rapida</w>
+      <w>ubicacion</w>
     </words>
   </dictionary>
 </component>

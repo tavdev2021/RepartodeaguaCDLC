@@ -206,32 +206,6 @@ class AuthViewModel(
         return isFullNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid
     }
 
-
-    /*fun login() { // Modificamos la función login existente
-        if (!validateLoginForm()) {
-            // No intentar el login si hay errores de validación
-            return
-        }
-
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val user = repository.login(_email.value, _password.value)
-                _currentUser.value = repository.currentUser
-                _isAuthenticated.value = user != null
-                if (user == null) {
-                    _error.value = "Email o contraseña incorrectos." // Error general del login
-                    _password.value = "" // Limpiar contraseña en caso de error de login
-                }
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Error desconocido durante el login"
-                _password.value = ""
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }*/
-
     fun login() {
     if (!validateLoginForm()) {
             // No intentar el login si hay errores de validación

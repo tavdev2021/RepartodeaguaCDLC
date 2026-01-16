@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -73,8 +74,17 @@ dependencies {
 
     implementation("androidx.core:core-splashscreen:1.0.1")
 
+    //Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    //Google Maps
+
     implementation(libs.androidx.runtime)
     implementation(libs.play.services.code.scanner)
+    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.play.services.location)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

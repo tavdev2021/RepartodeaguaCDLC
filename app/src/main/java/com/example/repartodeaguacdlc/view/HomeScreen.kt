@@ -1,6 +1,9 @@
 package com.example.repartodeaguacdlc.view
 
 import android.icu.util.Calendar
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,12 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,8 +42,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,15 +71,19 @@ fun HomeScreen(viewModel: AuthViewModel,
     val user by viewModel.currentUser.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    val context = LocalContext.current
+
+
     //Obtener el dia y fecha del sistema
     val calendar = Calendar.getInstance().time
     val dateFormat = DateFormat.getDateInstance(DateFormat.FULL).format(calendar)
 
     val acciones = listOf(
-        AccionRapida(Icons.Default.Add, "Nuevo Cliente",onAddNewClient),
-        AccionRapida(Icons.AutoMirrored.Filled.List, "Ver Pedidos", onPedidos),
-        AccionRapida(Icons.Default.Person, "Lista de clientes", onClientes),
-        AccionRapida(Icons.Default.Settings, "Ajustes", onSettings)
+        AccionRapida(R.drawable.nuevo_cliente, "Nuevo Cliente",onAddNewClient),
+        AccionRapida(R.drawable.lista_clientes, "Clientes", onClientes),
+        AccionRapida(R.drawable.corte_caja, "Corte de caja", onPedidos),
+        AccionRapida(R.drawable.inventario, "Inventario", onPedidos),
+        AccionRapida(R.drawable.ruta, "Ruta", onSettings)
     )
 
     LaunchedEffect(isAuthenticated) {
@@ -193,8 +197,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 fontWeight = FontWeight.Light,
                                 fontSize = 16.sp
                             ),
-                            color = Color.Black,
-                            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(start = 24.dp, top = 4.dp)
                         )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -207,11 +211,11 @@ fun HomeScreen(viewModel: AuthViewModel,
                         Card(
                             modifier = Modifier
                                 .width(160.dp)
-                                .height(160.dp)
+                                .height(140.dp)
                                 .clickable(onClick = { }),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.onSurface),
                             shape = RoundedCornerShape(16.dp),
                             elevation = CardDefaults.cardElevation(4.dp)
                         ) {
@@ -221,11 +225,13 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 horizontalAlignment = Alignment.Start,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Icono de ventas",
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                Image(painter = painterResource(id = R.drawable.water_drop),
+                                    contentDescription = "Money Icon",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .padding(start = 8.dp),
+                                    contentScale = ContentScale.Fit)
+
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
@@ -251,11 +257,11 @@ fun HomeScreen(viewModel: AuthViewModel,
                         Card(
                             modifier = Modifier
                                 .width(160.dp)
-                                .height(160.dp)
+                                .height(140.dp)
                                 .clickable(onClick = { }),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.onSurface),
                             shape = RoundedCornerShape(16.dp),
                             elevation = CardDefaults.cardElevation(4.dp)
                         ) {
@@ -265,11 +271,13 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 horizontalAlignment = Alignment.Start,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Icono de ventas",
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                Image(painter = painterResource(id = R.drawable.money_range),
+                                    contentDescription = "Money Icon",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .padding(start = 8.dp),
+                                    contentScale = ContentScale.Fit)
+
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
@@ -295,7 +303,6 @@ fun HomeScreen(viewModel: AuthViewModel,
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // --- Implementación del SearchBar ---
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -304,7 +311,10 @@ fun HomeScreen(viewModel: AuthViewModel,
                             Text(
                                 text = "Acciones Rápidas",
                                 style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                modifier = Modifier
+                                    .padding(horizontal = 24.dp)
+                                    .padding(start = 4.dp),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -312,19 +322,63 @@ fun HomeScreen(viewModel: AuthViewModel,
                             Card(modifier = Modifier.fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                                 .height(100.dp)
-                                .clickable(onClick = { }),
+                                .clickable(onClick = {
+                                    Toast.makeText(context, "Realizar Nueva Venta", Toast.LENGTH_SHORT).show()
+                                }),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary),
                                 shape = RoundedCornerShape(16.dp),
-                                elevation = CardDefaults.cardElevation(4.dp)
+                                elevation = CardDefaults.cardElevation(4.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
                             ) {
-                                Text("Realizar Venta",
-                                style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
-                                )
 
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically
+
+                                ) {
+                                    Icon(painter = painterResource(id = R.drawable.add_shopping_cart),
+                                        contentDescription = "Cart Icon",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .padding(start = 8.dp),
+                                        tint =  MaterialTheme.colorScheme.background)
+
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(horizontal = 16.dp),
+                                        verticalArrangement = Arrangement.Center,
+                                    ) {
+                                        Text(
+                                            text = "Realizar Venta",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            modifier = Modifier
+                                                .padding(horizontal = 16.dp),
+                                            color = MaterialTheme.colorScheme.background
+                                        )
+
+                                        Text(
+                                            text = "Registrar nuevo pedido",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier
+                                                .padding(horizontal = 16.dp),
+                                            color = MaterialTheme.colorScheme.background
+                                        )
+                                    }
+
+                                    Icon(painter = painterResource(id = R.drawable.chevron_forward),
+                                        contentDescription = "Forward Icon",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .padding(end = 8.dp),
+                                        tint = MaterialTheme.colorScheme.background)
+                                }
                             }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth(),
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -347,10 +401,10 @@ fun HomeScreen(viewModel: AuthViewModel,
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.Center
                                         ) {
-                                            Icon(
-                                                imageVector = accion.icon,
+                                            Image(
+                                                painter = painterResource(id = accion.icon),
                                                 contentDescription = accion.text,
-                                                modifier = Modifier.size(32.dp)
+                                                modifier = Modifier.size(48.dp)
                                             )
                                             Spacer(modifier = Modifier.height(8.dp))
                                             Text(

@@ -16,14 +16,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.twotone.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,89 +43,117 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
+import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClientesList(// 1. Inyecta tu ClientesViewModel
-    clientesViewModel: ClientesViewModel) {
-
-    // 2. Recolecta los estados del ViewModel
-    val searchText by clientesViewModel.searchText.collectAsState()
-    val searchResults by clientesViewModel.searchResults.collectAsState()
-
+fun ClientesList(
+    onAddNewClient: () -> Unit,
+    onClientClick: (Int) -> Unit
+) {
 
     //Contexto de la App
     val context = LocalContext.current
-    val messageqr = stringResource(R.string.funcion_qr_searchbar)
+
+    // 1. Instanciar el ViewModel usando el Factory
+    val clientesViewModel: ClientesViewModel = viewModel(
+        factory = ClientesViewModelFactory(context)
+    )
+
+    // 2. Recolecta los estados del ViewModel
+    val searchText by clientesViewModel.searchText.collectAsState()
+    val searchResults by clientesViewModel.searchResults.collectAsStateWithLifecycle()
 
     //Estados de SearchBar sin ViewModel
     //var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        SearchBar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            query = searchText,
-            onQueryChange = { newText ->
-                // 3. Llama a la función del ViewModel para actualizar la búsqueda
-                clientesViewModel.onSearchTextChanged(newText)
-
-            },
-            onSearch = {
-                // Aquí puedes manejar la acción de búsqueda (ej. navegar a otra pantalla)
-                active = false
-            },
-            active = active,
-            onActiveChange = { active = it },
-            placeholder = { Text(stringResource(R.string.searchbar_buscar_clientes)) },
-            leadingIcon = {
+    // 2. Usamos Scaffold para estructurar la pantalla
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onAddNewClient() }, // 3. Acción al pulsar
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape
+            ) {
                 Icon(
-                    Icons.Default.Search,
-                    contentDescription = "Icono de búsqueda"
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Agregar nuevo cliente"
                 )
-            },
-            trailingIcon = {
-
-                IconButton(onClick = {
-                    Toast.makeText(context, messageqr, Toast.LENGTH_SHORT).show() })
-                {
-                    Icon(
-                        painter = painterResource(id = R.drawable.qr_code),
-                        contentDescription = "Icono Qr scan"
-                    )
-                }
             }
+        }
+    ) { paddingValues -> // El Scaffold nos da un padding que debemos aplicar
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+                //.padding(8.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Contenido que se muestra cuando el SearchBar está activo
-            LazyColumn {
+
+            SearchBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                query = searchText,
+                onQueryChange = { newText ->
+                    // 3. Llama a la función del ViewModel para actualizar la búsqueda
+                    clientesViewModel.onSearchTextChanged(newText)
+
+                },
+                onSearch = {
+                    // Aquí puedes manejar la acción de búsqueda (ej. navegar a otra pantalla)
+                    active = false
+                },
+                active = active,
+                onActiveChange = { active = false },
+                placeholder = { Text(stringResource(R.string.searchbar_buscar_clientes)) },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Icono de búsqueda"
+                    )
+                },
+                trailingIcon = {
+
+                    IconButton(onClick = {
+                        clientesViewModel.startQRScanner(context)
+                    })
+                    {
+                        Icon(
+                            painter = painterResource(id = R.drawable.qr_code),
+                            contentDescription = "Icono Qr scan"
+                        )
+                    }
+                }
+            ) {
+
+            }
+
+            // Contenido que se muestra cuando no hay resultados de búsqueda
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f) // Ocupa todo el espacio disponible
+                    .padding(horizontal = 16.dp)
+            ) {
                 // 4. Itera sobre los resultados de búsqueda del ViewModel
                 items(searchResults) { cliente ->
-                    ListItem(
-                        headlineContent = {
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp) // Añade un poco de espacio entre las tarjetas
+                                    .padding(vertical = 8.dp) // Añade un poco de espacio entre las tarjetas
                                     .clickable {
                                         // Acción al hacer clic en la tarjeta, por ejemplo, navegar a los detalles del cliente
-                                        Toast
-                                            .makeText(
-                                                context,
-                                                "Cliente: ${cliente.nombre}",
-                                                Toast.LENGTH_SHORT
-                                            )
-                                            .show()
+                                        onClientClick(cliente.id) // Llama a la función de clic del cliente
                                     },
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Añade una sombra sutil
                                 colors = CardDefaults.cardColors(
@@ -137,20 +166,21 @@ fun ClientesList(// 1. Inyecta tu ClientesViewModel
                                         .fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Asumiendo que tu objeto `cliente` tiene una propiedad `imageUrl` con la URL de la imagen.
+                                    // Asumiendo que tu objeto `cliente` tiene una propiedad `imagenUrl` con la URL de la imagen.
                                     AsyncImage(
-                                        model = cliente.imageUrl, // Reemplaza con la URL de la imagen del cliente
+                                        model = cliente.imagenUrl, // Reemplaza con la URL de la imagen del cliente
                                         contentDescription = "Imagen del Cliente",
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(CircleShape), // Hace la imagen circular
                                         contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                                        placeholder = painterResource(id = R.drawable.ic_launcher_foreground), // Icono de placeholder mientras carga
-                                        error = painterResource(id = R.drawable.ic_launcher_foreground) // Icono si hay error de carga
+                                        placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
+                                        error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
                                     )
                                     // --- FIN DEL CAMBIO ---
 
                                     Spacer(modifier = Modifier.width(16.dp))
+
                                     Column(
                                         modifier = Modifier.weight(1f) // Ocupa el espacio restante
                                     ) {
@@ -160,22 +190,34 @@ fun ClientesList(// 1. Inyecta tu ClientesViewModel
                                             fontSize = 18.sp
                                         )
                                         // Suponiendo que tu objeto 'cliente' tiene una propiedad 'direccion'
-                                        // Text(text = cliente.direccion, style = MaterialTheme.typography.bodySmall)
+                                        Text(
+                                            text = cliente.ubicacion,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+
+                                        // Suponiendo que tu objeto 'cliente' tiene una propiedad 'email'
+                                        //Text(text = cliente.email, style = MaterialTheme.typography.bodySmall)
+
+                                        // Suponiendo que tu objeto 'cliente' tiene una propiedad 'telefono'
+                                        Text(
+                                            text = cliente.telefono,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
                                     }
                                     // Ejemplo de icono adicional a la derecha
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.TwoTone.ArrowForward,
-                                        contentDescription = "Icono de Favorito",
-                                        tint = MaterialTheme.colorScheme.secondary
+                                        painter = painterResource(id = R.drawable.chevron_forward),
+                                        contentDescription = "Fordward Icon",
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .padding(end = 8.dp),
+                                        tint = MaterialTheme.colorScheme.onBackground
                                     )
                                 }
                             }
                             // FIN DE LA CARD FORMATEADA
-                        },
-                    )
                 }
             }
         }
-
     }
 }

@@ -6,6 +6,7 @@
     //Mensajes de carga
     <string name="loading_iniciar_sesion">Logging in...</string>
     <string name="loading_registrar_usuario">Registering user...</string>
+    <string name="loading_registrar_cliente">Registering client...</string>
     <string name="loading_cerrar_sesion">Signing out...</string>
 
     //Textos de LoginScreen
@@ -26,6 +27,15 @@
     <string name="confirmar_contrasena">Confirm Password</string>
     <string name="button_register">Register</string>>
     <string name="ya_tienes_cuenta">Already have an account? Sign in</string>
+
+    //Textos de AddNewClient
+    <string name="appbar_regstrarnuevocliente">Register new client</string>
+    <string name="ingresa_datos_cliente">Please enter the data</string>
+    <string name="nombre_completo_cliente">Full Name</string>
+    <string name="email_register_cliente">Email</string>
+    <string name="contrasena_register_cliente">Password</string>
+    <string name="confirmar_contrasena_cliente">Confirm Password</string>
+    <string name="button_register_cliente">Register</string>>
 
     //Textos de HomeScreen
     <string name="name_hello">Hello,</string>

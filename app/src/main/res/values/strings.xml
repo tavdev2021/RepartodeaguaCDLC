@@ -5,6 +5,8 @@
     //Mensajes de carga
     <string name="loading_iniciar_sesion">Iniciando sesión...</string>
     <string name="loading_registrar_usuario">Registrando usuario...</string>
+    <string name="loading_registrar_cliente">Registrando cliente...</string>
+    <string name="loading_cargar_cliente">Cargando datos...</string>
     <string name="loading_cerrar_sesion">Cerrando sesión...</string>
 
     //Textos de LoginScreen
@@ -25,6 +27,21 @@
     <string name="confirmar_contrasena">Confirmar Contraseña</string>
     <string name="button_register">Registrar</string>>
     <string name="ya_tienes_cuenta">Ya tienes una cuenta? Inicia sesión</string>
+
+    //Textos de AddNewClient
+    <string name="appbar_regstrarnuevocliente">Registrar nuevo cliente</string>
+    <string name="ingresa_datos_cliente">Por favor ingresa los datos del cliente</string>
+    <string name="informacion_personal_cliente">Informacion Personal</string>
+    <string name="nombre_completo_cliente">Nombre Completo</string>
+    <string name="telefono_cliente">Telefono</string>
+    <string name="email_register_cliente">Correo electrónico</string>
+    <string name="ubicacion_detalles_cliente">Ubicacion y Detalles</string>
+    <string name="ubicacion_register_cliente">Calle, Numero, Colonia</string>
+    <string name="nota_register_cliente">Notas de la entrega (Referencias, Horarios, etc.)</string>
+    <string name="button_register_cliente">Registrar</string>>
+
+    //Textos de ClienteDetail
+    <string name="appbar_title_details">Detalle de cliente</string>
 
     //Textos de HomeScreen
     <string name="name_hello">Hola,</string>
