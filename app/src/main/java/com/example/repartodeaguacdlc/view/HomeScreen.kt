@@ -42,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -135,7 +134,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                                         CircleShape
                                     ),
                                 contentScale = ContentScale.Crop,
-
+                                placeholder = painterResource(id = R.drawable.ic_downloading),
+                                error = painterResource(id = R.drawable.ic_error)
                                 )
                         } else {
                             Icon(

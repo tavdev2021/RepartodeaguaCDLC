@@ -1,6 +1,4 @@
 package com.example.repartodeaguacdlc.view
-
-import android.widget.Toast
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.clickable

@@ -42,7 +42,7 @@ class ClientesViewModel(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000), // Mantiene el flujo activo 5s tras cerrar la pantalla
+        started = SharingStarted.WhileSubscribed(5000), // Mantiene el flujo activo 5 s tras cerrar la pantalla
         initialValue = emptyList()
     )
 
@@ -64,6 +64,7 @@ class ClientesViewModel(
             null
         }
     }
+
 
     /**
      * Inicia el escáner de Google Play Services para obtener un código QR.

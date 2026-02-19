@@ -14,12 +14,15 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.repartodeaguacdlc.data.ClientesUpdateViewModelFactory
 import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
 import com.example.repartodeaguacdlc.view.AddNewClient
 import com.example.repartodeaguacdlc.view.ClientDetail
 import com.example.repartodeaguacdlc.view.ClientesList
 import com.example.repartodeaguacdlc.view.PedidosList
 import com.example.repartodeaguacdlc.view.SettingsApp
+import com.example.repartodeaguacdlc.view.UpdateClientScreen
+import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 
 @Composable
@@ -130,6 +133,34 @@ fun AppNavHost()
             ClientDetail(
                 clienteId = id,
                 clientesViewModel = clientesViewModel,
+                onBack = { navController.popBackStack() },
+                onNavigateToEdit = { clienteId ->
+                    navController.navigate("updateClient/$clienteId")
+                }
+            )
+        }
+
+        composable(
+            route = "updateClient/{clienteId}",
+            arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
+            val context = androidx.compose.ui.platform.LocalContext.current
+
+            // Obtén la instancia del ViewModel usando el factory, igual que en ClientDetail
+            val clientesViewModel: ClientesViewModel = viewModel(
+                factory = ClientesViewModelFactory(context)
+            )
+
+            val viewModel: ClientesUpdateViewModel = viewModel(
+                factory = ClientesUpdateViewModelFactory(context)
+            )
+
+            UpdateClientScreen(
+                clienteId = id,
+                clientesViewModel = clientesViewModel,
+                viewModel = viewModel,
+                // Suponiendo que UpdateClientScreen también tiene un onBack
                 onBack = { navController.popBackStack() }
             )
         }

@@ -137,6 +137,7 @@ fun AddNewClient(
         if (isSuccess) {
             Toast.makeText(context, "Cliente registrado exitosamente", Toast.LENGTH_SHORT).show()
             viewModel.resetSuccess()
+            onNavigateToHomeFromAddNewClient()
         }
     }
 
@@ -371,6 +372,7 @@ fun AddNewClient(
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Sentences,
                     showKeyboardOnFocus = true, imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = {

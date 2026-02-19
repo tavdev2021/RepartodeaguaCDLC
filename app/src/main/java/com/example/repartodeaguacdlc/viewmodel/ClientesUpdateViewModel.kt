@@ -11,10 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AddNewClientViewModel(
-    private val clientesRepository: ClientesRepositoryRoom
+class ClientesUpdateViewModel(private val clientesRepository: ClientesRepositoryRoom
 ): ViewModel() {
-
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     private val _isSuccess = MutableStateFlow(false)
@@ -128,7 +126,7 @@ class AddNewClientViewModel(
         }
         return null // Válido
     }
-    
+
     fun updateLocation(latitude: Double, longitude: Double) {
         _locationClient.value = "$latitude, $longitude"
     }
@@ -150,9 +148,9 @@ class AddNewClientViewModel(
         return isFullNameValid && isPhoneValid && isEmailValid && isLocationValid && isNotesValid
     }
 
-    fun registerClient() {
+    fun updateCliente(clienteId: Int) {
         if (!validateRegisterForm())
-            // No intentar el registro si hay errores de validación
+        // No intentar la actualizacion si hay errores de validación
             return
 
         viewModelScope.launch {
@@ -163,7 +161,8 @@ class AddNewClientViewModel(
             try {
                 delay(1000)
                 // 1. Crear el objeto Cliente
-                val nuevoCliente = Clientes(
+                val updatedCliente = Clientes(
+                    id = clienteId,
                     nombre = _fullName.value,
                     telefono = _phone.value,
                     email = _emailRegisterClient.value,
@@ -174,7 +173,7 @@ class AddNewClientViewModel(
                 )
 
                 // 2. Guardar en Room (Local)
-                clientesRepository.insertCliente(nuevoCliente)
+                clientesRepository.updateCliente(updatedCliente)
 
                 // 3. Éxito: Limpiar los campos y errores de validación
                 clearInputsRegister()
@@ -194,11 +193,12 @@ class AddNewClientViewModel(
     fun resetSuccess() {
         _isSuccess.value = false
     }
-    fun clearError(){
+
+    fun clearError() {
         _error.value = null
     }
 
-    fun clearInputsRegister(){
+    fun clearInputsRegister() {
         _fullName.value = ""
         _phone.value = ""
         _emailRegisterClient.value = ""
@@ -206,7 +206,7 @@ class AddNewClientViewModel(
         _notasClient.value = ""
     }
 
-    fun clearErrorRegister(){
+    fun clearErrorRegister() {
         _fullNameError.value = null
         _phoneError.value = null
         _emailErrorRegister.value = null
