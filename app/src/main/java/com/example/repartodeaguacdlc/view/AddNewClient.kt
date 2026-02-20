@@ -395,7 +395,8 @@ fun AddNewClient(
                 focusManager.clearFocus()
                 viewModel.registerClient()
             },
-                enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && email.isNotBlank() && location.isNotBlank() && fullNameError == null && phoneError == null && emailError == null && locationError == null,
+                enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && email.isNotBlank() && location.isNotBlank() && notasClient.isNotBlank()
+                        && fullNameError == null && phoneError == null && emailError == null && locationError == null && notesClientError == null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),

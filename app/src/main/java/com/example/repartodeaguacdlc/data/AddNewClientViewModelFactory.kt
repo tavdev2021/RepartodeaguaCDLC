@@ -14,7 +14,7 @@ class AddNewClientViewModelFactory(private val context: Context) :
         val repository = ClientesRepositoryRoom(database.clientesDao())
 
         if (modelClass.isAssignableFrom(AddNewClientViewModel::class.java)) {
-        return AddNewClientViewModel(clientesRepository = repository) as T
+        return AddNewClientViewModel(repository) as T
     }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

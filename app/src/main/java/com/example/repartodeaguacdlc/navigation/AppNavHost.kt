@@ -97,7 +97,8 @@ fun AppNavHost()
             AddNewClient(
                 onNavigateToHomeFromAddNewClient = {
                     navController.navigate("home") {
-                    popUpTo ("addnewclient") {inclusive = true} } }
+                    popUpTo ("addnewclient") {inclusive = true}
+                        launchSingleTop = true } }
             )
         }
 

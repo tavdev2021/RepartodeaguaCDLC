@@ -1,5 +1,6 @@
 package com.example.repartodeaguacdlc.view
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +51,7 @@ import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.Clientes
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +66,16 @@ fun ClientDetail(clienteId: Int,
     // Usamos produceState o collectAsState para observar el resultado
     val cliente by produceState<Clientes?>(initialValue = null, clienteId) {
         value = clientesViewModel.getClienteById(id = clienteId)
+    }
+
+    // remember nos ayuda a mantener la misma instancia del Intent a través de las recomposiciones
+    val mapIntent = remember(cliente?.ubicacion) {
+        // Asegúrate de que el cliente no es nulo y la ubicación tampoco
+        cliente?.ubicacion?.let { ubicacion ->
+            // Crea el Uri para el intent del mapa. La 'q' es para la query y 'z' para el zoom.
+            val gmmIntentUri = "geo:0,0?q=$ubicacion&z=15".toUri()
+            Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        }
     }
 
     Scaffold(
@@ -136,7 +149,8 @@ fun ClientDetail(clienteId: Int,
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Row(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .padding(8.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
@@ -172,7 +186,19 @@ fun ClientDetail(clienteId: Int,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Button(onClick = {
-                                Toast.makeText(context,"Mapa", Toast.LENGTH_SHORT).show()
+
+                                if (mapIntent != null) {
+                                    // Comprueba si hay una app que pueda manejar el intent
+                                    if (mapIntent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(mapIntent)
+                                    } else {
+                                        // Si no se encuentra Google Maps, muestra un mensaje
+                                        Toast.makeText(context, "No se encontró una aplicación de mapas.", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Ubicación no disponible.", Toast.LENGTH_SHORT).show()
+                                }
+
                             }) {
                                 Icon(imageVector = Icons.Default.Place, contentDescription = "Mapa")
                             }

@@ -154,8 +154,6 @@ fun UpdateClientScreen(
             Toast.makeText(context, "Cliente actualizado exitosamente", Toast.LENGTH_SHORT).show()
             viewModel.resetSuccess()
             onBack()
-        } else {
-            Toast.makeText(context, "Error al actualizar el cliente", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -429,7 +427,8 @@ fun UpdateClientScreen(
                         focusManager.clearFocus()
                         viewModel.updateCliente(clienteId)
                     },
-                    enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && email.isNotBlank() && location.isNotBlank() && fullNameError == null && phoneError == null && emailError == null && locationError == null,
+                    enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && email.isNotBlank() && location.isNotBlank() && notasClient.isNotBlank()
+                            && fullNameError == null && phoneError == null && emailError == null && locationError == null && notesClientError == null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
