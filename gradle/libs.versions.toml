@@ -13,10 +13,11 @@ firebaseAuth = "24.0.1"
 runtime = "1.10.0"
 material3 = "1.4.0"
 playServicesCodeScanner = "16.1.0"
-foundationLayout = "1.10.0"
+foundationLayout = "1.10.3"
 playServicesLocation = "21.3.0"
 roomdb_version = "2.8.4"
 ksp = "2.3.2"
+foundationLayoutVersion = "1.10.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +43,7 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomdb_version" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomdb_version" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomdb_version" }
+androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayoutVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

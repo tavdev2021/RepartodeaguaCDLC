@@ -145,74 +145,74 @@ fun ClientesList(
             ) {
                 // 4. Itera sobre los resultados de búsqueda del ViewModel
                 items(searchResults) { cliente ->
-                            Card(
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp) // Añade un poco de espacio entre las tarjetas
+                                .clickable {
+                                    // Acción al hacer clic en la tarjeta, por ejemplo, navegar a los detalles del cliente
+                                    onClientClick(cliente.id) // Llama a la función de clic del cliente
+                                },
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Añade una sombra sutil
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant, // Usa un color del tema
+                            )
+                        ) {
+                            Row(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp) // Añade un poco de espacio entre las tarjetas
-                                    .clickable {
-                                        // Acción al hacer clic en la tarjeta, por ejemplo, navegar a los detalles del cliente
-                                        onClientClick(cliente.id) // Llama a la función de clic del cliente
-                                    },
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Añade una sombra sutil
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant, // Usa un color del tema
-                                )
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
+                                // Asumiendo que tu objeto `cliente` tiene una propiedad `imagenUrl` con la URL de la imagen.
+                                AsyncImage(
+                                    model = cliente.imagenUrl, // Reemplaza con la URL de la imagen del cliente
+                                    contentDescription = "Imagen del Cliente",
                                     modifier = Modifier
-                                        .padding(16.dp)
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .size(40.dp)
+                                        .clip(CircleShape), // Hace la imagen circular
+                                    contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
+                                    placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
+                                    error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
+                                )
+                                // --- FIN DEL CAMBIO ---
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Column(
+                                    modifier = Modifier.weight(1f) // Ocupa el espacio restante
                                 ) {
-                                    // Asumiendo que tu objeto `cliente` tiene una propiedad `imagenUrl` con la URL de la imagen.
-                                    AsyncImage(
-                                        model = cliente.imagenUrl, // Reemplaza con la URL de la imagen del cliente
-                                        contentDescription = "Imagen del Cliente",
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape), // Hace la imagen circular
-                                        contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                                        placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
-                                        error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
+                                    Text(
+                                        text = cliente.nombre,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
                                     )
-                                    // --- FIN DEL CAMBIO ---
+                                    // Suponiendo que tu objeto 'cliente' tiene una propiedad 'direccion'
+                                    Text(
+                                        text = cliente.ubicacion,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
 
-                                    Spacer(modifier = Modifier.width(16.dp))
+                                    // Suponiendo que tu objeto 'cliente' tiene una propiedad 'email'
+                                    //Text(text = cliente.email, style = MaterialTheme.typography.bodySmall)
 
-                                    Column(
-                                        modifier = Modifier.weight(1f) // Ocupa el espacio restante
-                                    ) {
-                                        Text(
-                                            text = cliente.nombre,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp
-                                        )
-                                        // Suponiendo que tu objeto 'cliente' tiene una propiedad 'direccion'
-                                        Text(
-                                            text = cliente.ubicacion,
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-
-                                        // Suponiendo que tu objeto 'cliente' tiene una propiedad 'email'
-                                        //Text(text = cliente.email, style = MaterialTheme.typography.bodySmall)
-
-                                        // Suponiendo que tu objeto 'cliente' tiene una propiedad 'telefono'
-                                        Text(
-                                            text = cliente.telefono,
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                    // Ejemplo de icono adicional a la derecha
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.chevron_forward),
-                                        contentDescription = "Fordward Icon",
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .padding(end = 8.dp),
-                                        tint = MaterialTheme.colorScheme.onBackground
+                                    // Suponiendo que tu objeto 'cliente' tiene una propiedad 'telefono'
+                                    Text(
+                                        text = cliente.telefono,
+                                        style = MaterialTheme.typography.bodySmall
                                     )
                                 }
+                                // Ejemplo de icono adicional a la derecha
+                                Icon(
+                                    painter = painterResource(id = R.drawable.chevron_forward),
+                                    contentDescription = "Fordward Icon",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .padding(end = 8.dp),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
                             }
+                        }
                             // FIN DE LA CARD FORMATEADA
                 }
             }
