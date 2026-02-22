@@ -54,9 +54,9 @@ dependencies {
     implementation(libs.firebase.auth)
 
     // Jetpack Compose y navegación
-    implementation("androidx.compose.ui:ui:1.10.3")
+    implementation("androidx.compose.ui:ui:1.10.0")
     implementation("androidx.compose.material3:material3:1.3.2")
-    implementation("androidx.navigation:navigation-compose:2.9.7")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
 
 // Lifecycle + Flow
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
@@ -77,7 +77,6 @@ dependencies {
     //Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    implementation(libs.androidx.foundation.layout)
     ksp(libs.room.compiler)
 
     //Google Maps
@@ -86,7 +85,6 @@ dependencies {
     implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.play.services.location)
-
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
