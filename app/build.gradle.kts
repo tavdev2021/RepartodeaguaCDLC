@@ -54,12 +54,15 @@ dependencies {
     implementation(libs.firebase.auth)
 
     // Jetpack Compose y navegación
-    implementation("androidx.compose.ui:ui:1.10.0")
-    implementation("androidx.compose.material3:material3:1.3.2")
-    implementation("androidx.navigation:navigation-compose:2.9.5")
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.animation:animation-core:1.10.3")
+    implementation("androidx.navigation:navigation-compose:2.9.7")
+    //implementation("androidx.compose.ui:ui:1.10.0")
+    //implementation("androidx.compose.material3:material3:1.3.2")
+
 
 // Lifecycle + Flow
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     //Cargar imagen en pantalla
@@ -68,11 +71,15 @@ dependencies {
 
     //Animaciones Lottie
 
-    implementation("com.airbnb.android:lottie-compose:6.7.0")
+    implementation("com.airbnb.android:lottie-compose:6.7.1")
 
     //Api SplashScreen
 
-    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.core:core-splashscreen:1.2.0")
+
+    //Icons
+
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
     //Room
     implementation(libs.room.runtime)

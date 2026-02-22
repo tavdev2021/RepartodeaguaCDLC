@@ -2,6 +2,9 @@ package com.example.repartodeaguacdlc.view
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +27,8 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,18 +53,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.Clientes
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
-import androidx.core.net.toUri
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun ClientDetail(clienteId: Int,
-                 clientesViewModel: ClientesViewModel,
-                 onNavigateToEdit: (Int) -> Unit,
-                 onBack: () -> Unit) {
+fun SharedTransitionScope.ClientDetail(
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    clienteId: Int,
+    clientesViewModel: ClientesViewModel,
+    onNavigateToEdit: (Int) -> Unit,
+    onBack: () -> Unit) {
     val isLoading by clientesViewModel.isLoading.collectAsState()
     val context = LocalContext.current
 
@@ -108,150 +115,172 @@ fun ClientDetail(clienteId: Int,
                 // Overlay con blur elegante
                 LoadingOverlay(
                     visible = isLoading,
-                    message = stringResource(R.string.loading_cargar_cliente)
+                    message = "Cargando datos..."
                 )
+
             } else {
-                // 2. Diseño del contenido del detalle
-                Column(
+
+                Card(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Ejemplo de visualización de datos
-                    Text(text = "Información del Cliente", style = MaterialTheme.typography.headlineMedium)
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    AsyncImage(
-                        model = cliente!!.imagenUrl,
-                        contentDescription = "Imagen del Cliente",
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)// Hace la imagen circular
-                            .border(2.dp, MaterialTheme.colorScheme.secondary, CircleShape),// Pone un borde en la imagen
-                        contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                        placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
-                        error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
+                        .fillMaxSize(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    ElevatedButton(onClick = {
-                        onNavigateToEdit(clienteId)
-                    },
-                        elevation = ButtonDefaults.elevatedButtonElevation(
-                            defaultElevation = 6.dp,
-                            pressedElevation = 2.dp,
-                            disabledElevation = 0.dp
-                        ),
+                ) {
+                    // 2. Diseño del contenido del detalle
+                    Column(
                         modifier = Modifier
-                            .padding(8.dp)
-                            .height(50.dp)) {
-                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Editar")
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Ejemplo de visualización de datos
+                        Text(
+                            text = "Información del Cliente",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            ElevatedButton(onClick = {
-                                Toast.makeText(context,"Llamar", Toast.LENGTH_SHORT).show()
-                            },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                                ) {
-                                Icon(imageVector = Icons.Default.Phone, contentDescription = "Llamar")
-                            }
-                            Text(text = "Llamar")
+                        AsyncImage(
+                            model = cliente!!.imagenUrl,
+                            contentDescription = "Imagen del Cliente",
+                            modifier = Modifier
+                                .sharedElement(
+                                    sharedContentState = rememberSharedContentState(key = "image-${cliente!!.id}"),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                                .size(100.dp)
+                                .clip(CircleShape)// Hace la imagen circular
+                                .border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.secondary,
+                                    CircleShape
+                                ),// Pone un borde en la imagen
+                            contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
+                            placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
+                            error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        ElevatedButton(onClick = {
+                            onNavigateToEdit(clienteId)
+                        },
+                            elevation = ButtonDefaults.elevatedButtonElevation(
+                                defaultElevation = 6.dp,
+                                pressedElevation = 2.dp,
+                                disabledElevation = 0.dp
+                            ),
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .height(50.dp)) {
+                            Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Editar")
                         }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            ElevatedButton(onClick = {
-                                Toast.makeText(context,"Mensaje", Toast.LENGTH_SHORT).show()
-                            },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                                ) {
-                                Icon(imageVector = Icons.Default.Email, contentDescription = "Mensaje")
-                            }
-                            Text(text = "Mensaje")
 
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            ElevatedButton(onClick = {
-
-                                if (mapIntent != null) {
-                                    // Comprueba si hay una app que pueda manejar el intent
-                                    if (mapIntent.resolveActivity(context.packageManager) != null) {
-                                        context.startActivity(mapIntent)
-                                    } else {
-                                        // Si no se encuentra Google Maps, muestra un mensaje
-                                        Toast.makeText(context, "No se encontró una aplicación de mapas.", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    Toast.makeText(context, "Ubicación no disponible.", Toast.LENGTH_SHORT).show()
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                ElevatedButton(onClick = {
+                                    Toast.makeText(context,"Llamar", Toast.LENGTH_SHORT).show()
+                                },
+                                    elevation = ButtonDefaults.elevatedButtonElevation(
+                                        defaultElevation = 6.dp,
+                                        pressedElevation = 2.dp,
+                                        disabledElevation = 0.dp
+                                    ),
+                                    ) {
+                                    Icon(imageVector = Icons.Default.Phone, contentDescription = "Llamar")
                                 }
-
-                            },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                                ) {
-                                Icon(imageVector = Icons.Default.Place, contentDescription = "Mapa")
+                                Text(text = "Llamar")
                             }
-                            Text(text = "Mapa")
-                        }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            ElevatedButton(onClick = {
-                                Toast.makeText(context,"Venta", Toast.LENGTH_SHORT).show()
-                            },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                                ) {
-                                Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Venta")
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                ElevatedButton(onClick = {
+                                    Toast.makeText(context,"Mensaje", Toast.LENGTH_SHORT).show()
+                                },
+                                    elevation = ButtonDefaults.elevatedButtonElevation(
+                                        defaultElevation = 6.dp,
+                                        pressedElevation = 2.dp,
+                                        disabledElevation = 0.dp
+                                    ),
+                                    ) {
+                                    Icon(imageVector = Icons.Default.Email, contentDescription = "Mensaje")
+                                }
+                                Text(text = "Mensaje")
+
                             }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                ElevatedButton(onClick = {
+
+                                    if (mapIntent != null) {
+                                        // Comprueba si hay una app que pueda manejar el intent
+                                        if (mapIntent.resolveActivity(context.packageManager) != null) {
+                                            context.startActivity(mapIntent)
+                                        } else {
+                                            // Si no se encuentra Google Maps, muestra un mensaje
+                                            Toast.makeText(context, "No se encontró una aplicación de mapas.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Ubicación no disponible.", Toast.LENGTH_SHORT).show()
+                                    }
+
+                                },
+                                    elevation = ButtonDefaults.elevatedButtonElevation(
+                                        defaultElevation = 6.dp,
+                                        pressedElevation = 2.dp,
+                                        disabledElevation = 0.dp
+                                    ),
+                                    ) {
+                                    Icon(imageVector = Icons.Default.Place, contentDescription = "Mapa")
+                                }
+                                Text(text = "Mapa")
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                ElevatedButton(onClick = {
+                                    Toast.makeText(context,"Venta", Toast.LENGTH_SHORT).show()
+                                },
+                                    elevation = ButtonDefaults.elevatedButtonElevation(
+                                        defaultElevation = 6.dp,
+                                        pressedElevation = 2.dp,
+                                        disabledElevation = 0.dp
+                                    ),
+                                    ) {
+                                    Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Venta")
+                                }
                                 Text(text = "Venta")
                             }
                         }
 
-                    DetailColumn(icon = Icons.Default.Phone, label = "Teléfono:", value = cliente!!.telefono)
-                    DetailColumn(icon = Icons.Default.Place, label = "Ubicación:", value = cliente!!.ubicacion)
-                    DetailColumn(icon = Icons.Default.Create,label = "Notas:", value = cliente!!.notas)
+                        DetailColumn(icon = Icons.Default.Phone, label = "Teléfono:", value = cliente!!.telefono)
+                        DetailColumn(icon = Icons.Default.Place, label = "Ubicación:", value = cliente!!.ubicacion)
+                        DetailColumn(icon = Icons.Default.Create,label = "Notas:", value = cliente!!.notas)
+                    }
                 }
             }
         }

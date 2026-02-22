@@ -24,7 +24,9 @@ import com.example.repartodeaguacdlc.view.SettingsApp
 import com.example.repartodeaguacdlc.view.UpdateClientScreen
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import androidx.compose.animation.*
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavHost()
 {
@@ -36,138 +38,167 @@ fun AppNavHost()
 
     val startDestination = if (isAuthenticated) "home" else "login"
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    SharedTransitionLayout {
 
-        composable("splash") {
-            SplashScreen(
-                authViewModel,
-                onNavigateToHome = {
-                    navController.navigate("home") {
-                        popUpTo("splash") { inclusive = true }
+        NavHost(navController = navController, startDestination = startDestination) {
+
+            composable("splash") {
+                SplashScreen(
+                    authViewModel,
+                    onNavigateToHome = {
+                        navController.navigate("home") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate("login") {
+                            popUpTo("splash") { inclusive = true }
+                        }
                     }
-                },
-                onNavigateToLogin = { navController.navigate("login") {
-                    popUpTo("splash") { inclusive = true }
+                )
+            }
+
+            composable("login") {
+                LoginScreen(
+                    authViewModel,
+                    onLoginSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate("register") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable("login") {
-            LoginScreen(
-                authViewModel,
-                onLoginSuccess = { navController.navigate("home") {
-                    popUpTo ("login") {inclusive = true} 
-                    launchSingleTop = true } },
-                onNavigateToRegister = { navController.navigate("register") {
-                    popUpTo ("login") {inclusive = true} }
-                }
-            )
-        }
-
-        composable("register") {
-            RegisterScreen(
-                authViewModel,
-                onRegisterSuccess = { navController.navigate("home") {
-                    popUpTo ("register") {inclusive = true}
-                    launchSingleTop = true } },
-                onNavigateToLogin = { navController.navigate("login") {
-                    popUpTo ("register") {inclusive = true} } }
-            )
-        }
-
-        composable("home") {
-            HomeScreen(
-                authViewModel,
-                onLogout = { navController.navigate("login") {
-                        popUpTo("home") { inclusive = true } } },
-                onAddNewClient = {
-                    navController.navigate("addnewclient") {
-                        popUpTo("home") { inclusive = true } } },
-                onPedidos = {
-                    navController.navigate("pedidos") },
-                onClientes = {
-                    navController.navigate("clientes") },
-                onSettings = {
-                    navController.navigate("settings")}
-            )
-        }
-
-        composable("addnewclient") {
-            AddNewClient(
-                onNavigateToHomeFromAddNewClient = {
-                    navController.navigate("home") {
-                    popUpTo ("addnewclient") {inclusive = true}
-                        launchSingleTop = true } }
-            )
-        }
-
-        composable("pedidos") {
-            PedidosList()
-        }
-
-        composable("clientes") {
-            ClientesList(
-                onAddNewClient = {
-                    navController.navigate("addnewclient") {
-                        popUpTo("clientes") { inclusive = true }
+            composable("register") {
+                RegisterScreen(
+                    authViewModel,
+                    onRegisterSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("register") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate("login") {
+                            popUpTo("register") { inclusive = true }
+                        }
                     }
-                },
+                )
+            }
 
-                onClientClick = { clienteId ->
-                    navController.navigate("clienteDetails/$clienteId")
-                }
-            )
-        }
+            composable("home") {
+                HomeScreen(
+                    authViewModel,
+                    onLogout = {
+                        navController.navigate("login") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    },
+                    onAddNewClient = {
+                        navController.navigate("addnewclient") {
+                            popUpTo("home") { inclusive = true }
+                        }
+                    },
+                    onPedidos = {
+                        navController.navigate("pedidos")
+                    },
+                    onClientes = {
+                        navController.navigate("clientes")
+                    },
+                    onSettings = {
+                        navController.navigate("settings")
+                    }
+                )
+            }
 
-        composable("clienteDetails/{clienteId}",
-            arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
-        ){ backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
-            val context = androidx.compose.ui.platform.LocalContext.current
+            composable("addnewclient") {
+                AddNewClient(
+                    onNavigateToHomeFromAddNewClient = {
+                        navController.navigate("home") {
+                            popUpTo("addnewclient") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
 
-            // 1. Instanciar el ViewModel usando el Factory
-            val clientesViewModel: ClientesViewModel = viewModel(
-                factory = ClientesViewModelFactory(context)
-            )
+            composable("pedidos") {
+                PedidosList()
+            }
 
-            ClientDetail(
-                clienteId = id,
-                clientesViewModel = clientesViewModel,
-                onBack = { navController.popBackStack() },
-                onNavigateToEdit = { clienteId ->
-                    navController.navigate("updateClient/$clienteId")
-                }
-            )
-        }
+            composable("clientes") {
 
-        composable(
-            route = "updateClient/{clienteId}",
-            arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
-            val context = androidx.compose.ui.platform.LocalContext.current
+                this@SharedTransitionLayout.ClientesList(
+                    animatedVisibilityScope = this,
+                    onAddNewClient = {
+                        navController.navigate("addnewclient") {
+                            popUpTo("clientes") { inclusive = true }
+                        }
+                    },
 
-            // Obtén la instancia del ViewModel usando el factory, igual que en ClientDetail
-            val clientesViewModel: ClientesViewModel = viewModel(
-                factory = ClientesViewModelFactory(context)
-            )
+                    onClientClick = { clienteId ->
+                        navController.navigate("clienteDetails/$clienteId")
+                    }
+                )
+            }
 
-            val viewModel: ClientesUpdateViewModel = viewModel(
-                factory = ClientesUpdateViewModelFactory(context)
-            )
+            composable(
+                "clienteDetails/{clienteId}",
+                arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
+                val context = androidx.compose.ui.platform.LocalContext.current
 
-            UpdateClientScreen(
-                clienteId = id,
-                clientesViewModel = clientesViewModel,
-                viewModel = viewModel,
-                // Suponiendo que UpdateClientScreen también tiene un onBack
-                onBack = { navController.popBackStack() }
-            )
-        }
+                // 1. Instanciar el ViewModel usando el Factory
+                val clientesViewModel: ClientesViewModel = viewModel(
+                    factory = ClientesViewModelFactory(context)
+                )
 
-        composable("settings") {
-            SettingsApp()
+                this@SharedTransitionLayout.ClientDetail(
+                    animatedVisibilityScope = this,
+                    clienteId = id,
+                    clientesViewModel = clientesViewModel,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToEdit = { clienteId ->
+                        navController.navigate("updateClient/$clienteId")
+                    }
+                )
+            }
+
+            composable(
+                route = "updateClient/{clienteId}",
+                arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
+                val context = androidx.compose.ui.platform.LocalContext.current
+
+                // Obtén la instancia del ViewModel usando el factory, igual que en ClientDetail
+                val clientesViewModel: ClientesViewModel = viewModel(
+                    factory = ClientesViewModelFactory(context)
+                )
+
+                val viewModel: ClientesUpdateViewModel = viewModel(
+                    factory = ClientesUpdateViewModelFactory(context)
+                )
+
+                UpdateClientScreen(
+                    clienteId = id,
+                    clientesViewModel = clientesViewModel,
+                    viewModel = viewModel,
+                    // Suponiendo que UpdateClientScreen también tiene un onBack
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("settings") {
+                SettingsApp()
+            }
         }
     }
 }

@@ -1,4 +1,8 @@
 package com.example.repartodeaguacdlc.view
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.clickable
@@ -48,9 +52,10 @@ import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun ClientesList(
+fun SharedTransitionScope.ClientesList(
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onAddNewClient: () -> Unit,
     onClientClick: (Int) -> Unit
 ) {
@@ -164,11 +169,16 @@ fun ClientesList(
                                         .fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+
                                     // Asumiendo que tu objeto `cliente` tiene una propiedad `imagenUrl` con la URL de la imagen.
                                     AsyncImage(
                                         model = cliente.imagenUrl, // Reemplaza con la URL de la imagen del cliente
                                         contentDescription = "Imagen del Cliente",
                                         modifier = Modifier
+                                            .sharedElement(
+                                                sharedContentState = rememberSharedContentState(key = "image-${cliente.id}"),
+                                                animatedVisibilityScope = animatedVisibilityScope
+                                            )
                                             .size(40.dp)
                                             .clip(CircleShape), // Hace la imagen circular
                                         contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
