@@ -23,7 +23,8 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -135,9 +136,14 @@ fun ClientDetail(clienteId: Int,
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(onClick = {
+                    ElevatedButton(onClick = {
                         onNavigateToEdit(clienteId)
                     },
+                        elevation = ButtonDefaults.elevatedButtonElevation(
+                            defaultElevation = 6.dp,
+                            pressedElevation = 2.dp,
+                            disabledElevation = 0.dp
+                        ),
                         modifier = Modifier
                             .padding(8.dp)
                             .height(50.dp)) {
@@ -158,9 +164,15 @@ fun ClientDetail(clienteId: Int,
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Button(onClick = {
+                            ElevatedButton(onClick = {
                                 Toast.makeText(context,"Llamar", Toast.LENGTH_SHORT).show()
-                            }) {
+                            },
+                                elevation = ButtonDefaults.elevatedButtonElevation(
+                                    defaultElevation = 6.dp,
+                                    pressedElevation = 2.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                ) {
                                 Icon(imageVector = Icons.Default.Phone, contentDescription = "Llamar")
                             }
                             Text(text = "Llamar")
@@ -171,9 +183,15 @@ fun ClientDetail(clienteId: Int,
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Button(onClick = {
+                            ElevatedButton(onClick = {
                                 Toast.makeText(context,"Mensaje", Toast.LENGTH_SHORT).show()
-                            }) {
+                            },
+                                elevation = ButtonDefaults.elevatedButtonElevation(
+                                    defaultElevation = 6.dp,
+                                    pressedElevation = 2.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                ) {
                                 Icon(imageVector = Icons.Default.Email, contentDescription = "Mensaje")
                             }
                             Text(text = "Mensaje")
@@ -185,7 +203,7 @@ fun ClientDetail(clienteId: Int,
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Button(onClick = {
+                            ElevatedButton(onClick = {
 
                                 if (mapIntent != null) {
                                     // Comprueba si hay una app que pueda manejar el intent
@@ -199,7 +217,13 @@ fun ClientDetail(clienteId: Int,
                                     Toast.makeText(context, "Ubicación no disponible.", Toast.LENGTH_SHORT).show()
                                 }
 
-                            }) {
+                            },
+                                elevation = ButtonDefaults.elevatedButtonElevation(
+                                    defaultElevation = 6.dp,
+                                    pressedElevation = 2.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                ) {
                                 Icon(imageVector = Icons.Default.Place, contentDescription = "Mapa")
                             }
                             Text(text = "Mapa")
@@ -210,9 +234,15 @@ fun ClientDetail(clienteId: Int,
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Button(onClick = {
+                            ElevatedButton(onClick = {
                                 Toast.makeText(context,"Venta", Toast.LENGTH_SHORT).show()
-                            }) {
+                            },
+                                elevation = ButtonDefaults.elevatedButtonElevation(
+                                    defaultElevation = 6.dp,
+                                    pressedElevation = 2.dp,
+                                    disabledElevation = 0.dp
+                                ),
+                                ) {
                                 Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Venta")
                             }
                                 Text(text = "Venta")
