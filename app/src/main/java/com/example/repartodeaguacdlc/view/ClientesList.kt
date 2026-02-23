@@ -1,5 +1,4 @@
 package com.example.repartodeaguacdlc.view
-import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -152,6 +151,10 @@ fun SharedTransitionScope.ClientesList(
                 items(searchResults) { cliente ->
                             Card(
                                 modifier = Modifier
+                                    .sharedElement(
+                                        sharedContentState = rememberSharedContentState(key = "card-${cliente.id}"),
+                                        animatedVisibilityScope = animatedVisibilityScope
+                                    )
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp) // Añade un poco de espacio entre las tarjetas
                                     .clickable {
@@ -176,7 +179,7 @@ fun SharedTransitionScope.ClientesList(
                                         contentDescription = "Imagen del Cliente",
                                         modifier = Modifier
                                             .sharedElement(
-                                                sharedContentState = rememberSharedContentState(key = "image-${cliente.id}"),
+                                                sharedContentState = rememberSharedContentState(key = "image-${cliente?.id}"),
                                                 animatedVisibilityScope = animatedVisibilityScope
                                             )
                                             .size(40.dp)

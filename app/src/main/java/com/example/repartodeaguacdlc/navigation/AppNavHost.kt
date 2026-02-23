@@ -1,30 +1,33 @@
 package com.example.repartodeaguacdlc.navigation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.repartodeaguacdlc.view.HomeScreen
-import com.example.repartodeaguacdlc.view.LoginScreen
-import com.example.repartodeaguacdlc.view.RegisterScreen
-import com.example.repartodeaguacdlc.view.SplashScreen
-import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.repartodeaguacdlc.data.ClientesUpdateViewModelFactory
 import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
 import com.example.repartodeaguacdlc.view.AddNewClient
 import com.example.repartodeaguacdlc.view.ClientDetail
 import com.example.repartodeaguacdlc.view.ClientesList
+import com.example.repartodeaguacdlc.view.HomeScreen
+import com.example.repartodeaguacdlc.view.LoginScreen
 import com.example.repartodeaguacdlc.view.PedidosList
+import com.example.repartodeaguacdlc.view.RegisterScreen
 import com.example.repartodeaguacdlc.view.SettingsApp
+import com.example.repartodeaguacdlc.view.SplashScreen
 import com.example.repartodeaguacdlc.view.UpdateClientScreen
+import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
-import androidx.compose.animation.*
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -133,6 +136,10 @@ fun AppNavHost()
             }
 
             composable("clientes") {
+                val context = LocalContext.current
+                val clientesViewModel: ClientesViewModel = viewModel(
+                    factory = ClientesViewModelFactory(context)
+                )
 
                 this@SharedTransitionLayout.ClientesList(
                     animatedVisibilityScope = this,
@@ -143,6 +150,7 @@ fun AppNavHost()
                     },
 
                     onClientClick = { clienteId ->
+                        clientesViewModel.selectClient(clienteId)
                         navController.navigate("clienteDetails/$clienteId")
                     }
                 )
@@ -152,17 +160,17 @@ fun AppNavHost()
                 "clienteDetails/{clienteId}",
                 arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
             ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
-                val context = androidx.compose.ui.platform.LocalContext.current
-
-                // 1. Instanciar el ViewModel usando el Factory
+                val context = LocalContext.current
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("clientes")
+                }
                 val clientesViewModel: ClientesViewModel = viewModel(
+                    viewModelStoreOwner = parentEntry,
                     factory = ClientesViewModelFactory(context)
                 )
 
                 this@SharedTransitionLayout.ClientDetail(
                     animatedVisibilityScope = this,
-                    clienteId = id,
                     clientesViewModel = clientesViewModel,
                     onBack = { navController.popBackStack() },
                     onNavigateToEdit = { clienteId ->
@@ -176,7 +184,7 @@ fun AppNavHost()
                 arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
-                val context = androidx.compose.ui.platform.LocalContext.current
+                val context = LocalContext.current
 
                 // Obtén la instancia del ViewModel usando el factory, igual que en ClientDetail
                 val clientesViewModel: ClientesViewModel = viewModel(

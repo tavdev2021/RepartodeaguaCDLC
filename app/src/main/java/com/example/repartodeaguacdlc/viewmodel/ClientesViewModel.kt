@@ -7,78 +7,67 @@ import androidx.lifecycle.viewModelScope
 import com.example.repartodeaguacdlc.model.Clientes
 import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 class ClientesViewModel(
-    val clientesRepository: ClientesRepositoryRoom
+    private val clientesRepository: ClientesRepositoryRoom
 ): ViewModel() {
 
-    // 2. Texto de búsqueda.
     private val _searchText = MutableStateFlow("")
-    val searchText: StateFlow<String> = _searchText
+    val searchText: StateFlow<String> = _searchText.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // 3. RESULTADOS FILTRADOS:
-    // Usamos 'combine' directamente para exponer el StateFlow.
-    // Si 'searchText' está vacío, devolverá 'allClientes' (la lista completa).
     val searchResults: StateFlow<List<Clientes>> = combine(_searchText, clientesRepository.allClientes) { text, clientes ->
         if (text.isBlank()) {
-            // Si la búsqueda está vacía, mostramos la lista completa.
             clientes
         } else {
-            // Si hay texto, filtramos la lista de clientes
-            // La búsqueda no distingue mayúsculas/minúsculas.
             clientes.filter { cliente ->
                 cliente.nombre.contains(text, ignoreCase = true)
-                // Opcional: || cliente.direccion.contains(text, ignoreCase = true)
             }
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000), // Mantiene el flujo activo 5 s tras cerrar la pantalla
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    // Función que llamarás desde el OutlinedTextField / SearchBar en tu UI
+    private val _selectedClient = MutableStateFlow<Clientes?>(null)
+    val selectedClient: StateFlow<Clientes?> = _selectedClient.asStateFlow()
+
+    fun selectClient(id: Int) {
+        // Busca el cliente en la lista actual de resultados de búsqueda
+        val client = searchResults.value.find { it.id == id }
+        _selectedClient.value = client
+    }
+
     fun onSearchTextChanged(text: String) {
         _searchText.value = text
     }
 
     suspend fun getClienteById(id: Int): Clientes? {
         _isLoading.value = true
-        delay(500)
         return try {
             _isLoading.value = false
             clientesRepository.getClienteById(id)
-        } catch (
-            e: Exception
-        ) {
-            // Manejar errores
+        } catch (e: Exception) {
             null
         }
     }
 
-
-    /**
-     * Inicia el escáner de Google Play Services para obtener un código QR.
-     * @parametro context El contexto de la Activity/Composable necesario para el scanner.
-     */
     fun startQRScanner(context: Context) {
         val scanner = GmsBarcodeScanning.getClient(context)
 
         scanner.startScan()
             .addOnSuccessListener { barcode ->
-                // barcode.rawValue contiene el texto del código QR
                 val qrContent = barcode.rawValue
                 if (!qrContent.isNullOrBlank()) {
-                    // Actualizamos el texto de búsqueda con el contenido del QR
                     onSearchTextChanged(qrContent)
                     Toast.makeText(context, "QR Escaneado: $qrContent", Toast.LENGTH_SHORT).show()
                 }
@@ -87,7 +76,6 @@ class ClientesViewModel(
                 Toast.makeText(context, "Error al escanear: ${e.message}", Toast.LENGTH_SHORT).show()
             }
             .addOnCanceledListener {
-                // El usuario canceló el escaneo
                 Toast.makeText(context, "Escaneo cancelado", Toast.LENGTH_SHORT).show()
             }
     }
