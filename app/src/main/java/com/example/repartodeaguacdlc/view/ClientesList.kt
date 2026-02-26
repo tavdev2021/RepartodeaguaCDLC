@@ -2,6 +2,7 @@ package com.example.repartodeaguacdlc.view
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.clickable
@@ -179,11 +180,16 @@ fun SharedTransitionScope.ClientesList(
                                         contentDescription = "Imagen del Cliente",
                                         modifier = Modifier
                                             .sharedElement(
-                                                sharedContentState = rememberSharedContentState(key = "image-${cliente?.id}"),
+                                                sharedContentState = rememberSharedContentState(key = "image-${cliente.id}"),
                                                 animatedVisibilityScope = animatedVisibilityScope
                                             )
                                             .size(40.dp)
-                                            .clip(CircleShape), // Hace la imagen circular
+                                            .clip(CircleShape) // Hace la imagen circular
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.secondary,
+                                                CircleShape
+                                            ),// Pone un borde en la imagen
                                         contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
                                         placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
                                         error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
@@ -196,6 +202,11 @@ fun SharedTransitionScope.ClientesList(
                                         modifier = Modifier.weight(1f) // Ocupa el espacio restante
                                     ) {
                                         Text(
+                                            modifier = Modifier
+                                                .sharedElement(
+                                                    sharedContentState = rememberSharedContentState(key = "nombre-${cliente.id}"),
+                                                    animatedVisibilityScope = animatedVisibilityScope
+                                                ),
                                             text = cliente.nombre,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 18.sp

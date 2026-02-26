@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class ClientesViewModel(
     private val clientesRepository: ClientesRepositoryRoom
@@ -24,27 +25,43 @@ class ClientesViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    val searchResults: StateFlow<List<Clientes>> = combine(_searchText, clientesRepository.allClientes) { text, clientes ->
-        if (text.isBlank()) {
-            clientes
-        } else {
-            clientes.filter { cliente ->
-                cliente.nombre.contains(text, ignoreCase = true)
+    val searchResults: StateFlow<List<Clientes>> =
+        combine(_searchText, clientesRepository.allClientes) { text, clientes ->
+            if (text.isBlank()) {
+                clientes
+            } else {
+                clientes.filter { cliente ->
+                    cliente.nombre.contains(text, ignoreCase = true)
+                }
             }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     private val _selectedClient = MutableStateFlow<Clientes?>(null)
     val selectedClient: StateFlow<Clientes?> = _selectedClient.asStateFlow()
 
+    private var selectedClientId: Int? = null
+
     fun selectClient(id: Int) {
-        // Busca el cliente en la lista actual de resultados de búsqueda
-        val client = searchResults.value.find { it.id == id }
-        _selectedClient.value = client
+        viewModelScope.launch {
+            selectedClientId = id //Guardamos el Id del cliente seleccionado
+            _isLoading.value = true
+            try {
+                _selectedClient.value = clientesRepository.getClienteById(id)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun refreshSelectedClient() {
+        // Si tenemos un ID guardado, simplemente volvemos a llamar a selectClient con él.
+        selectedClientId?.let { id ->
+            selectClient(id)
+        }
     }
 
     fun onSearchTextChanged(text: String) {

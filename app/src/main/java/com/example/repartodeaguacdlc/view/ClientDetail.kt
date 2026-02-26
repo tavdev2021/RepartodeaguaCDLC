@@ -82,6 +82,11 @@ fun SharedTransitionScope.ClientDetail(
             TopAppBar(
                 title = {
                     Text(
+                        modifier = Modifier
+                            .sharedElement(
+                                sharedContentState = rememberSharedContentState(key = "nombre-${cliente?.id}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            ),
                         text = cliente?.nombre ?: stringResource(R.string.appbar_title_details)
                     )
                 },
@@ -105,20 +110,23 @@ fun SharedTransitionScope.ClientDetail(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+
+
             Card(
                 modifier = Modifier
+                    .padding(8.dp)
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .fillMaxHeight(0.8f)
+                    .fillMaxHeight(0.9f)
                     .sharedElement(
                         sharedContentState = rememberSharedContentState(key = "card-${cliente?.id}"),
                         animatedVisibilityScope = animatedVisibilityScope
                     )
                     .fillMaxSize(),
                 shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
                 )
             ) {
                 // 2. Diseño del contenido del detalle
@@ -128,34 +136,8 @@ fun SharedTransitionScope.ClientDetail(
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Ejemplo de visualización de datos
-                    Text(
-                        text = "Información del Cliente",
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
 
-                    AsyncImage(
-                        model = cliente?.imagenUrl,
-                        contentDescription = "Imagen del Cliente",
-                        modifier = Modifier
-                            .sharedElement(
-                                sharedContentState = rememberSharedContentState(key = "image-${cliente?.id}"),
-                                animatedVisibilityScope = animatedVisibilityScope
-                            )
-                            .size(100.dp)
-                            .clip(CircleShape)// Hace la imagen circular
-                            .border(
-                                2.dp,
-                                MaterialTheme.colorScheme.secondary,
-                                CircleShape
-                            ),// Pone un borde en la imagen
-                        contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                        placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
-                        error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     ElevatedButton(
                         onClick = {
@@ -167,12 +149,12 @@ fun SharedTransitionScope.ClientDetail(
                             disabledElevation = 0.dp
                         ),
                         modifier = Modifier
-                            .padding(8.dp)
+                            .padding(16.dp)
                             .height(50.dp)
                     ) {
                         Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar")
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Editar")
+                        Text(text = "Editar Cliente")
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -310,6 +292,35 @@ fun SharedTransitionScope.ClientDetail(
                     )
                 }
             }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(25.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                AsyncImage(
+                    model = cliente?.imagenUrl,
+                    contentDescription = "Imagen del Cliente",
+                    modifier = Modifier
+                        .sharedElement(
+                            sharedContentState = rememberSharedContentState(key = "image-${cliente?.id}"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                        .size(100.dp)
+                        .clip(CircleShape)// Hace la imagen circular
+                        .border(
+                            2.dp,
+                            MaterialTheme.colorScheme.secondary,
+                            CircleShape
+                        ),// Pone un borde en la imagen
+                    contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
+                    placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
+                    error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
+                )
+            }
+
         }
     }
 }

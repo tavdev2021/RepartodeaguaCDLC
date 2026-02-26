@@ -180,14 +180,18 @@ fun AppNavHost()
             }
 
             composable(
-                route = "updateClient/{clienteId}",
+                "updateClient/{clienteId}",
                 arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
             ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getInt("clienteId") ?: 0
+                val clienteId = backStackEntry.arguments?.getInt("clienteId") ?: 0
                 val context = LocalContext.current
 
-                // Obtén la instancia del ViewModel usando el factory, igual que en ClientDetail
+                // 1. Obtiene el ViewModel compartido desde el "padre" ("clientes")
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("clientes")
+                }
                 val clientesViewModel: ClientesViewModel = viewModel(
+                    viewModelStoreOwner = parentEntry,
                     factory = ClientesViewModelFactory(context)
                 )
 
@@ -196,11 +200,27 @@ fun AppNavHost()
                 )
 
                 UpdateClientScreen(
-                    clienteId = id,
+                    clienteId = clienteId,
                     clientesViewModel = clientesViewModel,
                     viewModel = viewModel,
+                    onUpdateSuccess = {
+                        clientesViewModel.refreshSelectedClient()
+
+                        navController.navigate("clienteDetails/$clienteId") {
+                            popUpTo("updateClient/$clienteId") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     // Suponiendo que UpdateClientScreen también tiene un onBack
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack()
+                    },
+
+                    onClientDeleted = {
+                        navController.navigate("clientes") {
+                            popUpTo("clientes") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 

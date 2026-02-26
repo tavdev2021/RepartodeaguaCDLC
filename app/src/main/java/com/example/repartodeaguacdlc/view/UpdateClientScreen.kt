@@ -26,6 +26,7 @@ import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material.icons.twotone.LocationOn
 import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Phone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,14 +40,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,7 +67,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
-import com.example.repartodeaguacdlc.model.Clientes
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 import kotlinx.coroutines.launch
@@ -75,26 +77,20 @@ fun UpdateClientScreen(
     clienteId: Int,
     clientesViewModel: ClientesViewModel,
     viewModel: ClientesUpdateViewModel,
-    onBack: () -> Unit
+    onUpdateSuccess: () -> Unit,
+    onBack: () -> Unit,
+    onClientDeleted: () -> Unit
 ) {
 
     // 1. Obtener el contexto de Android
     val context = LocalContext.current
 
-    // 1. Buscamos el cliente en la base de datos usando el ID
-    // Usamos produceState o collectAsState para observar el resultado
-    val cliente by produceState<Clientes?>(initialValue = null, clienteId) {
-        value = clientesViewModel.getClienteById(id = clienteId)
-    }
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+
+    val cliente by clientesViewModel.selectedClient.collectAsState()
 
     LaunchedEffect(cliente) {
-        cliente?.let { c ->
-            viewModel.onFullNameChange(c.nombre)
-            viewModel.onPhoneNumberChange(c.telefono)
-            viewModel.onEmailChangeRegister(c.email)
-            viewModel.onLocationChangeClient(c.ubicacion)
-            viewModel.onNotesClientChange(c.notas)
-        }
+        viewModel.loadClientData(cliente)
     }
 
     // Observar los valores de los campos desde el ViewModel
@@ -153,7 +149,7 @@ fun UpdateClientScreen(
         if (isSuccess) {
             Toast.makeText(context, "Cliente actualizado exitosamente", Toast.LENGTH_SHORT).show()
             viewModel.resetSuccess()
-            onBack()
+            onUpdateSuccess()
         }
     }
 
@@ -408,7 +404,11 @@ fun UpdateClientScreen(
                     ),
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
-                        viewModel.updateCliente(clienteId)
+                        viewModel.updateCliente(
+                            clienteId = clienteId,
+                            onUpdateComplete = {
+                                onUpdateSuccess()
+                            })
                     }),
                     isError = notesClientError != null,
                     supportingText = {
@@ -425,7 +425,11 @@ fun UpdateClientScreen(
                 Button(
                     onClick = {
                         focusManager.clearFocus()
-                        viewModel.updateCliente(clienteId)
+                        viewModel.updateCliente(
+                            clienteId = clienteId,
+                            onUpdateComplete = {
+                                onUpdateSuccess()
+                            })
                     },
                     enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && email.isNotBlank() && location.isNotBlank() && notasClient.isNotBlank()
                             && fullNameError == null && phoneError == null && emailError == null && locationError == null && notesClientError == null,
@@ -441,8 +445,57 @@ fun UpdateClientScreen(
 
                     Text("Actualizar", fontSize = 16.sp)
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Botón de texto para eliminar
+                TextButton(
+                    onClick = {
+                        // Mostrar el diálogo de confirmación en lugar de eliminar directamente
+                        showDeleteConfirmationDialog = true
+                    }
+                ) {
+                    Text(text = "Eliminar Cliente", color = MaterialTheme.colorScheme.error,
+                        fontSize = 20.sp)
+                }
             }
         }
+    }
+
+    // Diálogo de confirmación para eliminar
+    if (showDeleteConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // Cierra el diálogo si el usuario presiona fuera de él
+                showDeleteConfirmationDialog = false
+            },
+            title = { Text("Confirmar Eliminación") },
+            text = { Text("¿Estás seguro de que quieres eliminar a este cliente? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    modifier = Modifier.padding(8.dp),
+                    onClick = {
+                        cliente?.let {
+                                viewModel.deleteClient(it)
+                                showDeleteConfirmationDialog = false // Cierra el diálogo
+                                onClientDeleted() // Navega hacia atrás o a la lista principal
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmationDialog = false // Cierra el diálogo
+                    }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     // Overlay con blur elegante

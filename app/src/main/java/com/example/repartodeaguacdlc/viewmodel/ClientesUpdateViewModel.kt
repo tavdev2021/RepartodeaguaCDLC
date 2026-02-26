@@ -148,7 +148,7 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
         return isFullNameValid && isPhoneValid && isEmailValid && isLocationValid && isNotesValid
     }
 
-    fun updateCliente(clienteId: Int) {
+    fun updateCliente(clienteId: Int, onUpdateComplete: () -> Unit) {
         if (!validateRegisterForm())
         // No intentar la actualizacion si hay errores de validación
             return
@@ -175,18 +175,34 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
                 // 2. Guardar en Room (Local)
                 clientesRepository.updateCliente(updatedCliente)
 
-                // 3. Éxito: Limpiar los campos y errores de validación
-                clearInputsRegister()
-                clearErrorRegister()
 
-                // 4. Éxito: Mostrar mensaje de éxito
+                // 3. Éxito: Mostrar mensaje de éxito
                 _isSuccess.value = true
+                onUpdateComplete()
 
             } catch (e: Exception) {
                 _error.value = "Error al guardar localmente: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun loadClientData(cliente: Clientes?) {
+        cliente?.let {
+            _fullName.value = it.nombre
+            _phone.value = it.telefono
+            _emailRegisterClient.value = it.email
+            _locationClient.value = it.ubicacion
+            _notasClient.value = it.notas
+            // Limpia los errores al cargar un nuevo cliente
+            clearErrorRegister()
+        }
+    }
+
+    fun deleteClient(cliente: Clientes) {
+        viewModelScope.launch {
+            clientesRepository.deleteCliente(cliente)
         }
     }
 
