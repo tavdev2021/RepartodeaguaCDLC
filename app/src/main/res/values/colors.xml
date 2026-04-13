@@ -11,4 +11,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="azul_turquesa">#00B8D4</color>
     <color name="celeste_claro">#4FC3F7</color>
+    <color name="verde_agua">#00A896</color>
+    <color name="gray_light">#D3D3D3</color>
+
 </resources>

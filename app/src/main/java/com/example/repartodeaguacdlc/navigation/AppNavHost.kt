@@ -25,6 +25,7 @@ import com.example.repartodeaguacdlc.view.RegisterScreen
 import com.example.repartodeaguacdlc.view.SettingsApp
 import com.example.repartodeaguacdlc.view.SplashScreen
 import com.example.repartodeaguacdlc.view.UpdateClientScreen
+import com.example.repartodeaguacdlc.view.VentaScreen
 import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
@@ -175,6 +176,9 @@ fun AppNavHost()
                     onBack = { navController.popBackStack() },
                     onNavigateToEdit = { clienteId ->
                         navController.navigate("updateClient/$clienteId")
+                    },
+                    onNavigateToVenta = { clienteId ->
+                        navController.navigate("venta/$clienteId")
                     }
                 )
             }
@@ -222,6 +226,26 @@ fun AppNavHost()
                         }
                     }
                 )
+            }
+
+            composable("venta/{clienteId}",
+                arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val clienteId = backStackEntry.arguments?.getInt("clienteId") ?: 0
+                val context = LocalContext.current
+
+                // 1. Obtiene el ViewModel compartido desde el "padre" ("clientes")
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry("clientes")
+                }
+                val clientesViewModel: ClientesViewModel = viewModel(
+                    viewModelStoreOwner = parentEntry,
+                    factory = ClientesViewModelFactory(context)
+                )
+                VentaScreen(
+                    clientesViewModel = clientesViewModel,
+                    clienteId = clienteId,
+                    onBack = { navController.popBackStack() })
             }
 
             composable("settings") {

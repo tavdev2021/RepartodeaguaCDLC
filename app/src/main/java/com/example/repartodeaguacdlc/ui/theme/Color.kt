@@ -16,7 +16,7 @@ val secondaryContainerLight = Color(0xFFA7F3D0)
 val onSecondaryContainerLight = Color(0xFF004D40)
 
 val tertiaryLight = Color(0xFFBBDEFB)     // Verde natural (vida, salud)
-val onTertiaryLight = Color.White
+val onTertiaryLight = Color(0xFFF5F7FA)
 val tertiaryContainerLight = Color(0xFFC8E6C9)
 val onTertiaryContainerLight = Color(0xFF1B5E20)
 

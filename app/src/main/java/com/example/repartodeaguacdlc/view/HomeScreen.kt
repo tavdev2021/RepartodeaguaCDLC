@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,13 +25,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -105,7 +101,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.2f),
+                        .fillMaxHeight(0.15f),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -113,7 +109,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 40.dp, start = 10.dp),
+                            .padding(top = 30.dp, start = 10.dp),
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -150,7 +146,7 @@ fun HomeScreen(viewModel: AuthViewModel,
 
                         Column(
                             horizontalAlignment = Alignment.Start,
-                            verticalArrangement = Arrangement.Top
+                            verticalArrangement = Arrangement.Center
 
                         ) {
 
@@ -177,15 +173,26 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 modifier = Modifier.padding(start = 8.dp, top = 0.dp)
                             )
                         }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+
+                        Icon(
+                            painter = painterResource(id = R.drawable.logout_icon),
+                            contentDescription = "Logout Icon",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .padding(end = 16.dp)
+                                .clickable(onClick = {viewModel.logout()}),
+                        )
                     }
                 }
 
                 Card(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .offset(y = (-50).dp)
                         .fillMaxWidth()
-                        .fillMaxHeight(0.8f),
+                        .fillMaxHeight(0.88f),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -226,7 +233,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Image(painter = painterResource(id = R.drawable.water_drop),
-                                    contentDescription = "Money Icon",
+                                    contentDescription = "Water Drop Icon",
                                     modifier = Modifier
                                         .size(48.dp)
                                         .padding(start = 8.dp),
@@ -391,8 +398,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                                             .height(130.dp)
                                             .clickable(onClick = accion.action),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                                            containerColor = MaterialTheme.colorScheme.surface,
+                                            contentColor = MaterialTheme.colorScheme.onSurface),
                                         shape = RoundedCornerShape(16.dp),
                                         elevation = CardDefaults.cardElevation(4.dp)
                                     ) {
@@ -427,23 +434,6 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 .padding(16.dp)
                         ) {
 
-                            OutlinedButton(
-                                onClick = { viewModel.logout() },
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .offset(y = (-25).dp)
-                                    .fillMaxWidth()
-                                    .height(50.dp)
-                                    .padding(horizontal = 8.dp)
-                                    .shadow(4.dp, shape = RoundedCornerShape(12.dp)),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary
-                                )
-                            ) {
-                                Text(stringResource(R.string.button_logout), fontSize = 16.sp)
-                            }
                         }
                     }
                 }

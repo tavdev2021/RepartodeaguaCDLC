@@ -23,11 +23,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -65,6 +65,7 @@ fun SharedTransitionScope.ClientDetail(
     animatedVisibilityScope: AnimatedVisibilityScope,
     clientesViewModel: ClientesViewModel,
     onNavigateToEdit: (Int) -> Unit,
+    onNavigateToVenta: (Int) -> Unit,
     onBack: () -> Unit) {
 
     val context = LocalContext.current
@@ -74,6 +75,20 @@ fun SharedTransitionScope.ClientDetail(
         cliente?.ubicacion?.let { ubicacion ->
             val gmmIntentUri = "geo:0,0?q=$ubicacion&z=15".toUri()
             Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        }
+    }
+
+    val callIntent = remember(cliente?.telefono) {
+        cliente?.telefono?.let { telefono ->
+            val callUri = "tel:$telefono"
+            Intent(Intent.ACTION_DIAL, callUri.toUri())
+        }
+    }
+
+    val messageIntent = remember(cliente?.telefono) {
+        cliente?.telefono?.let { telefono ->
+            val messageUri = "smsto:$telefono"
+            Intent(Intent.ACTION_SENDTO, messageUri.toUri())
         }
     }
 
@@ -94,6 +109,14 @@ fun SharedTransitionScope.ClientDetail(
                     IconButton(onClick = { onBack() }) { // <--- AQUÍ SE USA onBack
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onNavigateToEdit(cliente!!.id) }) {
+                        Icon(
+                            imageVector = Icons.TwoTone.Edit,
                             contentDescription = "Regresar"
                         )
                     }
@@ -124,9 +147,9 @@ fun SharedTransitionScope.ClientDetail(
                     )
                     .fillMaxSize(),
                 shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    containerColor = MaterialTheme.colorScheme.onPrimary,
                 )
             ) {
                 // 2. Diseño del contenido del detalle
@@ -137,27 +160,7 @@ fun SharedTransitionScope.ClientDetail(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    ElevatedButton(
-                        onClick = {
-                            onNavigateToEdit(cliente!!.id)
-                        },
-                        elevation = ButtonDefaults.elevatedButtonElevation(
-                            defaultElevation = 6.dp,
-                            pressedElevation = 2.dp,
-                            disabledElevation = 0.dp
-                        ),
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .height(50.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Editar Cliente")
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     Row(
                         modifier = Modifier
@@ -171,7 +174,16 @@ fun SharedTransitionScope.ClientDetail(
                         ) {
                             ElevatedButton(
                                 onClick = {
-                                    Toast.makeText(context, "Llamar", Toast.LENGTH_SHORT).show()
+                                    if (callIntent != null) {
+                                        if (callIntent.resolveActivity(context.packageManager) != null) {
+                                            context.startActivity(callIntent)
+                                        } else {
+                                            Toast.makeText(context, "No se encontro una aplicacion para llamar", Toast.LENGTH_SHORT).show()
+                                            // Si no se encuentra ninguna app para llamar, muestra un mensaje")
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Número de teléfono no disponible.", Toast.LENGTH_SHORT).show()
+                                    }
                                 },
                                 elevation = ButtonDefaults.elevatedButtonElevation(
                                     defaultElevation = 6.dp,
@@ -194,7 +206,16 @@ fun SharedTransitionScope.ClientDetail(
                         ) {
                             ElevatedButton(
                                 onClick = {
-                                    Toast.makeText(context, "Mensaje", Toast.LENGTH_SHORT).show()
+                                    if (messageIntent != null) {
+                                        if (messageIntent.resolveActivity(context.packageManager) != null) {
+                                            context.startActivity(messageIntent)
+                                        } else {
+                                            Toast.makeText(context, "No se encontro una aplicacion para enviar mensajes", Toast.LENGTH_SHORT).show()
+                                            // Si no se encuentra ninguna app para llamar, muestra un mensaje")
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Número de teléfono no disponible.", Toast.LENGTH_SHORT).show()
+                                    }
                                 },
                                 elevation = ButtonDefaults.elevatedButtonElevation(
                                     defaultElevation = 6.dp,
@@ -258,7 +279,7 @@ fun SharedTransitionScope.ClientDetail(
                         ) {
                             ElevatedButton(
                                 onClick = {
-                                    Toast.makeText(context, "Venta", Toast.LENGTH_SHORT).show()
+                                    cliente?.let { onNavigateToVenta(it.id) }
                                 },
                                 elevation = ButtonDefaults.elevatedButtonElevation(
                                     defaultElevation = 6.dp,

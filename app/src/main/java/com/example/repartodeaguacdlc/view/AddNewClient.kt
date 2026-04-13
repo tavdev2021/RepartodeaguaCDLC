@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Create
 import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material.icons.twotone.LocationOn
+import androidx.compose.material.icons.twotone.LocationSearching
 import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Phone
 import androidx.compose.material3.Button
@@ -345,7 +346,7 @@ fun AddNewClient(
                             )
                         )
                     }) {
-                        Icon(painter = painterResource(id = R.drawable.outline_map),
+                        Icon(Icons.TwoTone.LocationSearching,
                             contentDescription = "Map Icon",
                             modifier = Modifier
                                 .size(28.dp)
