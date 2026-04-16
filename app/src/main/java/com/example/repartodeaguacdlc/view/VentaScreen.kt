@@ -1,5 +1,6 @@
 package com.example.repartodeaguacdlc.view
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -54,18 +56,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.repartodeaguacdlc.R
+import com.example.repartodeaguacdlc.model.Productos
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VentaScreen(
     clienteId: Int,
     clientesViewModel: ClientesViewModel,
+    productosViewModel: ProductosViewModel,
     clienteDireccion: String = "Av. Libertador 1234, Centro",
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onBackToClientList: () -> Unit
 ) {
     val cliente by clientesViewModel.selectedClient.collectAsState()
+    val listaProductos by productosViewModel.productos.collectAsState()
+    val total by productosViewModel.totalPagar.collectAsState(initial = 0.0)
+    val articulos by productosViewModel.totalArticulos.collectAsState(initial = 0)
+
     var metodoSeleccionado by remember { mutableStateOf("Efectivo") }
     Scaffold(
         topBar = {
@@ -87,8 +96,24 @@ fun VentaScreen(
             )
         },
         bottomBar = {
+            val context = LocalContext.current
             // Barra inferior con el total y botón finalizar
-            VentaBottomBarMock()
+            VentaBottomBar(
+                total = total,
+                cantidadArticulos = articulos,
+                onFinalizar = {
+
+                    productosViewModel.finalizarVenta(
+                        clienteId = clienteId,
+                        metodoPago = metodoSeleccionado,
+                        onSuccess = {
+                            Toast.makeText(context, "Venta generada con exito", Toast.LENGTH_SHORT).show()
+                            onBackToClientList() // Regresa a la lista de clientes
+                        }
+                    )
+
+                }
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -135,7 +160,7 @@ fun VentaScreen(
                             .padding(start = 12.dp)
                             .weight(1f)) {
                             Text("Cliente Seleccionado", color = Color(0xFF1976D2), style = MaterialTheme.typography.labelSmall)
-                            Text(cliente?.nombre ?: "", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                            Text(cliente?.nombre ?: "Cargando...", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
                             Text(clienteDireccion, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         }
                         // Icono de gota de fondo (decorativo)
@@ -157,13 +182,17 @@ fun VentaScreen(
                     fontWeight = FontWeight.Bold)
             }
 
-            items(6) { index ->
-                val imagen = listOf(R.drawable.garrafon_agua, R.drawable.agua_pack, R.drawable.splash, R.drawable.splash, R.drawable.splash, R.drawable.splash)
-                val titulos = listOf("Agua Purificada", "Pack 12x 500ml", "Dispensador", "Agua en bolsita 500ml Caja", "Hielo en bolsa", "Hielo en barra")
-                val precios = listOf("$5.00 c/u", "$8.00 / pack", "$10.00 c/u", "$50.00 c/u", "$50.00 c/u", "$60.00 c/u")
-                val subtotales = listOf("$10.00", "16.00", "$20.00", "$100.00", "$100.00", "$120.00")
-
-                ProductoItemMock(imagen[index],titulos[index], precios[index], subtotales[index])
+            items(listaProductos.size) { index ->
+                val producto = listaProductos[index]
+                ProductoItem(
+                    producto = producto,
+                    onIncrement = {
+                        productosViewModel.actualizarCantidad(producto.id, producto.cantidad + 1)
+                    },
+                    onDecrement = {
+                        productosViewModel.actualizarCantidad(producto.id, producto.cantidad - 1)
+                    }
+                )
             }
 
             // Sección Método de pago
@@ -228,94 +257,67 @@ fun VentaScreen(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
-fun ProductoItemMock(imagen: Int, nombre: String, precio: String, subtotal: String) {
+fun ProductoItem(
+    producto: Productos, // Tu Data Class
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit
+) {
+    val subtotal = producto.precio * producto.cantidad
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Placeholder de imagen
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(id = producto.imagenRes),
+                contentDescription = null,
+                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF03A9F4).copy(alpha = 0.1f))
+            )
 
-                Image(painter = painterResource(id = imagen), contentDescription = null,
-                        modifier = Modifier
-                        .size(64.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                    .background(Color(0xFF03A9F4).copy(alpha = 0.3f)))
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                Text(producto.nombre, fontWeight = FontWeight.Bold)
+                Text("$${producto.precio} c/u", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
 
-            Column(modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp)) {
-                Text(nombre, fontWeight = FontWeight.Bold)
-                Text(precio, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-
-                // Badge de Subtotal
-                Surface(
-                    color = Color(0xFFE8EAF6),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Text(
-                        subtotal,
-                        modifier = Modifier.padding(
-                            horizontal = 6.dp,
-                            vertical = 2.dp
-                        ),
-                        color = Color(0xFF3F51B5),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (producto.cantidad > 0) {
+                    Surface(color = Color(0xFFE8EAF6), shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(top = 4.dp)) {
+                        Text("Subtotal: $${String.format("%.2f", subtotal)}", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF3F51B5), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 
-            // Controles de cantidad
+            // Botones conectados a las lambdas
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = { },
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(Color(0xFFF5F5F5), CircleShape)
-                ) {
-                    Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(
-                        18.dp
-                    ))
+                IconButton(onClick = onDecrement, modifier = Modifier.size(32.dp).background(Color(0xFFF5F5F5), CircleShape)) {
+                    Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(18.dp))
                 }
-
-                Text("2", modifier = Modifier.padding(horizontal = 12.dp), fontWeight = FontWeight.Bold)
-
-                IconButton(
-                    onClick = { },
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(Color(0xFF2196F3), CircleShape)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(18.dp)
-                    )
+                Text("${producto.cantidad}", modifier = Modifier.padding(horizontal = 12.dp), fontWeight = FontWeight.Bold)
+                IconButton(onClick = onIncrement, modifier = Modifier.size(32.dp).background(Color(0xFF2196F3), CircleShape)) {
+                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                 }
             }
         }
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
-fun VentaBottomBarMock() {
-    val context = LocalContext.current
+fun VentaBottomBar(
+    total: Double,
+    cantidadArticulos: Int,
+    onFinalizar: () -> Unit
+) {
     Surface(
         shadowElevation = 16.dp,
         color = Color.White,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(modifier = Modifier
+            .navigationBarsPadding()
             .padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -324,16 +326,17 @@ fun VentaBottomBarMock() {
             ) {
                 Column {
                     Text("TOTAL A PAGAR", color = Color.Gray, style = MaterialTheme.typography.labelMedium)
-                    Text("6 artículos", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                    Text("$cantidadArticulos artículos", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
                 }
-                Text("$46.00", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
+                Text("$${String.format("%.2f", total)}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* Próximamente lógica Room */
-                    Toast.makeText(context, "Venta finalizada", Toast.LENGTH_SHORT).show()},
+                onClick = /* Próximamente lógica Room */
+                    onFinalizar,
+                enabled = cantidadArticulos > 0,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

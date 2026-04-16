@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.repartodeaguacdlc.data.ClientesUpdateViewModelFactory
 import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
+import com.example.repartodeaguacdlc.data.ProductosViewModelFactory
 import com.example.repartodeaguacdlc.view.AddNewClient
 import com.example.repartodeaguacdlc.view.ClientDetail
 import com.example.repartodeaguacdlc.view.ClientesList
@@ -29,6 +30,7 @@ import com.example.repartodeaguacdlc.view.VentaScreen
 import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -229,7 +231,7 @@ fun AppNavHost()
             }
 
             composable("venta/{clienteId}",
-                arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
+                arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
             ) { backStackEntry ->
                 val clienteId = backStackEntry.arguments?.getInt("clienteId") ?: 0
                 val context = LocalContext.current
@@ -242,10 +244,31 @@ fun AppNavHost()
                     viewModelStoreOwner = parentEntry,
                     factory = ClientesViewModelFactory(context)
                 )
+
+                remember(clienteId) {
+                    clientesViewModel.selectClient(clienteId)
+                    true
+                }
+
+                val productosViewModel: ProductosViewModel = viewModel(
+                    factory = ProductosViewModelFactory(context)
+                )
                 VentaScreen(
                     clientesViewModel = clientesViewModel,
+                    productosViewModel = productosViewModel,
                     clienteId = clienteId,
-                    onBack = { navController.popBackStack() })
+                    onBack = {
+                        productosViewModel.limpiarCarrito()
+                        navController.popBackStack()
+                     },
+                    onBackToClientList = {
+                        productosViewModel.limpiarCarrito()
+                        navController.navigate("clientes") {
+                            popUpTo("clientes") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
 
             composable("settings") {
