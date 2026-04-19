@@ -84,6 +84,7 @@ dependencies {
     //Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.firebase.firestore.ktx)
     ksp(libs.room.compiler)
 
     //Google Maps

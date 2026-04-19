@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,11 +52,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.Productos
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
@@ -149,12 +153,34 @@ fun VentaScreen(
                             color = Color(0xFFBBDEFB),
                             modifier = Modifier.size(48.dp)
                         ) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                modifier = Modifier.padding(8.dp),
-                                tint = Color(0xFF1976D2)
-                            )
+                            //Foto de perfil
+                            val imageUrl = cliente?.imagenUrl
+                            //val imageUrl = "https://i.pravatar.cc/300"
+                            if (imageUrl != null) {
+                                AsyncImage(
+                                    model = imageUrl,
+                                    contentDescription = "Imagen de perfil",
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(CircleShape)
+                                        .border(
+                                            2.dp,
+                                            MaterialTheme.colorScheme.secondary,
+                                            CircleShape
+                                        ),
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = painterResource(id = R.drawable.ic_downloading),
+                                    error = painterResource(id = R.drawable.ic_error)
+                                )
+                            } else {
+
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(8.dp),
+                                    tint = Color(0xFF1976D2)
+                                )
+                            }
                         }
                         Column(modifier = Modifier
                             .padding(start = 12.dp)

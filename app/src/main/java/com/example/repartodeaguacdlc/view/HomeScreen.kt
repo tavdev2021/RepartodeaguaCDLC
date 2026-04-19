@@ -50,6 +50,7 @@ import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.AccionRapida
 import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
+import com.google.firebase.Firebase
 import java.text.DateFormat
 
 
@@ -65,6 +66,7 @@ fun HomeScreen(viewModel: AuthViewModel,
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
     val user by viewModel.currentUser.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val userProfile by viewModel.userProfile.collectAsState()
 
     val context = LocalContext.current
 
@@ -82,7 +84,15 @@ fun HomeScreen(viewModel: AuthViewModel,
     )
 
     LaunchedEffect(isAuthenticated) {
-        if (!isAuthenticated) onLogout()
+        if (!isAuthenticated && !isLoading) {
+            onLogout()
+        }
+    }
+
+    LaunchedEffect(user) {
+        if (user != null) {
+            viewModel.fetchUserData()
+        }
     }
 
     Box(
@@ -115,8 +125,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                     ) {
 
                         //Foto de perfil
-                        //val imageUrl = firebaseUser.photoUrl
-                        val imageUrl = "https://i.pravatar.cc/300"
+                        val imageUrl = firebaseUser.photoUrl
+                        //val imageUrl = "https://i.pravatar.cc/300"
                         if (imageUrl != null) {
                             AsyncImage(
                                 model = imageUrl,
@@ -151,10 +161,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                         ) {
 
                             Text(
-                                (stringResource(R.string.name_hello) + " " + firebaseUser.displayName?.split(
-                                    " "
-                                )
-                                    ?.firstOrNull()),
+                                text = (stringResource(R.string.name_hello) + " " +
+                                        (firebaseUser.displayName?.split(" ")?.firstOrNull() ?: "Usuario")),
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 18.sp
@@ -163,8 +171,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 modifier = Modifier.padding(start = 8.dp)
                             )
 
-                            Text(
-                                stringResource(R.string.name_route),
+                            Text("Ruta: ${userProfile?.ruta ?: "Cargando..."}",
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontWeight = FontWeight.Light,
                                     fontSize = 16.sp

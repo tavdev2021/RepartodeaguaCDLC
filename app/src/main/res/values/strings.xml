@@ -25,6 +25,7 @@
     <string name="email_register">Correo electrónico</string>
     <string name="contrasena_register">Contraseña</string>
     <string name="confirmar_contrasena">Confirmar Contraseña</string>
+    <string name="ruta_asignada">Ruta Asignada</string>
     <string name="button_register">Registrar</string>>
     <string name="ya_tienes_cuenta">Ya tienes una cuenta? Inicia sesión</string>
 

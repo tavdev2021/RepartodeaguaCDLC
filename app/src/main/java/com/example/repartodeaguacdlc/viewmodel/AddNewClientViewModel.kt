@@ -169,7 +169,7 @@ class AddNewClientViewModel(
                     email = _emailRegisterClient.value,
                     ubicacion = _locationClient.value,
                     notas = _notasClient.value,
-                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&length=3",
+                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=random&length=2",
                     fechaRegistro = System.currentTimeMillis()
                 )
 

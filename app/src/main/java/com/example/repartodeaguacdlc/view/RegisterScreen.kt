@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material.icons.twotone.Lock
 import androidx.compose.material.icons.twotone.Person
+import androidx.compose.material.icons.twotone.Route
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -75,12 +76,15 @@ fun RegisterScreen(
     val email by viewModel.emailRegister.collectAsState()
     val password by viewModel.passwordRegister.collectAsState()
     val confirmPassword by viewModel.confirmPasswordRegister.collectAsState()
+    val rutaAsignada by viewModel.rutaAsignada.collectAsState()
 
     // Observar los errores de los campos desde el ViewModel
     val fullNameError by viewModel.fullNameError.collectAsState()
     val emailError by viewModel.emailErrorRegister.collectAsState()
     val passwordError by viewModel.passwordErrorRegister.collectAsState()
     val confirmPasswordError by viewModel.confirmPasswordErrorRegister.collectAsState()
+    val rutaAsignadaError by viewModel.rutaAsignadaError.collectAsState()
+
 
     val error by viewModel.error.collectAsState()
     val focusManager = LocalFocusManager.current
@@ -268,11 +272,10 @@ fun RegisterScreen(
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Password,
-                    showKeyboardOnFocus = true, imeAction = ImeAction.Done
+                    showKeyboardOnFocus = true, imeAction = ImeAction.Next
                 ),
-                keyboardActions = KeyboardActions(onDone = {
-                    focusManager.clearFocus()
-                    viewModel.register()
+                keyboardActions = KeyboardActions(onNext = {
+                    focusManager.moveFocus(FocusDirection.Down)
                 }),
                 isError = confirmPasswordError != null,
                 supportingText = {
@@ -297,11 +300,42 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(if (confirmPasswordError != null) 8.dp else 16.dp)) // Menos espacio si hay error
 
+            OutlinedTextField(
+                value = rutaAsignada,
+                onValueChange = { viewModel.onRutaAsignadaChange(it) },
+                label = { Text(stringResource(R.string.ruta_asignada)) },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
+                    Icon(Icons.TwoTone.Route, contentDescription = "Route Icon")
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Text,
+                    capitalization = KeyboardCapitalization.Words,
+                    showKeyboardOnFocus = true, imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                    viewModel.register()
+                }),
+                isError = rutaAsignadaError != null,
+                supportingText = {
+                    rutaAsignadaError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(if (confirmPasswordError != null) 8.dp else 16.dp)) // Menos espacio si hay error
+
             Button(onClick = {
                 focusManager.clearFocus()
                 viewModel.register()
             },
-                enabled = !isLoading && fullName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && emailError == null && passwordError == null && confirmPasswordError == null,
+                enabled = !isLoading && fullName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && rutaAsignada.isNotBlank() && fullNameError == null && emailError == null && passwordError == null && confirmPasswordError == null && rutaAsignadaError == null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),

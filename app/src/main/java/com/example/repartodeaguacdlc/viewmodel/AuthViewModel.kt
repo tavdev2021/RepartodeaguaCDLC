@@ -3,6 +3,7 @@ package com.example.repartodeaguacdlc.viewmodel
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.repartodeaguacdlc.model.UserProfile
 import com.example.repartodeaguacdlc.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.delay
@@ -14,6 +15,9 @@ import kotlinx.coroutines.launch
 class AuthViewModel(
     private val repository: AuthRepository = AuthRepository()
 ): ViewModel() {
+
+    private val _userProfile = MutableStateFlow<UserProfile?>(null)
+    val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
 
     private val _isAuthenticated = MutableStateFlow(repository.currentUser != null)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated.asStateFlow()
@@ -45,6 +49,9 @@ class AuthViewModel(
     private val _confirmPasswordRegister = MutableStateFlow("")
     val confirmPasswordRegister: StateFlow<String> = _confirmPasswordRegister.asStateFlow()
 
+    private val _rutaAsignada = MutableStateFlow("")
+    val rutaAsignada: StateFlow<String> = _rutaAsignada.asStateFlow()
+
     // Estados para los errores de los campos
     private val _fullNameError = MutableStateFlow<String?>(null)
     val fullNameError: StateFlow<String?> = _fullNameError.asStateFlow()
@@ -63,6 +70,9 @@ class AuthViewModel(
 
     private val _confirmPasswordErrorRegister = MutableStateFlow<String?>(null)
     val confirmPasswordErrorRegister: StateFlow<String?> = _confirmPasswordErrorRegister.asStateFlow()
+
+    private val _rutaAsignadaError = MutableStateFlow<String?>(null)
+    val rutaAsignadaError: StateFlow<String?> = _rutaAsignadaError.asStateFlow()
 
 
     init {
@@ -116,12 +126,17 @@ class AuthViewModel(
         }
     }
 
+    fun onRutaAsignadaChange(newRutaAsignada: String) {
+        _rutaAsignada.value = newRutaAsignada
+        _rutaAsignadaError.value = validateRutaAsignada(newRutaAsignada)
+    }
+
     // --- Funciones de Validación ---
     private fun validateFullName(fullName: String): String? {
         if (fullName.isBlank()) {
             return "El nombre no puede estar vacío."
-        } else if (fullName.length < 3) {
-            return "El nombre debe tener al menos 3 caracteres."
+        } else if (fullName.length < 5) {
+            return "El nombre debe tener al menos 5 caracteres."
         } else if (!fullName.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$"))) {
             return "El nombre solo puede contener letras y espacios."
         }
@@ -160,7 +175,7 @@ class AuthViewModel(
         }
         // Si confirmPasswordValue no es null y no está vacío, y no coincide, añade error
         // Esto se puede hacer más elegante, pero es un ejemplo
-        if (confirmPasswordValue != null && confirmPasswordValue.isNotEmpty() && password != confirmPasswordValue) {
+        if (!confirmPasswordValue.isNullOrEmpty() && password != confirmPasswordValue) {
             // Podríamos devolver un error específico o dejar que validateConfirmPassword lo maneje.
             // Por ahora, solo validamos la contraseña en sí.
             // La validación de coincidencia se hará en validateConfirmPassword.
@@ -173,6 +188,13 @@ class AuthViewModel(
             return "Confirma tu contraseña."
         }else if (passwordValue != confirmPasswordValue) {
             return "Las contraseñas no coinciden."
+        }
+        return null
+    }
+
+    private fun validateRutaAsignada(rutaAsignada: String): String? {
+        if (rutaAsignada.isBlank()) {
+            return "La ruta no puede estar vacía."
         }
         return null
     }
@@ -228,12 +250,34 @@ class AuthViewModel(
         }
         viewModelScope.launch {
             _isLoading.value = true
-            val result = repository.register(_fullName.value,_emailRegister.value, _passwordRegister.value)
-            _isLoading.value = false
-            result.onFailure { _error.value = it.message ?: "Error desconocido durante el registro"
+
+            val imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=random&length=2"
+
+            val result = repository.register(_fullName.value,_emailRegister.value, _passwordRegister.value, imagenUrl = imagenUrl, _rutaAsignada.value)
+            result.onSuccess {
+                // 1. Forzar la actualización del usuario actual con los datos nuevos
+                _currentUser.value = repository.currentUser
+
+                // 2. Cargar los datos de Firestore inmediatamente
+                fetchUserData()
+
+                // 3. Marcar como autenticado
+                _isAuthenticated.value = true
+            }.onFailure {
+                _error.value = it.message ?: "Error desconocido durante el registro"
             _passwordRegister.value = ""
-            _confirmPasswordRegister.value = ""}
-            _currentUser.value = repository.currentUser
+            _confirmPasswordRegister.value = ""
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun fetchUserData() {
+        viewModelScope.launch {
+            val ruta = repository.getRutaAsignada()
+            val nombre = repository.currentUser?.displayName ?: ""
+            val imageUrl = repository.currentUser?.photoUrl?.toString()
+            _userProfile.value = UserProfile(nombre, ruta, imageUrl ?: "Sin ruta")
         }
     }
 
@@ -273,6 +317,7 @@ class AuthViewModel(
         _emailRegister.value = ""
         _passwordRegister.value = ""
         _confirmPasswordRegister.value = ""
+        _rutaAsignada.value = ""
     }
 
     fun clearErrorRegister(){
@@ -280,5 +325,6 @@ class AuthViewModel(
         _emailErrorRegister.value = null
         _passwordErrorRegister.value = null
         _confirmPasswordErrorRegister.value = null
+        _rutaAsignadaError.value = null
     }
 }
