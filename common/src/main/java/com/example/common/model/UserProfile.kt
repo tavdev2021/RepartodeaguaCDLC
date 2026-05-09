@@ -1,4 +1,4 @@
-package com.example.repartodeaguacdlc.model
+package com.example.common.model
 
 data class UserProfile(
     val nombre: String = "",

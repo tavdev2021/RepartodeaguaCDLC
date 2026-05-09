@@ -25,3 +25,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Reparto de agua CDLC"
 include(":app")
+include(":common")
+include(":admin_app")

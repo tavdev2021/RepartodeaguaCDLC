@@ -21,7 +21,11 @@ import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Route
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -70,6 +74,7 @@ fun RegisterScreen(
 ) {
 
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+    val availableRoutes by viewModel.availableRoutes.collectAsState()
 
     // Observar los valores de los campos desde el ViewModel
     val fullName by viewModel.fullName.collectAsState()
@@ -91,6 +96,7 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
+    var expanded by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -300,36 +306,63 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(if (confirmPasswordError != null) 8.dp else 16.dp)) // Menos espacio si hay error
 
-            OutlinedTextField(
-                value = rutaAsignada,
-                onValueChange = { viewModel.onRutaAsignadaChange(it) },
-                label = { Text(stringResource(R.string.ruta_asignada)) },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                leadingIcon = {
-                    Icon(Icons.TwoTone.Route, contentDescription = "Route Icon")
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Text,
-                    capitalization = KeyboardCapitalization.Words,
-                    showKeyboardOnFocus = true, imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = {
-                    focusManager.clearFocus()
-                    viewModel.register()
-                }),
-                isError = rutaAsignadaError != null,
-                supportingText = {
-                    rutaAsignadaError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            // Contenedor principal del Dropdown
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }, // Abre/Cierra al tocar
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = rutaAsignada,
+                    onValueChange = { }, // No permitimos escribir, se cambia vía el menú
+                    readOnly = true,    // Importante: Hace que el campo sea solo de selección
+                    label = { Text(stringResource(R.string.ruta_asignada)) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        // .menuAnchor vincula el menú al TextField para que flote debajo
+                        .menuAnchor(
+                            ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                            true
+                        ),
+                    leadingIcon = {
+                        Icon(Icons.TwoTone.Route, contentDescription = "Route Icon")
+                    },
+                    // El icono de la flechita que gira (Material 3 standard)
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    isError = rutaAsignadaError != null,
+                    supportingText = {
+                        rutaAsignadaError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
                 )
-            )
 
-            Spacer(modifier = Modifier.height(if (confirmPasswordError != null) 8.dp else 16.dp)) // Menos espacio si hay error
+                // Este es el menú que aparece al hacer click
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false } // Se cierra si tocas fuera
+                ) {
+                    // Iteramos sobre la lista que viene del ViewModel
+                    availableRoutes.forEach { route ->
+                        DropdownMenuItem(
+                            text = { Text(route) },
+                            onClick = {
+                                viewModel.onRutaAsignadaChange(route) // Avisamos al VM la ruta elegida
+                                expanded = false // Cerramos el menú
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(if (rutaAsignadaError != null) 8.dp else 16.dp)) // Menos espacio si hay error
 
             Button(onClick = {
                 focusManager.clearFocus()

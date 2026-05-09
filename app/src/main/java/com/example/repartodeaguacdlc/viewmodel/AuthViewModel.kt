@@ -3,7 +3,7 @@ package com.example.repartodeaguacdlc.viewmodel
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.repartodeaguacdlc.model.UserProfile
+import com.example.common.model.UserProfile
 import com.example.repartodeaguacdlc.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.delay
@@ -52,6 +52,9 @@ class AuthViewModel(
     private val _rutaAsignada = MutableStateFlow("")
     val rutaAsignada: StateFlow<String> = _rutaAsignada.asStateFlow()
 
+    private val _availableRoutes = MutableStateFlow<List<String>>(emptyList())
+    val availableRoutes: StateFlow<List<String>> = _availableRoutes.asStateFlow()
+
     // Estados para los errores de los campos
     private val _fullNameError = MutableStateFlow<String?>(null)
     val fullNameError: StateFlow<String?> = _fullNameError.asStateFlow()
@@ -76,6 +79,9 @@ class AuthViewModel(
 
 
     init {
+
+        fetchAvailableRoutes()
+
         viewModelScope.launch {
             repository.getAuthState().collect { loggedIn ->
                 _isAuthenticated.value = loggedIn
@@ -129,6 +135,18 @@ class AuthViewModel(
     fun onRutaAsignadaChange(newRutaAsignada: String) {
         _rutaAsignada.value = newRutaAsignada
         _rutaAsignadaError.value = validateRutaAsignada(newRutaAsignada)
+    }
+
+    // --- NUEVO: Función para obtener rutas (por ahora estática) ---
+    private fun fetchAvailableRoutes() {
+        // En el futuro, aquí harás una llamada a repository o Firestore
+        _availableRoutes.value = listOf(
+            "Arroyo Grande - Centro",
+            "Arroyo Grande - Sur",
+            "La Laja - El Timbinal",
+            "La Cienega",
+            "La Cañada - El pinzan"
+        )
     }
 
     // --- Funciones de Validación ---
