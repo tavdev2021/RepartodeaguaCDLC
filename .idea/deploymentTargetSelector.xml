@@ -2,15 +2,15 @@
 <project version="4">
   <component name="deploymentTargetSelector">
     <selectionStates>
-      <SelectionState runConfigName="app">
+      <SelectionState runConfigName="admin_app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-04-15T05:47:40.065592Z">
+        <DropdownSelection timestamp="2026-05-23T00:48:47.010519Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="FirebaseDirectAccess" identifier="reservation=projects/reparto-de-agua-3bb1a/deviceSessions/session-as3a1ppfkxcpa" />
+              <DeviceId pluginId="FirebaseDirectAccess" identifier="reservation=projects/reparto-de-agua-3bb1a/deviceSessions/session-1umewko8wtd55" />
             </handle>
             <template>
-              <DeviceId pluginId="FirebaseDirectAccess" type="TEMPLATE" identifier="model_id=fogona/34" />
+              <DeviceId pluginId="FirebaseDirectAccess" type="TEMPLATE" identifier="model_id=e3qksx/36" />
             </template>
           </Target>
         </DropdownSelection>
@@ -24,7 +24,7 @@
           </targets>
         </DialogSelection>
       </SelectionState>
-      <SelectionState runConfigName="admin_app">
+      <SelectionState runConfigName="repartidor_app">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-04-15T05:47:40.065592Z">
           <Target type="DEFAULT_BOOT">

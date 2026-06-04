@@ -49,8 +49,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.AccionRapida
-import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
-import com.google.firebase.Firebase
+import com.example.common.viewmodel.AuthViewModel
 import java.text.DateFormat
 
 
@@ -63,10 +62,18 @@ fun HomeScreen(viewModel: AuthViewModel,
                onSettings:() -> Unit,
                onLogout: () -> Unit) {
 
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+    //val isAuthenticated by viewModel.isAuthenticated.collectAsState()
     val user by viewModel.currentUser.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val userProfile by viewModel.userProfile.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            if (event is AuthViewModel.AuthEvent.NavigateToLogin) {
+                onLogout() // Esta es la función que viene del NavHost
+            }
+        }
+    }
 
     val context = LocalContext.current
 
@@ -82,18 +89,6 @@ fun HomeScreen(viewModel: AuthViewModel,
         AccionRapida(R.drawable.inventario, "Inventario", onPedidos),
         AccionRapida(R.drawable.ruta, "Ruta", onSettings)
     )
-
-    LaunchedEffect(isAuthenticated) {
-        if (!isAuthenticated && !isLoading) {
-            onLogout()
-        }
-    }
-
-    LaunchedEffect(user) {
-        if (user != null) {
-            viewModel.fetchUserData()
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -190,7 +185,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                             modifier = Modifier
                                 .size(48.dp)
                                 .padding(end = 16.dp)
-                                .clickable(onClick = {viewModel.logout()}),
+                                .clickable(onClick = { viewModel.logout() }),
                         )
                     }
                 }
@@ -234,7 +229,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                             elevation = CardDefaults.cardElevation(4.dp)
                         ) {
                             Column(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier
+                                    .fillMaxSize()
                                     .padding(start = 16.dp),
                                 horizontalAlignment = Alignment.Start,
                                 verticalArrangement = Arrangement.Center
@@ -280,7 +276,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                             elevation = CardDefaults.cardElevation(4.dp)
                         ) {
                             Column(
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier
+                                    .fillMaxSize()
                                     .padding(start = 16.dp),
                                 horizontalAlignment = Alignment.Start,
                                 verticalArrangement = Arrangement.Center
@@ -333,11 +330,16 @@ fun HomeScreen(viewModel: AuthViewModel,
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            Card(modifier = Modifier.fillMaxWidth()
+                            Card(modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                                 .height(100.dp)
                                 .clickable(onClick = {
-                                    Toast.makeText(context, "Realizar Nueva Venta", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        "Realizar Nueva Venta",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.primary,

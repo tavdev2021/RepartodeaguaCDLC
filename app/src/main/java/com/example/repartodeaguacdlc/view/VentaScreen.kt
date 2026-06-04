@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
-import com.example.repartodeaguacdlc.model.Productos
+import com.example.common.model.Productos
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
 

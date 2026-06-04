@@ -4,7 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.repartodeaguacdlc.model.Clientes
+import com.example.common.model.Clientes
 import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.flow.MutableStateFlow

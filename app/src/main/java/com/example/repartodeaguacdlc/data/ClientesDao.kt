@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.repartodeaguacdlc.model.Clientes
+import com.example.common.model.Clientes
 import kotlinx.coroutines.flow.Flow
 
 @Dao

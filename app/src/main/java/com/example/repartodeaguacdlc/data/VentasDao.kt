@@ -3,8 +3,8 @@ package com.example.repartodeaguacdlc.data
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Transaction
-import com.example.repartodeaguacdlc.model.DetalleVentaEntity
-import com.example.repartodeaguacdlc.model.VentaEntity
+import com.example.common.model.DetalleVentaEntity
+import com.example.common.model.VentaEntity
 
 @Dao
 interface VentasDao {

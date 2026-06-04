@@ -1,16 +1,19 @@
-package com.example.repartodeaguacdlc.viewmodel
+package com.example.common.viewmodel
 
 import android.util.Patterns
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.common.model.UserProfile
-import com.example.repartodeaguacdlc.repository.AuthRepository
-import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.delay
+import com.example.common.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlin.time.Duration.Companion.milliseconds
 
 class AuthViewModel(
     private val repository: AuthRepository = AuthRepository()
@@ -55,6 +58,12 @@ class AuthViewModel(
     private val _availableRoutes = MutableStateFlow<List<String>>(emptyList())
     val availableRoutes: StateFlow<List<String>> = _availableRoutes.asStateFlow()
 
+    private val _rolAsignado = MutableStateFlow("")
+    val rolAsignado: StateFlow<String> = _rolAsignado.asStateFlow()
+
+    private val _availableRoles = MutableStateFlow<List<String>>(emptyList())
+    val availableRoles: StateFlow<List<String>> = _availableRoles.asStateFlow()
+
     // Estados para los errores de los campos
     private val _fullNameError = MutableStateFlow<String?>(null)
     val fullNameError: StateFlow<String?> = _fullNameError.asStateFlow()
@@ -77,18 +86,33 @@ class AuthViewModel(
     private val _rutaAsignadaError = MutableStateFlow<String?>(null)
     val rutaAsignadaError: StateFlow<String?> = _rutaAsignadaError.asStateFlow()
 
+    private val _rolAsignadoError = MutableStateFlow<String?>(null)
+    val rolAsignadoError: StateFlow<String?> = _rutaAsignadaError.asStateFlow()
+
+    private val _navigationEvent = MutableSharedFlow<AuthEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
+
+    sealed class AuthEvent {
+        object NavigateToHome : AuthEvent()
+        object NavigateToLogin : AuthEvent()
+    }
+
 
     init {
 
         fetchAvailableRoutes()
+        fetchAvailableRoles()
 
         viewModelScope.launch {
             repository.getAuthState().collect { loggedIn ->
                 _isAuthenticated.value = loggedIn
                 _currentUser.value = repository.currentUser
 
-                if(!loggedIn) {
+                if(loggedIn) {
+                    fetchUserData()
+                }else{
                     _isLoading.value = false
+                    _userProfile.value = null
                 }
 
             }
@@ -137,6 +161,20 @@ class AuthViewModel(
         _rutaAsignadaError.value = validateRutaAsignada(newRutaAsignada)
     }
 
+    fun onRolAsignadoChange(newRolAsignado: String) {
+        _rolAsignado.value = newRolAsignado
+        _rolAsignadoError.value = validateRolAsignado(newRolAsignado)
+
+        // Lógica condicional para la ruta
+        if (newRolAsignado == "Administrador") {
+            _rutaAsignada.value = "S/R" // "Sin Ruta" o "Administración"
+            _rutaAsignadaError.value = null // Quitamos el error ya que el valor es válido
+        } else {
+            // Si vuelve a Repartidor, limpiamos para obligar a seleccionar una
+            _rutaAsignada.value = ""
+        }
+    }
+
     // --- NUEVO: Función para obtener rutas (por ahora estática) ---
     private fun fetchAvailableRoutes() {
         // En el futuro, aquí harás una llamada a repository o Firestore
@@ -146,6 +184,13 @@ class AuthViewModel(
             "La Laja - El Timbinal",
             "La Cienega",
             "La Cañada - El pinzan"
+        )
+    }
+
+    private fun fetchAvailableRoles() {
+        _availableRoles.value = listOf(
+            "Repartidor",
+            "Administrador"
         )
     }
 
@@ -217,6 +262,12 @@ class AuthViewModel(
         return null
     }
 
+    private fun validateRolAsignado(rolAsignado: String): String? {
+        if (rolAsignado.isBlank()) {
+            return "La ruta no puede estar vacía."
+        }
+        return null
+    }
 
     private fun validateLoginForm(): Boolean {
         // Ejecutar todas las validaciones y actualizar los errores
@@ -246,7 +297,7 @@ class AuthViewModel(
         return isFullNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid
     }
 
-    fun login() {
+    fun login(expectedRole: String) {
     if (!validateLoginForm()) {
             // No intentar el login si hay errores de validación
             return
@@ -254,12 +305,29 @@ class AuthViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             val result = repository.login(_emailLogin.value, _passwordLogin.value)
+
+            result.onSuccess {
+                val user = repository.currentUser
+                val profile = repository.getUserProfile(user?.uid ?: "")
+
+                if (profile?.role == expectedRole) {
+                    // Éxito: El rol coincide
+                    _userProfile.value = profile
+                    _isAuthenticated.value = true
+                    _navigationEvent.emit(AuthEvent.NavigateToHome)
+                } else {
+                    // Error: El usuario existe pero no tiene el permiso para esta app
+                    repository.logout() // Lo sacamos de Firebase Auth
+                    _error.value = "No tienes permisos para acceder a esta aplicación."
+                    _isAuthenticated.value = false
+                }
+            }.onFailure {
+                _error.value = it.message ?: "Error desconocido durante el login"
+            }
             _isLoading.value = false
-            result.onFailure { _error.value = it.message ?: "Error desconocido durante el login"
-                _passwordLogin.value = ""}
+            _passwordLogin.value = ""}
             _currentUser.value = repository.currentUser
         }
-    }
 
     fun register() {
         if (!validateRegisterForm()) {
@@ -271,7 +339,7 @@ class AuthViewModel(
 
             val imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=random&length=2"
 
-            val result = repository.register(_fullName.value,_emailRegister.value, _passwordRegister.value, imagenUrl = imagenUrl, _rutaAsignada.value)
+            val result = repository.register(_fullName.value,_emailRegister.value, _passwordRegister.value, imagenUrl = imagenUrl, _rutaAsignada.value, _rolAsignado.value)
             result.onSuccess {
                 // 1. Forzar la actualización del usuario actual con los datos nuevos
                 _currentUser.value = repository.currentUser
@@ -292,17 +360,19 @@ class AuthViewModel(
 
     fun fetchUserData() {
         viewModelScope.launch {
-            val ruta = repository.getRutaAsignada()
-            val nombre = repository.currentUser?.displayName ?: ""
-            val imageUrl = repository.currentUser?.photoUrl?.toString()
-            _userProfile.value = UserProfile(nombre, ruta, imageUrl ?: "Sin ruta")
+            val uid = repository.currentUser?.uid
+            if (uid != null) {
+                // 👇 Usamos el método que trae el perfil completo (con rol) desde Firestore
+                val profile = repository.getUserProfile(uid)
+                _userProfile.value = profile
+            }
         }
     }
 
     fun logout() {
         viewModelScope.launch {
             _isLoading.value = true
-            delay(2000)
+            delay(1000.milliseconds)
             try {
                 repository.logout()
                 clearInputsLogin()
@@ -310,8 +380,13 @@ class AuthViewModel(
                 clearErrorLogin()
                 clearErrorRegister()
                 _currentUser.value = null
+                _userProfile.value = null
+                _isAuthenticated.value = false
+                _isLoading.value = false
+                _navigationEvent.emit(AuthEvent.NavigateToLogin)
             } catch (e: Exception) {
                 _error.value = e.message
+                _isLoading.value = false
             }
         }
     }

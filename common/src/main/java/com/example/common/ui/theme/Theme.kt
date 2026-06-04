@@ -1,4 +1,4 @@
-package com.example.repartodeaguacdlc.ui.theme
+package com.example.common.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

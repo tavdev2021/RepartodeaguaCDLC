@@ -1,9 +1,8 @@
-package com.example.repartodeaguacdlc.model
+package com.example.common.model
 
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
-
 
 @Entity(tableName = "productos")
 data class Productos(

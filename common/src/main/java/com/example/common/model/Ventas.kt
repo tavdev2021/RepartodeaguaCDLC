@@ -1,4 +1,4 @@
-package com.example.repartodeaguacdlc.model
+package com.example.common.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -3,7 +3,7 @@ package com.example.repartodeaguacdlc.viewmodel
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.repartodeaguacdlc.model.Clientes
+import com.example.common.model.Clientes
 import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

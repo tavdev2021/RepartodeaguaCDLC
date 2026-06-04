@@ -1,4 +1,4 @@
-package com.example.repartodeaguacdlc.ui.theme
+package com.example.common.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

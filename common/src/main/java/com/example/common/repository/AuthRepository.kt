@@ -1,5 +1,7 @@
-package com.example.repartodeaguacdlc.repository
+package com.example.common.repository
 
+import androidx.core.net.toUri
+import com.example.common.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -7,7 +9,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import androidx.core.net.toUri
 
 class AuthRepository (
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -30,7 +31,7 @@ class AuthRepository (
         Result.failure(e)
     }
 
-    suspend fun register(fullName: String, email: String, password: String, imagenUrl: String,rutaAsignada: String): Result<Unit> {
+    suspend fun register(fullName: String, email: String, password: String, imagenUrl: String,rutaAsignada: String, rolAsignado: String): Result<Unit> {
     return try {
         // 1. Crear el usuario con email y contraseña.
         val authResult = auth.createUserWithEmailAndPassword(email, password).await()
@@ -55,9 +56,10 @@ class AuthRepository (
                 "uid" to user.uid,
                 "nombre" to fullName,
                 "imagenUrl" to imagenUrl,
-                "ruta" to rutaAsignada // Aquí guardamos "Ruta-01"
+                "ruta" to rutaAsignada, // Aquí guardamos "Ruta-01"
+                "role" to rolAsignado
             )
-            db.collection("repartidores").document(user.uid).set(userData).await()
+            db.collection("usuarios").document(user.uid).set(userData).await()
 
             // 4. Si todo ha ido bien, devolvermos éxito.
             Result.success(Unit)
@@ -72,16 +74,12 @@ class AuthRepository (
     }
 }
 
-    // Función para obtener la ruta del usuario actual
-    suspend fun getRutaAsignada(): String? {
-        val uid = auth.currentUser?.uid ?: return null
+    // 2. Nueva función para obtener el perfil y validar rol
+    suspend fun getUserProfile(uid: String): UserProfile? {
         return try {
-            val document = db.collection("repartidores").document(uid).get().await()
-            document.getString("ruta") // Retorna el nombre de la ruta, ej: "Ruta 01"
-        } catch (e: Exception) {
-
-            null
-        }
+            val doc = db.collection("usuarios").document(uid).get().await()
+            doc.toObject(UserProfile::class.java)
+        } catch (e: Exception) { null }
     }
 
         fun logout() {

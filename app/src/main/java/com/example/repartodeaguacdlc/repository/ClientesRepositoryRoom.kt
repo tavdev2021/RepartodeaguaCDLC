@@ -1,7 +1,7 @@
 package com.example.repartodeaguacdlc.repository
 
 import com.example.repartodeaguacdlc.data.ClientesDao
-import com.example.repartodeaguacdlc.model.Clientes
+import com.example.common.model.Clientes
 import kotlinx.coroutines.flow.Flow
 
 class ClientesRepositoryRoom(private val clientesDao: ClientesDao) {

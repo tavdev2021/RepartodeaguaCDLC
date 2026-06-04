@@ -4,11 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.repartodeaguacdlc.model.Clientes
+import com.example.common.model.Clientes
 import kotlin.concurrent.Volatile
-import com.example.repartodeaguacdlc.model.Productos
-import com.example.repartodeaguacdlc.model.VentaEntity
-import com.example.repartodeaguacdlc.model.DetalleVentaEntity
+import com.example.common.model.Productos
+import com.example.common.model.VentaEntity
+import com.example.common.model.DetalleVentaEntity
 
 @Database(entities = [
     Clientes::class,
@@ -25,22 +25,21 @@ abstract class AppDatabase: RoomDatabase() {
     abstract fun productosDao(): ProductosDao
     abstract fun ventasDao(): VentasDao
 
-    companion object{
+    companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-
-            val instance = Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "app_database"
-            )
-                .fallbackToDestructiveMigration(false)
-                .build()
-            INSTANCE = instance
-            instance
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "app_database"
+                )
+                    .fallbackToDestructiveMigration(true) // Permitir migración destructiva para evitar crash durante desarrollo
+                    .build()
+                INSTANCE = instance
+                instance
             }
         }
     }

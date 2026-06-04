@@ -3,8 +3,6 @@ package com.example.repartodeaguacdlc.navigation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,7 +25,7 @@ import com.example.repartodeaguacdlc.view.SettingsApp
 import com.example.repartodeaguacdlc.view.SplashScreen
 import com.example.repartodeaguacdlc.view.UpdateClientScreen
 import com.example.repartodeaguacdlc.view.VentaScreen
-import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
+import com.example.common.viewmodel.AuthViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
@@ -40,13 +38,9 @@ fun AppNavHost()
 
     val authViewModel: AuthViewModel = viewModel()
 
-    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
-
-    val startDestination = if (isAuthenticated) "home" else "login"
-
     SharedTransitionLayout {
 
-        NavHost(navController = navController, startDestination = startDestination) {
+        NavHost(navController = navController, startDestination = "splash") {
 
             composable("splash") {
                 SplashScreen(
@@ -83,13 +77,6 @@ fun AppNavHost()
 
             composable("register") {
                 RegisterScreen(
-                    authViewModel,
-                    onRegisterSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("register") { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    },
                     onNavigateToLogin = {
                         navController.navigate("login") {
                             popUpTo("register") { inclusive = true }

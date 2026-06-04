@@ -1,3 +1,53 @@
 <resources>
     <string name="app_name">Admin_App</string>
+
+    //Mensajes de carga
+    <string name="loading_iniciar_sesion">Iniciando sesión...</string>
+    <string name="loading_registrar_usuario">Registrando usuario...</string>
+    <string name="loading_registrar_cliente">Registrando cliente...</string>
+    <string name="loading_cargar_cliente">Cargando datos...</string>
+    <string name="loading_cerrar_sesion">Cerrando sesión...</string>
+
+    //Textos de LoginScreen
+    <string name="bienvenido_login">Bienvenido</string>
+    <string name="inicia_sesion">Por favor inicia sesión</string>
+    <string name="correo_electronico">Correo electrónico</string>
+    <string name="contrasena">Contraseña</string>
+    <string name="button_login">Iniciar Sesión</string>
+    <string name="no_tienes_cuenta">No tienes una cuenta? Registrate aqui</string>
+
+    //Textos de RegisterScreen
+    <string name="appbar_crearcuenta_register">Crear Cuenta</string>
+    <string name="bienvenido_register">Registrate</string>
+    <string name="ingresa_datos_register">Por favor ingresa tus datos</string>
+    <string name="nombre_completo_register">Nombre Completo</string>
+    <string name="email_register">Correo electrónico</string>
+    <string name="contrasena_register">Contraseña</string>
+    <string name="confirmar_contrasena">Confirmar Contraseña</string>
+    <string name="ruta_asignada">Asignar Ruta</string>
+    <string name="button_register">Registrar</string>>
+    <string name="ya_tienes_cuenta">Ya tienes una cuenta? Inicia sesión</string>
+
+    //Textos de AddNewClient
+    <string name="appbar_regstrarnuevocliente">Registrar nuevo cliente</string>
+    <string name="ingresa_datos_cliente">Por favor ingresa los datos del cliente</string>
+    <string name="informacion_personal_cliente">Informacion Personal</string>
+    <string name="nombre_completo_cliente">Nombre Completo</string>
+    <string name="telefono_cliente">Telefono</string>
+    <string name="email_register_cliente">Correo electrónico</string>
+    <string name="ubicacion_detalles_cliente">Ubicacion y Detalles</string>
+    <string name="ubicacion_register_cliente">Calle, Numero, Colonia</string>
+    <string name="nota_register_cliente">Notas de la entrega (Referencias, Horarios, etc.)</string>
+    <string name="button_register_cliente">Registrar</string>>
+
+    //Textos de ClienteDetail
+    <string name="appbar_title_details">Detalle de cliente</string>
+
+    //Textos de HomeScreen
+    <string name="name_hello">Hola,</string>
+    <string name="name_route">Ruta Norte #4</string>
+    <string name="searchbar_buscar_clientes">Buscar cliente...</string>
+    <string name="funcion_qr_searchbar">Funcion QR en desarrollo</string>
+    <string name="button_logout">Cerrar Sesión</string>
+
 </resources>

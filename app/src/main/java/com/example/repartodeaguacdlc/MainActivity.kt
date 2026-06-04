@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.repartodeaguacdlc.navigation.AppNavHost
-import com.example.repartodeaguacdlc.ui.theme.RepartoDeAguaCDLCTheme
+import com.example.common.ui.theme.RepartoDeAguaCDLCTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,7 +16,6 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             RepartoDeAguaCDLCTheme {
-
                 AppNavHost()
             }
         }

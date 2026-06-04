@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.repartodeaguacdlc.R
-import com.example.repartodeaguacdlc.viewmodel.AuthViewModel
+import com.example.common.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,7 +64,6 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
     val generalError by viewModel.error.collectAsState()
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
@@ -82,9 +81,12 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            onLoginSuccess()
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is AuthViewModel.AuthEvent.NavigateToHome -> onLoginSuccess()
+                else -> {}
+            }
         }
     }
 
@@ -182,7 +184,7 @@ fun LoginScreen(
                     ),
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
-                        viewModel.login()
+                        viewModel.login("Repartidor")
                     }),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -210,7 +212,7 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         focusManager.clearFocus()
-                        viewModel.login()
+                        viewModel.login("Repartidor")
                     },
                     enabled = !isLoading && email.isNotBlank() && password.isNotBlank() && emailError == null && passwordError == null,
                     modifier = Modifier

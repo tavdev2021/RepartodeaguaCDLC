@@ -53,41 +53,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.firebase.auth)
-
-    // Jetpack Compose y navegación
-    implementation("androidx.compose.animation:animation")
-    implementation("androidx.compose.animation:animation-core:1.10.3")
-    implementation("androidx.navigation:navigation-compose:2.9.7")
-    //implementation("androidx.compose.ui:ui:1.10.0")
-    //implementation("androidx.compose.material3:material3:1.3.2")
-
-
-// Lifecycle + Flow
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-
-    //Cargar imagen en pantalla
-
-    implementation("io.coil-kt:coil-compose:2.7.0")
-
-    //Animaciones Lottie
-
-    implementation("com.airbnb.android:lottie-compose:6.7.1")
-
-    //Api SplashScreen
-
-    implementation("androidx.core:core-splashscreen:1.2.0")
-
-    //Icons
-
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
-
-    //Room
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    implementation(libs.firebase.firestore.ktx)
-    ksp(libs.room.compiler)
 
     //Google Maps
 
@@ -95,6 +60,9 @@ dependencies {
     implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.play.services.location)
+
+    // Room Compiler (KSP es necesario en cada módulo que define la DB o DAOs)
+    ksp(libs.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

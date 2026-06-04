@@ -8,3 +8,11 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.built.in1.kotlin) apply false
 }
+
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            force(libs.androidx.concurrent.futures)
+        }
+    }
+}

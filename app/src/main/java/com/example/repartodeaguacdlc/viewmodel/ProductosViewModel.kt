@@ -3,9 +3,9 @@ package com.example.repartodeaguacdlc.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repartodeaguacdlc.R
-import com.example.repartodeaguacdlc.model.DetalleVentaEntity
-import com.example.repartodeaguacdlc.model.Productos
-import com.example.repartodeaguacdlc.model.VentaEntity
+import com.example.common.model.DetalleVentaEntity
+import com.example.common.model.Productos
+import com.example.common.model.VentaEntity
 import com.example.repartodeaguacdlc.repository.ProductosRepositoryRoom
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
