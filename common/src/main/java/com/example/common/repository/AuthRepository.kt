@@ -40,7 +40,7 @@ class AuthRepository (
         val user = authResult.user
 
         if (user != null) {
-            // ...y crear una solicitud para actualizar su perfil.
+            //... y crear una solicitud para actualizar su perfil.
             val profileUpdates = UserProfileChangeRequest.Builder()
                 .setDisplayName(fullName)
                 // Aquí también podrías añadir una URL de foto de perfil por defecto si quisieras
@@ -55,6 +55,7 @@ class AuthRepository (
             val userData = mapOf(
                 "uid" to user.uid,
                 "nombre" to fullName,
+                "email" to email,
                 "imagenUrl" to imagenUrl,
                 "ruta" to rutaAsignada, // Aquí guardamos "Ruta-01"
                 "role" to rolAsignado

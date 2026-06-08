@@ -64,7 +64,6 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
     val generalError by viewModel.error.collectAsState()
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
@@ -82,9 +81,12 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            onLoginSuccess()
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is AuthViewModel.AuthEvent.NavigateToHome -> onLoginSuccess()
+                else -> {}
+            }
         }
     }
 

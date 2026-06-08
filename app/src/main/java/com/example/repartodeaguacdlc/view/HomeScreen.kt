@@ -121,7 +121,6 @@ fun HomeScreen(viewModel: AuthViewModel,
 
                         //Foto de perfil
                         val imageUrl = firebaseUser.photoUrl
-                        //val imageUrl = "https://i.pravatar.cc/300"
                         if (imageUrl != null) {
                             AsyncImage(
                                 model = imageUrl,

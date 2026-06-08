@@ -27,13 +27,9 @@ fun AppNavHost()
 
     val authViewModel: AuthViewModel = viewModel()
 
-    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
-
-    val startDestination = if (isAuthenticated) "home" else "login"
-
     SharedTransitionLayout {
 
-        NavHost(navController = navController, startDestination = startDestination) {
+        NavHost(navController = navController, startDestination = "splash") {
 
             composable("splash") {
                 SplashScreen(

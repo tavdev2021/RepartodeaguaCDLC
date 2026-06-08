@@ -1,5 +1,7 @@
 package com.example.repartodeaguacdlc.view
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -7,6 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -18,6 +23,9 @@ import com.airbnb.lottie.compose.*
 import com.example.common.viewmodel.AuthViewModel
 import com.example.repartodeaguacdlc.R
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+import androidx.compose.animation.core.animateFloatAsState // Para animar la opacidad
+import androidx.compose.ui.graphics.graphicsLayer // Para aplicar la opacidad de forma eficiente
 
 @Composable
 fun SplashScreen(
@@ -31,15 +39,30 @@ fun SplashScreen(
         composition = composition,
         iterations = LottieConstants.IterateForever // La animación se repite mientras carga
     )
+    var startAnimation by remember { mutableStateOf(false) }
+
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (startAnimation) 1f else 0f,
+        animationSpec = tween(durationMillis = 1000), // Aparece en 1 segundo
+        label = "FadeIn"
+    )
+
+    val animatedBottomColor by animateColorAsState(
+        targetValue = if (startAnimation) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.primary,
+        animationSpec = tween(durationMillis = 1200),
+        label = "GradientAnim"
+    )
 
     // Lógica de navegación (El "Guardián de Roles")
     LaunchedEffect(Unit) {
+
+        startAnimation = true
 
         val currentUser = authViewModel.currentUser.value
         val startTime = System.currentTimeMillis()
 
         if (currentUser == null) {
-            delay(1500)
+            delay(2000.milliseconds)
             onNavigateToLogin()
         } else {
             authViewModel.fetchUserData()
@@ -47,9 +70,9 @@ fun SplashScreen(
                 if (profile != null) {
 
                     val elapsedTime = System.currentTimeMillis() - startTime
-                    val remainingTime = 2500 - elapsedTime
+                    val remainingTime = 3000 - elapsedTime
 
-                    if (remainingTime > 0) delay(remainingTime)
+                    if (remainingTime > 0) delay(remainingTime.milliseconds)
 
                     if (profile.role == "Repartidor") {
                         onNavigateToHome()
@@ -72,13 +95,15 @@ fun SplashScreen(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.primaryContainer
+                        animatedBottomColor
                     )
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier
+                .graphicsLayer(alpha = contentAlpha),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

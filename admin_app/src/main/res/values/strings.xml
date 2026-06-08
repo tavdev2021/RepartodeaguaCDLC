@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Admin_App</string>
+    <string name="app_name">Admin CDLC</string>
 
     //Mensajes de carga
     <string name="loading_iniciar_sesion">Iniciando sesión...</string>

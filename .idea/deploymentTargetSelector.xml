@@ -4,14 +4,11 @@
     <selectionStates>
       <SelectionState runConfigName="admin_app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-05-23T00:48:47.010519Z">
+        <DropdownSelection timestamp="2026-06-08T19:10:37.402326500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="FirebaseDirectAccess" identifier="reservation=projects/reparto-de-agua-3bb1a/deviceSessions/session-1umewko8wtd55" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CR71E4Z0X" />
             </handle>
-            <template>
-              <DeviceId pluginId="FirebaseDirectAccess" type="TEMPLATE" identifier="model_id=e3qksx/36" />
-            </template>
           </Target>
         </DropdownSelection>
         <DialogSelection>
@@ -24,16 +21,13 @@
           </targets>
         </DialogSelection>
       </SelectionState>
-      <SelectionState runConfigName="repartidor_app">
+      <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-04-15T05:47:40.065592Z">
+        <DropdownSelection timestamp="2026-06-07T04:23:31.606976900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="FirebaseDirectAccess" identifier="reservation=projects/reparto-de-agua-3bb1a/deviceSessions/session-as3a1ppfkxcpa" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\octav\.android\avd\Pixel_7_Pro.avd" />
             </handle>
-            <template>
-              <DeviceId pluginId="FirebaseDirectAccess" type="TEMPLATE" identifier="model_id=fogona/34" />
-            </template>
           </Target>
         </DropdownSelection>
         <DialogSelection>
