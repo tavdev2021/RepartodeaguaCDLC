@@ -6,37 +6,20 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -54,401 +37,208 @@ import java.text.DateFormat
 @Composable
 fun HomeScreen(
     authViewModel: AuthViewModel,
-    onLogout: () -> Unit) {
-
+    onLogout: () -> Unit
+) {
     val user by authViewModel.currentUser.collectAsState()
     val isLoading by authViewModel.isLoading.collectAsState()
     val userProfile by authViewModel.userProfile.collectAsState()
 
     LaunchedEffect(Unit) {
-
         authViewModel.navigationEvent.collect { event ->
             if (event is AuthViewModel.AuthEvent.NavigateToLogin) {
-                onLogout() // Esta es la función que viene del NavHost
+                onLogout()
             }
         }
     }
 
     val context = LocalContext.current
-
-    //Obtener el día y fecha del sistema
     val calendar = Calendar.getInstance().time
     val dateFormat = DateFormat.getDateInstance(DateFormat.FULL).format(calendar)
 
     val acciones = listOf(
-        AccionRapida(
-            R.drawable.nuevo_cliente,
-            "Nuevo Cliente"
-        ),
+        AccionRapida(R.drawable.nuevo_cliente, "Nuevo Cliente"),
         AccionRapida(R.drawable.lista_clientes, "Clientes"),
         AccionRapida(R.drawable.corte_caja, "Corte de caja"),
         AccionRapida(R.drawable.inventario, "Inventario"),
         AccionRapida(R.drawable.ruta, "Ruta")
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-
+    Box(modifier = Modifier.fillMaxSize()) {
         user?.let { firebaseUser ->
+            Column(modifier = Modifier.fillMaxSize()) {
 
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-
+                // --- HEADER (Tu diseño original refinado) ---
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.15f),
-                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().fillMaxHeight(0.18f),
+                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 30.dp, start = 10.dp),
-                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Foto de perfil
+                        ProfileImage(url = firebaseUser.photoUrl.toString())
 
-                        //Foto de perfil
-                        val imageUrl = firebaseUser.photoUrl
-                        if (imageUrl != null) {
-                            AsyncImage(
-                                model = imageUrl,
-                                contentDescription = "Imagen de perfil",
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(CircleShape)
-                                    .border(
-                                        2.dp,
-                                        MaterialTheme.colorScheme.secondary,
-                                        CircleShape
-                                    ),
-                                contentScale = ContentScale.Crop,
-                                placeholder = painterResource(id = R.drawable.ic_downloading),
-                                error = painterResource(id = R.drawable.ic_error)
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Imagen de perfil",
-                                modifier = Modifier
-                                    .size(50.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                        }
-
-                        Column(
-                            horizontalAlignment = Alignment.Start,
-                            verticalArrangement = Arrangement.Center
-
-                        ) {
-
+                        Column(modifier = Modifier.padding(start = 12.dp)) {
                             Text(
-                                text = (stringResource(R.string.name_hello) + " " +
-                                        (firebaseUser.displayName?.split(" ")?.firstOrNull() ?: "Usuario")),
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 18.sp
-                                ),
-                                color = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.padding(start = 8.dp)
+                                text = "Hola, ${firebaseUser.displayName?.split(" ")?.firstOrNull() ?: "Admin"}",
+                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
-
-                            Text("Ruta: ${userProfile?.ruta ?: "Cargando..."}",
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    fontWeight = FontWeight.Light,
-                                    fontSize = 16.sp
-                                ),
-                                color = MaterialTheme.colorScheme.surface,
-                                modifier = Modifier.padding(start = 8.dp, top = 0.dp)
+                            Text(
+                                text = userProfile?.role ?: "Administrador",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                             )
                         }
-
                         Spacer(modifier = Modifier.weight(1f))
-
-
-                        Icon(
-                            painter = painterResource(id = R.drawable.logout_icon),
-                            contentDescription = "Logout Icon",
-                            modifier = Modifier
-                                .size(48.dp)
-                                .padding(end = 16.dp)
-                                .clickable(onClick = { authViewModel.logout() }),
-                        )
+                        IconButton(onClick = { authViewModel.logout() }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.logout_icon),
+                                contentDescription = "Logout",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
 
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.88f),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                // --- CUERPO DEL DASHBOARD ---
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
+                    item {
+                        Text(dateFormat, style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                    }
 
-                    Text(
-                        "$dateFormat",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Light,
-                            fontSize = 16.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(start = 24.dp, top = 4.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    //Implementacion de Cards para datos rapidos
-
-                    Row(modifier = Modifier
-                        .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly) {
-                        Card(
-                            modifier = Modifier
-                                .width(160.dp)
-                                .height(140.dp)
-                                .clickable(onClick = { }),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = MaterialTheme.colorScheme.onSurface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(4.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(start = 16.dp),
-                                horizontalAlignment = Alignment.Start,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Image(painter = painterResource(id = R.drawable.water_drop),
-                                    contentDescription = "Water Drop Icon",
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .padding(start = 8.dp),
-                                    contentScale = ContentScale.Fit)
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Text(
-                                    "Ventas de hoy",
-                                    fontSize = 16.sp,
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodySmall
-
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "42",
-                                    fontSize = 32.sp,
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold
-
-                                )
-                            }
-                        }
-
-                        Card(
-                            modifier = Modifier
-                                .width(160.dp)
-                                .height(140.dp)
-                                .clickable(onClick = { }),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = MaterialTheme.colorScheme.onSurface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(4.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(start = 16.dp),
-                                horizontalAlignment = Alignment.Start,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Image(painter = painterResource(id = R.drawable.money_range),
-                                    contentDescription = "Money Icon",
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .padding(start = 8.dp),
-                                    contentScale = ContentScale.Fit)
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Text(
-                                    "Ingresos de hoy",
-                                    fontSize = 16.sp,
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodySmall
-
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "$3,450",
-                                    fontSize = 32.sp,
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold
-
-                                )
-                            }
+                    // 1. GRID DE INDICADORES (KPIs)
+                    item {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            MetricCard(
+                                modifier = Modifier.weight(1f),
+                                title = "Ventas Hoy",
+                                value = "42",
+                                trend = "+15% vs ayer",
+                                isPositive = true,
+                                icon = R.drawable.water_drop
+                            )
+                            MetricCard(
+                                modifier = Modifier.weight(1f),
+                                title = "Ingresos",
+                                value = "$3,450",
+                                trend = "-5% vs ayer",
+                                isPositive = false,
+                                icon = R.drawable.money_range
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        // --- (NUEVO) IMPLEMENTACIÓN DE LAZYROW CON CARDS ---
+                    // 2. SECCIÓN: AVANCE DE RUTAS
+                    item {
                         Column {
-                            Text(
-                                text = "Acciones Rápidas",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .padding(horizontal = 24.dp)
-                                    .padding(start = 4.dp),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Card(modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .height(100.dp)
-                                .clickable(onClick = {
-                                    Toast.makeText(
-                                        context,
-                                        "Realizar Nueva Venta",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary),
-                                shape = RoundedCornerShape(16.dp),
-                                elevation = CardDefaults.cardElevation(4.dp),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
-                            ) {
-
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalAlignment = Alignment.CenterVertically
-
-                                ) {
-                                    Icon(painter = painterResource(id = R.drawable.add_shopping_cart),
-                                        contentDescription = "Cart Icon",
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .padding(start = 8.dp),
-                                        tint =  MaterialTheme.colorScheme.background)
-
-                                    Column(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(horizontal = 16.dp),
-                                        verticalArrangement = Arrangement.Center,
-                                    ) {
-                                        Text(
-                                            text = "Realizar Venta",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp),
-                                            color = MaterialTheme.colorScheme.background
-                                        )
-
-                                        Text(
-                                            text = "Registrar nuevo pedido",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            modifier = Modifier
-                                                .padding(horizontal = 16.dp),
-                                            color = MaterialTheme.colorScheme.background
-                                        )
-                                    }
-
-                                    Icon(painter = painterResource(id = R.drawable.chevron_forward),
-                                        contentDescription = "Forward Icon",
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .padding(end = 8.dp),
-                                        tint = MaterialTheme.colorScheme.background)
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            LazyRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(acciones) { accion ->
-                                    Card(
-                                        modifier = Modifier
-                                            .width(150.dp)
-                                            .height(130.dp)
-                                            .clickable(onClick = {} ),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surface,
-                                            contentColor = MaterialTheme.colorScheme.onSurface),
-                                        shape = RoundedCornerShape(16.dp),
-                                        elevation = CardDefaults.cardElevation(4.dp)
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.fillMaxSize(),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center
-                                        ) {
-                                            Image(
-                                                painter = painterResource(id = accion.icon),
-                                                contentDescription = accion.text,
-                                                modifier = Modifier.size(48.dp)
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = accion.text,
-                                                textAlign = TextAlign.Center,
-                                                style = MaterialTheme.typography.bodySmall
-
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                            Text("Avance de Rutas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(10.dp))
+                            RouteProgressItem("Ruta 1 - Centro", 0.75f, "15/20 Entregas")
+                            Spacer(Modifier.height(8.dp))
+                            RouteProgressItem("Ruta 2 - Sur", 0.30f, "6/20 Entregas")
                         }
-                        // --- FIN DE LA IMPLEMENTACIÓN DE LAZYROW ---
+                    }
 
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        ) {
-
+                    // 3. ACCIONES RÁPIDAS (LazyRow original)
+                    item {
+                        Column {
+                            Text("Gestión Rápida", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(10.dp))
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                items(acciones) { accion ->
+                                    QuickActionCard(accion)
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
+        // --- EL LOADING OVERLAY (Aquí está de vuelta) ---
+        LoadingOverlay(
+            visible = isLoading,
+            message = stringResource(R.string.loading_cerrar_sesion)
+        )
     }
+}
 
-    // Overlay con blur elegante
-    LoadingOverlay(
-        visible = isLoading,
-        message = stringResource(R.string.loading_cerrar_sesion)
-    )
+// --- SUB-COMPONENTES PARA ORDENAR EL CÓDIGO ---
 
+@Composable
+fun ProfileImage(url: String?) {
+    Box(modifier = Modifier.size(60.dp).clip(CircleShape).border(2.dp, Color.White, CircleShape)) {
+        AsyncImage(
+            model = url,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            error = painterResource(R.drawable.ic_error)
+        )
+    }
+}
+
+@Composable
+fun MetricCard(modifier: Modifier, title: String, value: String, trend: String, isPositive: Boolean, icon: Int) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Icon(painterResource(icon), null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+                Text(trend, style = MaterialTheme.typography.labelSmall, color = if(isPositive) Color(0xFF4CAF50) else Color.Red)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+        }
+    }
+}
+
+@Composable
+fun RouteProgressItem(name: String, progress: Float, label: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            }
+            Spacer(Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            )
+        }
+    }
+}
+
+@Composable
+fun QuickActionCard(accion: AccionRapida) {
+    Card(
+        modifier = Modifier.size(110.dp).clickable { /* Acción */ },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Image(painterResource(accion.icon), null, Modifier.size(40.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(accion.text, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+        }
+    }
 }
