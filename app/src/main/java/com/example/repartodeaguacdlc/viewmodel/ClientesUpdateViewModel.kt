@@ -148,7 +148,7 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
         return isFullNameValid && isPhoneValid && isEmailValid && isLocationValid && isNotesValid
     }
 
-    fun updateCliente(clienteId: Int, onUpdateComplete: () -> Unit) {
+    fun updateCliente(clienteId: String, onUpdateComplete: () -> Unit) {
         if (!validateRegisterForm())
         // No intentar la actualizacion si hay errores de validación
             return

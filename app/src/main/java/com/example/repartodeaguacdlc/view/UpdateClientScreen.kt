@@ -74,7 +74,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdateClientScreen(
-    clienteId: Int,
+    clienteId: String,
     clientesViewModel: ClientesViewModel,
     viewModel: ClientesUpdateViewModel,
     onUpdateSuccess: () -> Unit,

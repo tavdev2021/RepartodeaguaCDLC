@@ -63,13 +63,17 @@ fun HomeScreen(
         AccionRapida(R.drawable.ruta, "Ruta")
     )
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .navigationBarsPadding()) {
         user?.let { firebaseUser ->
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // --- HEADER (Tu diseño original refinado) ---
                 Card(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight(0.18f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.15f),
                     shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -142,9 +146,15 @@ fun HomeScreen(
                         Column {
                             Text("Avance de Rutas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(10.dp))
-                            RouteProgressItem("Ruta 1 - Centro", 0.75f, "15/20 Entregas")
+                            RouteProgressItem("Arroyo Grande - Centro", 0.75f, "75/100 Entregas")
                             Spacer(Modifier.height(8.dp))
-                            RouteProgressItem("Ruta 2 - Sur", 0.30f, "6/20 Entregas")
+                            RouteProgressItem("Arroyo Grande - Sur", 0.30f, "6/20 Entregas")
+                            Spacer(Modifier.height(8.dp))
+                            RouteProgressItem("La Laja - El Timbinal", 0.80f, "64/80 Entregas")
+                            Spacer(Modifier.height(8.dp))
+                            RouteProgressItem("La Cienega", 0.25f, "10/40 Entregas")
+                            Spacer(Modifier.height(8.dp))
+                            RouteProgressItem("La Cañada - El pinzan", 0.50f, "10/20 Entregas")
                         }
                     }
 
@@ -235,7 +245,9 @@ fun QuickActionCard(accion: AccionRapida) {
         modifier = Modifier.size(110.dp).clickable { /* Acción */ },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Column(Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
             Image(painterResource(accion.icon), null, Modifier.size(40.dp))
             Spacer(Modifier.height(8.dp))
             Text(accion.text, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)

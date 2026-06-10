@@ -67,7 +67,7 @@ import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VentaScreen(
-    clienteId: Int,
+    clienteId: String,
     clientesViewModel: ClientesViewModel,
     productosViewModel: ProductosViewModel,
     clienteDireccion: String = "Av. Libertador 1234, Centro",

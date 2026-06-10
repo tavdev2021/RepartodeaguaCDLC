@@ -3,6 +3,7 @@ package com.example.repartodeaguacdlc.navigation
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -148,8 +149,9 @@ fun AppNavHost()
 
             composable(
                 "clienteDetails/{clienteId}",
-                arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
+                arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
             ) { backStackEntry ->
+                val clienteId = backStackEntry.arguments?.getString("clienteId") ?: ""
                 val context = LocalContext.current
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry("clientes")
@@ -158,6 +160,10 @@ fun AppNavHost()
                     viewModelStoreOwner = parentEntry,
                     factory = ClientesViewModelFactory(context)
                 )
+
+                LaunchedEffect(clienteId) {
+                    clientesViewModel.selectClient(clienteId)
+                }
 
                 this@SharedTransitionLayout.ClientDetail(
                     animatedVisibilityScope = this,
@@ -174,9 +180,9 @@ fun AppNavHost()
 
             composable(
                 "updateClient/{clienteId}",
-                arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
+                arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
             ) { backStackEntry ->
-                val clienteId = backStackEntry.arguments?.getInt("clienteId") ?: 0
+                val clienteId = backStackEntry.arguments?.getString("clienteId") ?: ""
                 val context = LocalContext.current
 
                 // 1. Obtiene el ViewModel compartido desde el "padre" ("clientes")
@@ -218,9 +224,9 @@ fun AppNavHost()
             }
 
             composable("venta/{clienteId}",
-                arguments = listOf(navArgument("clienteId") { type = NavType.IntType })
+                arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
             ) { backStackEntry ->
-                val clienteId = backStackEntry.arguments?.getInt("clienteId") ?: 0
+                val clienteId = backStackEntry.arguments?.getString("clienteId") ?: ""
                 val context = LocalContext.current
 
                 // 1. Obtiene el ViewModel compartido desde el "padre" ("clientes")

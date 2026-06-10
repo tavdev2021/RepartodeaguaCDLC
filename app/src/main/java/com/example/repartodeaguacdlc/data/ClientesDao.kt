@@ -22,7 +22,7 @@ interface ClientesDao {
 
     // READ: Obtener un cliente específico por ID
     @Query("SELECT * FROM clientes WHERE id = :id")
-    suspend fun getClienteById(id: Int): Clientes?
+    suspend fun getClienteById(id: String): Clientes?
 
     // UPDATE: Actualizar los datos de un cliente existente
     @Update

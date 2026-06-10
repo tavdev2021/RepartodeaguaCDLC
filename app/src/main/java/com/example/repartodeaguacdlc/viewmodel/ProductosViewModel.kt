@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class ProductosViewModel(private val productosRepository: ProductosRepositoryRoom): ViewModel() {
 
@@ -52,24 +53,31 @@ class ProductosViewModel(private val productosRepository: ProductosRepositoryRoo
     val totalPagar = _productos.map { lista -> lista.sumOf { it.precio * it.cantidad } }
     val totalArticulos = _productos.map { lista -> lista.sumOf { it.cantidad } }
 
-    fun finalizarVenta(clienteId: Int, metodoPago: String, onSuccess: () -> Unit) {
+    fun finalizarVenta(clienteId: String, metodoPago: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             val productosSeleccionados = _productos.value.filter { it.cantidad > 0 }
             if (productosSeleccionados.isEmpty()) return@launch
 
+            val ventaId = UUID.randomUUID().toString() // Generamos un ID único para la venta
+
             val venta = VentaEntity(
+                id = ventaId,
                 clienteId = clienteId,
                 fecha = System.currentTimeMillis(),
-                total = productosSeleccionados.sumOf { it.precio * it.cantidad },
-                metodoPago = metodoPago
+                total = productosSeleccionados.sumOf { producto ->
+                    producto.precio * producto.cantidad },
+                metodoPago = metodoPago,
+                isSynced = false, // 👈 Nuevo: Indica que está pendiente de subir
+                ultimaActualizacion = System.currentTimeMillis() // 👈 Nuevo: Marca de tiempo
             )
 
-            val detalles = productosSeleccionados.map {
+            val detalles = productosSeleccionados.map { producto ->
                 DetalleVentaEntity(
-                    ventaId = 0, // Se autogenera en la transacción
-                    productoId = it.id,
-                    cantidad = it.cantidad,
-                    precioUnitario = it.precio
+                    id = UUID.randomUUID().toString(),
+                    ventaId = ventaId, // Se autogenera en la transacción
+                    productoId = producto.id,
+                    cantidad = producto.cantidad,
+                    precioUnitario = producto.precio
                 )
             }
 

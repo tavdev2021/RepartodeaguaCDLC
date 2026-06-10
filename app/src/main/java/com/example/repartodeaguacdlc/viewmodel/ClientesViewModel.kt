@@ -43,9 +43,9 @@ class ClientesViewModel(
     private val _selectedClient = MutableStateFlow<Clientes?>(null)
     val selectedClient: StateFlow<Clientes?> = _selectedClient.asStateFlow()
 
-    private var selectedClientId: Int? = null
+    private var selectedClientId: String? = null
 
-    fun selectClient(id: Int) {
+    fun selectClient(id: String) {
         viewModelScope.launch {
             selectedClientId = id //Guardamos el Id del cliente seleccionado
             _isLoading.value = true
@@ -68,7 +68,7 @@ class ClientesViewModel(
         _searchText.value = text
     }
 
-    suspend fun getClienteById(id: Int): Clientes? {
+    suspend fun getClienteById(id: String): Clientes? {
         _isLoading.value = true
         return try {
             _isLoading.value = false

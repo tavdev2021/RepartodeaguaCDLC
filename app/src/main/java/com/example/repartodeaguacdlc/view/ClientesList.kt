@@ -57,7 +57,7 @@ import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 fun SharedTransitionScope.ClientesList(
     animatedVisibilityScope: AnimatedVisibilityScope,
     onAddNewClient: () -> Unit,
-    onClientClick: (Int) -> Unit
+    onClientClick: (String) -> Unit
 ) {
 
     //Contexto de la App
@@ -97,7 +97,6 @@ fun SharedTransitionScope.ClientesList(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-                //.padding(8.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

@@ -10,7 +10,7 @@ class ClientesRepositoryRoom(private val clientesDao: ClientesDao) {
     val allClientes: Flow<List<Clientes>> = clientesDao.getAllClientes()
 
     // Obtener Cliente por ID
-    suspend fun getClienteById(id: Int): Clientes? {
+    suspend fun getClienteById(id: String): Clientes? {
         return clientesDao.getClienteById(id)
     }
 

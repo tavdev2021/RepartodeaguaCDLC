@@ -64,8 +64,8 @@ import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 fun SharedTransitionScope.ClientDetail(
     animatedVisibilityScope: AnimatedVisibilityScope,
     clientesViewModel: ClientesViewModel,
-    onNavigateToEdit: (Int) -> Unit,
-    onNavigateToVenta: (Int) -> Unit,
+    onNavigateToEdit: (String) -> Unit,
+    onNavigateToVenta: (String) -> Unit,
     onBack: () -> Unit) {
 
     val context = LocalContext.current
