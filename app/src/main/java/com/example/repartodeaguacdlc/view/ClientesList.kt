@@ -1,4 +1,5 @@
 package com.example.repartodeaguacdlc.view
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -51,6 +52,7 @@ import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
@@ -127,7 +129,18 @@ fun SharedTransitionScope.ClientesList(
                 trailingIcon = {
 
                     IconButton(onClick = {
-                        clientesViewModel.startQRScanner(context)
+                        val scanner = GmsBarcodeScanning.getClient(context)
+
+                        scanner.startScan()
+                            .addOnSuccessListener { barcode ->
+                                clientesViewModel.startQRScanner(barcode.rawValue)
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(context, "Error al escanear: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnCanceledListener {
+                                Toast.makeText(context, "Escaneo cancelado", Toast.LENGTH_SHORT).show()
+                            }
                     })
                     {
                         Icon(

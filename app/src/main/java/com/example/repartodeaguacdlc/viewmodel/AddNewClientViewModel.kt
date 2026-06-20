@@ -35,6 +35,9 @@ class AddNewClientViewModel(
     private val _locationClient = MutableStateFlow("")
     val locationClient: StateFlow<String> = _locationClient.asStateFlow()
 
+    private val _isFetchingLocation = MutableStateFlow(false)
+    val isFetchingLocation: StateFlow<Boolean> = _isFetchingLocation.asStateFlow()
+
     private val _notasClient = MutableStateFlow("")
     val notasClient: StateFlow<String> = _notasClient.asStateFlow()
 
@@ -131,6 +134,10 @@ class AddNewClientViewModel(
     
     fun updateLocation(latitude: Double, longitude: Double) {
         _locationClient.value = "$latitude, $longitude"
+    }
+
+    fun setFetchinglocation(loading: Boolean) {
+        _isFetchingLocation.value = loading
     }
 
     private fun validateRegisterForm(): Boolean {

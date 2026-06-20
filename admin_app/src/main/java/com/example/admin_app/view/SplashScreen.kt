@@ -33,7 +33,6 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.animation.core.animateFloatAsState // Para animar la opacidad
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue

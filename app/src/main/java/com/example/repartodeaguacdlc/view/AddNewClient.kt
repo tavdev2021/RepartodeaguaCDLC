@@ -1,6 +1,7 @@
 package com.example.repartodeaguacdlc.view
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,9 +65,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.data.AddNewClientViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.AddNewClientViewModel
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,6 +91,7 @@ fun AddNewClient(
     val phone by viewModel.phone.collectAsState()
     val email by viewModel.emailRegisterClient.collectAsState()
     val location by viewModel.locationClient.collectAsState()
+    val isFetchingLocation by viewModel.isFetchingLocation.collectAsState()
     val notasClient by viewModel.notasClient.collectAsState()
 
     // Observar los errores de los campos desde el ViewModel
@@ -109,16 +114,35 @@ fun AddNewClient(
     fun obtenerUbicacionActual(
         fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient,
         viewModel: AddNewClientViewModel,
-        context: android.content.Context
+        context: Context
     ) {
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null) {
-                viewModel.updateLocation(location.latitude, location.longitude)
-                Toast.makeText(context, "Ubicación obtenida", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "No se pudo obtener la ubicación. Activa el GPS.", Toast.LENGTH_LONG).show()
+
+        viewModel.setFetchinglocation(true)
+
+        val priority = Priority.PRIORITY_HIGH_ACCURACY
+
+        fusedLocationClient.getCurrentLocation(priority, null)
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    viewModel.updateLocation(location.latitude, location.longitude)
+                    Toast.makeText(context, "Ubicación precisa obtenida", Toast.LENGTH_SHORT).show()
+                    viewModel.setFetchinglocation(false)
+                } else {
+                    fusedLocationClient.lastLocation
+                        .addOnSuccessListener { lastLocation ->
+                            lastLocation?.let {
+                                viewModel.updateLocation(it.latitude, it.longitude)
+                                Toast.makeText(context, "Ubicación aproximada obtenida", Toast.LENGTH_SHORT).show()
+                                viewModel.setFetchinglocation(false)
+                            } ?: Toast.makeText(
+                                context,
+                                "No se pudo obtener la ubicación. Activa el GPS y sal a cielo abierto",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            viewModel.setFetchinglocation(false)
+                        }
+                }
             }
-        }
     }
 
 // Launcher para solicitar permisos
@@ -338,20 +362,31 @@ fun AddNewClient(
                     locationError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 },
                 trailingIcon = {
-                    IconButton(onClick = {
-                        locationPermissionLauncher.launch(
-                            arrayOf(
-                            android.Manifest.permission.ACCESS_FINE_LOCATION,
-                            android.Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
+                    if (isFetchingLocation) {
+                        // INDICADOR DE CARGA
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
                         )
-                    }) {
-                        Icon(Icons.TwoTone.LocationSearching,
-                            contentDescription = "Map Icon",
-                            modifier = Modifier
-                                .size(28.dp)
-                                .padding(end = 8.dp),
-                            tint =  MaterialTheme.colorScheme.primary)
+                    } else {
+                        IconButton(onClick = {
+                            locationPermissionLauncher.launch(
+                                arrayOf(
+                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
+                        }) {
+                            Icon(
+                                Icons.TwoTone.LocationSearching,
+                                contentDescription = "Map Icon",
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .padding(end = 8.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(

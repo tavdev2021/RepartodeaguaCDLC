@@ -53,6 +53,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.common.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch

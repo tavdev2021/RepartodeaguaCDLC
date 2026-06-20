@@ -1,4 +1,4 @@
-package com.example.repartodeaguacdlc.view
+package com.example.common.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,7 +20,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.example.repartodeaguacdlc.R
+import com.example.common.R
 
 @Composable
 fun LoadingOverlay(

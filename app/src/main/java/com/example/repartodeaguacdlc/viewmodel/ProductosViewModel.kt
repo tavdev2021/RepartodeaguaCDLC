@@ -56,7 +56,8 @@ class ProductosViewModel(private val productosRepository: ProductosRepositoryRoo
     fun finalizarVenta(clienteId: String, metodoPago: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             val productosSeleccionados = _productos.value.filter { it.cantidad > 0 }
-            if (productosSeleccionados.isEmpty()) return@launch
+            if (productosSeleccionados.isEmpty())
+                return@launch
 
             val ventaId = UUID.randomUUID().toString() // Generamos un ID único para la venta
 

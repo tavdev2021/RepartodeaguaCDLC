@@ -5,48 +5,25 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.twotone.Edit
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
@@ -66,310 +44,238 @@ fun SharedTransitionScope.ClientDetail(
     clientesViewModel: ClientesViewModel,
     onNavigateToEdit: (String) -> Unit,
     onNavigateToVenta: (String) -> Unit,
-    onBack: () -> Unit) {
-
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
     val cliente by clientesViewModel.selectedClient.collectAsState()
+    val isLoading by clientesViewModel.isLoading.collectAsState()
 
+    // Intents
     val mapIntent = remember(cliente?.ubicacion) {
-        cliente?.ubicacion?.let { ubicacion ->
-            val gmmIntentUri = "geo:0,0?q=$ubicacion&z=15".toUri()
-            Intent(Intent.ACTION_VIEW, gmmIntentUri)
-        }
+        cliente?.ubicacion?.let { Intent(Intent.ACTION_VIEW, "geo:0,0?q=$it&z=15".toUri()) }
     }
-
     val callIntent = remember(cliente?.telefono) {
-        cliente?.telefono?.let { telefono ->
-            val callUri = "tel:$telefono"
-            Intent(Intent.ACTION_DIAL, callUri.toUri())
-        }
+        cliente?.telefono?.let { Intent(Intent.ACTION_DIAL, "tel:$it".toUri()) }
     }
-
     val messageIntent = remember(cliente?.telefono) {
-        cliente?.telefono?.let { telefono ->
-            val messageUri = "smsto:$telefono"
-            Intent(Intent.ACTION_SENDTO, messageUri.toUri())
-        }
+        cliente?.telefono?.let { Intent(Intent.ACTION_SENDTO, "smsto:$it".toUri()) }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        modifier = Modifier
-                            .sharedElement(
-                                sharedContentState = rememberSharedContentState(key = "nombre-${cliente?.id}"),
-                                animatedVisibilityScope = animatedVisibilityScope
-                            ),
-                        text = cliente?.nombre ?: stringResource(R.string.appbar_title_details)
-                    )
-                },
+            CenterAlignedTopAppBar(
+                title = { Text("Detalle del Cliente", style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
-                    IconButton(onClick = { onBack() }) { // <--- AQUÍ SE USA onBack
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Regresar"
-                        )
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Regresar")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onNavigateToEdit(cliente!!.id) }) {
-                        Icon(
-                            imageVector = Icons.TwoTone.Edit,
-                            contentDescription = "Regresar"
-                        )
+                    cliente?.let {
+                        IconButton(onClick = { onNavigateToEdit(it.id) }) {
+                            Icon(Icons.TwoTone.Edit, "Editar", tint = MaterialTheme.colorScheme.primary)
+                        }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent // Lo haremos transparente para que luzca integrado
                 )
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (cliente != null) {
+                val currentCliente = cliente!!
 
-
-            Card(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.9f)
-                    .sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "card-${cliente?.id}"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    )
-                    .fillMaxSize(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.onPrimary,
-                )
-            ) {
-                // 2. Diseño del contenido del detalle
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .verticalScroll(rememberScrollState())
                 ) {
+                    // --- HEADER SECCION ---
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        AsyncImage(
+                            model = currentCliente.imagenUrl,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .sharedElement(
+                                    sharedContentState = rememberSharedContentState(key = "image-${currentCliente.id}"),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                                .size(140.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    4.dp,
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                    CircleShape
+                                ),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.ic_downloading),
+                            error = painterResource(id = R.drawable.ic_error)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = currentCliente.nombre,
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
+                            ),
+                            modifier = Modifier.sharedElement(
+                                sharedContentState = rememberSharedContentState(key = "nombre-${currentCliente.id}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                        )
+                        Text(
+                            text = "ID: ${currentCliente.id.take(8)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    // --- ACCIONES RAPIDAS (Tiles) ---
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        QuickActionButton(
+                            icon = Icons.Default.Phone,
+                            label = "Llamar",
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            callIntent?.let { context.startActivity(it) } ?: Toast.makeText(context, "No disponible", Toast.LENGTH_SHORT).show()
+                        }
+                        QuickActionButton(
+                            icon = Icons.Default.ShoppingCart,
+                            label = "Venta",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            onNavigateToVenta(currentCliente.id)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        QuickActionButton(
+                            icon = Icons.Default.Place,
+                            label = "Mapa",
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            ElevatedButton(
-                                onClick = {
-                                    if (callIntent != null) {
-                                        if (callIntent.resolveActivity(context.packageManager) != null) {
-                                            context.startActivity(callIntent)
-                                        } else {
-                                            Toast.makeText(context, "No se encontro una aplicacion para llamar", Toast.LENGTH_SHORT).show()
-                                            // Si no se encuentra ninguna app para llamar, muestra un mensaje")
-                                        }
-                                    } else {
-                                        Toast.makeText(context, "Número de teléfono no disponible.", Toast.LENGTH_SHORT).show()
-                                    }
-                                },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Phone,
-                                    contentDescription = "Llamar"
-                                )
-                            }
-                            Text(text = "Llamar")
+                            mapIntent?.let { context.startActivity(it) } ?: Toast.makeText(context, "Sin ubicación", Toast.LENGTH_SHORT).show()
                         }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        QuickActionButton(
+                            icon = Icons.Default.Email,
+                            label = "Mensaje",
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            ElevatedButton(
-                                onClick = {
-                                    if (messageIntent != null) {
-                                        if (messageIntent.resolveActivity(context.packageManager) != null) {
-                                            context.startActivity(messageIntent)
-                                        } else {
-                                            Toast.makeText(context, "No se encontro una aplicacion para enviar mensajes", Toast.LENGTH_SHORT).show()
-                                            // Si no se encuentra ninguna app para llamar, muestra un mensaje")
-                                        }
-                                    } else {
-                                        Toast.makeText(context, "Número de teléfono no disponible.", Toast.LENGTH_SHORT).show()
-                                    }
-                                },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Email,
-                                    contentDescription = "Mensaje"
-                                )
-                            }
-                            Text(text = "Mensaje")
-
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            ElevatedButton(
-                                onClick = {
-
-                                    if (mapIntent != null) {
-                                        // Comprueba si hay una app que pueda manejar el intent
-                                        if (mapIntent.resolveActivity(context.packageManager) != null) {
-                                            context.startActivity(mapIntent)
-                                        } else {
-                                            // Si no se encuentra Google Maps, muestra un mensaje
-                                            Toast.makeText(
-                                                context,
-                                                "No se encontró una aplicación de mapas.",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Ubicación no disponible.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-
-                                },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                            ) {
-                                Icon(imageVector = Icons.Default.Place, contentDescription = "Mapa")
-                            }
-                            Text(text = "Mapa")
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            ElevatedButton(
-                                onClick = {
-                                    cliente?.let { onNavigateToVenta(it.id) }
-                                },
-                                elevation = ButtonDefaults.elevatedButtonElevation(
-                                    defaultElevation = 6.dp,
-                                    pressedElevation = 2.dp,
-                                    disabledElevation = 0.dp
-                                ),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ShoppingCart,
-                                    contentDescription = "Venta"
-                                )
-                            }
-                            Text(text = "Venta")
+                            messageIntent?.let { context.startActivity(it) }
                         }
                     }
 
-                    DetailColumn(
-                        icon = Icons.Default.Phone,
-                        label = "Teléfono:",
-                        value = cliente!!.telefono
-                    )
-                    DetailColumn(
-                        icon = Icons.Default.Place,
-                        label = "Ubicación:",
-                        value = cliente!!.ubicacion
-                    )
-                    DetailColumn(
-                        icon = Icons.Default.Create,
-                        label = "Notas:",
-                        value = cliente!!.notas
-                    )
+                    // --- SECCION DETALLES ---
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .sharedElement(
+                                sharedContentState = rememberSharedContentState(key = "card-${currentCliente.id}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            ),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text(
+                                "Información de contacto",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            DetailRow(Icons.Default.Phone, "Teléfono", currentCliente.telefono)
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
+                            DetailRow(Icons.Default.Place, "Ubicación", currentCliente.ubicacion)
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
+                            DetailRow(Icons.Default.Create, "Notas adicionales", currentCliente.notas)
+                        }
+                    }
                 }
             }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(25.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                AsyncImage(
-                    model = cliente?.imagenUrl,
-                    contentDescription = "Imagen del Cliente",
-                    modifier = Modifier
-                        .sharedElement(
-                            sharedContentState = rememberSharedContentState(key = "image-${cliente?.id}"),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                        .size(100.dp)
-                        .clip(CircleShape)// Hace la imagen circular
-                        .border(
-                            2.dp,
-                            MaterialTheme.colorScheme.secondary,
-                            CircleShape
-                        ),// Pone un borde en la imagen
-                    contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                    placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
-                    error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
-                )
-            }
-
         }
     }
 }
 
 @Composable
-fun DetailColumn(icon: ImageVector, label: String, value: String) {
-
-    Row(modifier = Modifier
-        .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+fun QuickActionButton(
+    icon: ImageVector,
+    label: String,
+    containerColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(60.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = containerColor
     ) {
-        Text(
-                text = label,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+fun DetailRow(icon: ImageVector, label: String, value: String) {
+    Row(verticalAlignment = Alignment.Top) {
+        Surface(
+            modifier = Modifier.size(36.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+        ) {
+            Icon(
+                icon,
+                null,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(18.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
-            Text(text = value, style = MaterialTheme.typography.bodyLarge)
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                value.ifBlank { "Sin especificar" },
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+            )
         }
     }
 }

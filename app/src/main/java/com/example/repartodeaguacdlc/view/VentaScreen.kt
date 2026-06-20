@@ -5,7 +5,9 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -305,9 +307,18 @@ fun ProductoItem(
                 modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF03A9F4).copy(alpha = 0.1f))
             )
 
-            Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                Text(producto.nombre, fontWeight = FontWeight.Bold)
-                Text("$${producto.precio} c/u", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)) {
+                Text(
+                    producto.nombre,
+                    fontWeight = FontWeight.Bold)
+
+                Text(
+                    "$${producto.precio} c/u",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray)
 
                 if (producto.cantidad > 0) {
                     Surface(color = Color(0xFFE8EAF6), shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(top = 4.dp)) {
@@ -317,13 +328,57 @@ fun ProductoItem(
             }
 
             // Botones conectados a las lambdas
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDecrement, modifier = Modifier.size(32.dp).background(Color(0xFFF5F5F5), CircleShape)) {
-                    Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(18.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color(0xFFF5F5F5)) // Fondo gris claro de la elipse
+                    .padding(6.dp)
+                ) {
+
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape) // Asegura ripple circular
+                        .background(
+                            if (producto.cantidad > 0) Color.White
+                            else Color(0xFFF5F5F5) // Igual al fondo cuando está apagado
+                        )
+                        .clickable(enabled = producto.cantidad > 0) { onDecrement() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Remove,
+                        contentDescription = "Menos",
+                        modifier = Modifier
+                            .size(18.dp),
+                        tint = if (producto.cantidad > 0) Color(0xFF2196F3) else Color.LightGray
+                    )
                 }
-                Text("${producto.cantidad}", modifier = Modifier.padding(horizontal = 12.dp), fontWeight = FontWeight.Bold)
-                IconButton(onClick = onIncrement, modifier = Modifier.size(32.dp).background(Color(0xFF2196F3), CircleShape)) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+
+                Text("${producto.cantidad}",
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF2196F3)) // Fondo azul sólido
+                        .clickable{ onIncrement() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Mas",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(18.dp)
+                    )
                 }
             }
         }

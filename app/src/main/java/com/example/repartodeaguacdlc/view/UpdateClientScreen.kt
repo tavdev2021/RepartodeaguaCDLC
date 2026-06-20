@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Create
 import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material.icons.twotone.LocationOn
+import androidx.compose.material.icons.twotone.LocationSearching
 import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Phone
 import androidx.compose.material3.AlertDialog
@@ -66,9 +67,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,6 +108,7 @@ fun UpdateClientScreen(
     val phoneError by viewModel.phoneError.collectAsState()
     val emailError by viewModel.emailErrorRegister.collectAsState()
     val locationError by viewModel.locationError.collectAsState()
+    val isFetchingLocation by viewModel.isFetchingLocation.collectAsState()
     val notesClientError by viewModel.notesClientError.collectAsState()
 
     val error by viewModel.error.collectAsState()
@@ -122,14 +126,32 @@ fun UpdateClientScreen(
         viewModel: ClientesUpdateViewModel,
         context: android.content.Context
     ) {
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null) {
-                viewModel.updateLocation(location.latitude, location.longitude)
-                Toast.makeText(context, "Ubicación obtenida", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "No se pudo obtener la ubicación. Activa el GPS.", Toast.LENGTH_LONG).show()
+        viewModel.setFetchinglocation(true)
+
+        val priority = Priority.PRIORITY_HIGH_ACCURACY
+
+        fusedLocationClient.getCurrentLocation(priority, null)
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    viewModel.updateLocation(location.latitude, location.longitude)
+                    Toast.makeText(context, "Ubicación precisa obtenida", Toast.LENGTH_SHORT).show()
+                    viewModel.setFetchinglocation(false)
+                } else {
+                    fusedLocationClient.lastLocation
+                        .addOnSuccessListener { lastLocation ->
+                            lastLocation?.let {
+                                viewModel.updateLocation(it.latitude, it.longitude)
+                                Toast.makeText(context, "Ubicación aproximada obtenida", Toast.LENGTH_SHORT).show()
+                                viewModel.setFetchinglocation(false)
+                            } ?: Toast.makeText(
+                                context,
+                                "No se pudo obtener la ubicación. Activa el GPS y sal a cielo abierto",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            viewModel.setFetchinglocation(false)
+                        }
+                }
             }
-        }
     }
 
 // Launcher para solicitar permisos
@@ -362,22 +384,31 @@ fun UpdateClientScreen(
                         locationError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     },
                     trailingIcon = {
-                        IconButton(onClick = {
-                            locationPermissionLauncher.launch(
-                                arrayOf(
-                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                        if (isFetchingLocation) {
+                            // INDICADOR DE CARGA
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            IconButton(onClick = {
+                                locationPermissionLauncher.launch(
+                                    arrayOf(
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
                                 )
-                            )
-                        }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_map),
-                                contentDescription = "Map Icon",
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .padding(end = 8.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            }) {
+                                Icon(
+                                    Icons.TwoTone.LocationSearching,
+                                    contentDescription = "Map Icon",
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .padding(end = 8.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(

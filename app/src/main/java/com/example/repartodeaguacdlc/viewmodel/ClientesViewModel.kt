@@ -1,12 +1,9 @@
 package com.example.repartodeaguacdlc.viewmodel
 
-import android.content.Context
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.common.model.Clientes
 import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -68,32 +65,10 @@ class ClientesViewModel(
         _searchText.value = text
     }
 
-    suspend fun getClienteById(id: String): Clientes? {
-        _isLoading.value = true
-        return try {
-            _isLoading.value = false
-            clientesRepository.getClienteById(id)
-        } catch (e: Exception) {
-            null
+    fun startQRScanner(qrContent: String?) {
+
+        if (!qrContent.isNullOrBlank()) {
+            onSearchTextChanged(qrContent)
         }
-    }
-
-    fun startQRScanner(context: Context) {
-        val scanner = GmsBarcodeScanning.getClient(context)
-
-        scanner.startScan()
-            .addOnSuccessListener { barcode ->
-                val qrContent = barcode.rawValue
-                if (!qrContent.isNullOrBlank()) {
-                    onSearchTextChanged(qrContent)
-                    Toast.makeText(context, "QR Escaneado: $qrContent", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(context, "Error al escanear: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-            .addOnCanceledListener {
-                Toast.makeText(context, "Escaneo cancelado", Toast.LENGTH_SHORT).show()
-            }
     }
 }

@@ -8,8 +8,8 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.repartodeaguacdlc" />
-                  <option name="mobileSdkAppId" value="1:1047637806109:android:e76c581ff98573c8da4af4" />
+                  <option name="appId" value="com.example.admin_app" />
+                  <option name="mobileSdkAppId" value="1:1047637806109:android:6a9c98974e03dd46da4af4" />
                   <option name="projectId" value="reparto-de-agua-3bb1a" />
                   <option name="projectNumber" value="1047637806109" />
                 </ConnectionSetting>
