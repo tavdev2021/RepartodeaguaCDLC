@@ -2,7 +2,6 @@ package com.example.repartodeaguacdlc.view
 
 import android.annotation.SuppressLint
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,25 +60,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.repartodeaguacdlc.R
 import com.example.common.model.Productos
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
-import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
+import com.example.repartodeaguacdlc.viewmodel.VentasViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VentaScreen(
     clienteId: String,
     clientesViewModel: ClientesViewModel,
-    productosViewModel: ProductosViewModel,
+    ventasViewModel: VentasViewModel,
     clienteDireccion: String = "Av. Libertador 1234, Centro",
     onBack: () -> Unit,
     onBackToClientList: () -> Unit
 ) {
     val cliente by clientesViewModel.selectedClient.collectAsState()
-    val listaProductos by productosViewModel.productos.collectAsState()
-    val total by productosViewModel.totalPagar.collectAsState(initial = 0.0)
-    val articulos by productosViewModel.totalArticulos.collectAsState(initial = 0)
+    val listaProductos by ventasViewModel.productos.collectAsState()
+    val total by ventasViewModel.totalPagar.collectAsState(initial = 0.0)
+    val articulos by ventasViewModel.totalArticulos.collectAsState(initial = 0)
 
     var metodoSeleccionado by remember { mutableStateOf("Efectivo") }
     Scaffold(
@@ -109,7 +110,7 @@ fun VentaScreen(
                 cantidadArticulos = articulos,
                 onFinalizar = {
 
-                    productosViewModel.finalizarVenta(
+                    ventasViewModel.finalizarVenta(
                         clienteId = clienteId,
                         metodoPago = metodoSeleccionado,
                         onSuccess = {
@@ -215,10 +216,10 @@ fun VentaScreen(
                 ProductoItem(
                     producto = producto,
                     onIncrement = {
-                        productosViewModel.actualizarCantidad(producto.id, producto.cantidad + 1)
+                        ventasViewModel.actualizarCantidad(producto.id, producto.cantidad + 1)
                     },
                     onDecrement = {
-                        productosViewModel.actualizarCantidad(producto.id, producto.cantidad - 1)
+                        ventasViewModel.actualizarCantidad(producto.id, producto.cantidad - 1)
                     }
                 )
             }
@@ -300,11 +301,23 @@ fun ProductoItem(
         elevation = CardDefaults.cardElevation(2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = producto.imagenRes),
-                contentDescription = null,
-                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF03A9F4).copy(alpha = 0.1f))
+        Row(modifier = Modifier
+            .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(producto.imagenUrl)
+                    .crossfade(true)
+                    .placeholder(R.drawable.ic_downloading)
+                    .error(R.drawable.ic_error)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .build(),
+                contentDescription = producto.nombre,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF03A9F4).copy(alpha = 0.1f))
             )
 
             Column(

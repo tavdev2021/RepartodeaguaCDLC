@@ -175,7 +175,7 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
                     email = _emailRegisterClient.value,
                     ubicacion = _locationClient.value,
                     notas = _notasClient.value,
-                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&length=3",
+                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&length=2",
                     fechaRegistro = System.currentTimeMillis()
                 )
 

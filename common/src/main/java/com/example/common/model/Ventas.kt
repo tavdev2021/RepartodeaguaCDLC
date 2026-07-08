@@ -8,12 +8,10 @@ import java.util.UUID
 data class VentaEntity(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val clienteId: String,
-    val fecha: Long,
-    val total: Double,
-    val metodoPago: String,
-
-    // Campos para el SyncWorker
+    val clienteId: String = "",
+    val fecha: Long = 0L,
+    val total: Double = 0.0,
+    val metodoPago: String = "",
     val isSynced: Boolean = false,
     val ultimaActualizacion: Long = System.currentTimeMillis()
 )
@@ -22,8 +20,16 @@ data class VentaEntity(
 data class DetalleVentaEntity(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val ventaId: String,
-    val productoId: Int,
-    val cantidad: Int,
-    val precioUnitario: Double
+    val ventaId: String = "",
+    val productoId: String = "",
+    val cantidad: Int = 0,
+    val precioUnitario: Double = 0.0
+)
+
+data class VentaConDatos(
+    val id: String,
+    val nombreCliente: String,
+    val total: Double,
+    val totalProductos: Int,
+    val fecha: Long
 )

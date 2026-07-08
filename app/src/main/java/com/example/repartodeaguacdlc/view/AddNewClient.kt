@@ -1,7 +1,6 @@
 package com.example.repartodeaguacdlc.view
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -65,11 +64,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.common.util.LocationHelper
 import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.data.AddNewClientViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.AddNewClientViewModel
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,51 +108,30 @@ fun AddNewClient(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val fusedLocationClient = remember { com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context) }
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
     @SuppressLint("MissingPermission")
-    fun obtenerUbicacionActual(
-        fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient,
-        viewModel: AddNewClientViewModel,
-        context: Context
-    ) {
-
-        viewModel.setFetchinglocation(true)
-
-        val priority = Priority.PRIORITY_HIGH_ACCURACY
-
-        fusedLocationClient.getCurrentLocation(priority, null)
-            .addOnSuccessListener { location ->
-                if (location != null) {
-                    viewModel.updateLocation(location.latitude, location.longitude)
-                    Toast.makeText(context, "Ubicación precisa obtenida", Toast.LENGTH_SHORT).show()
-                    viewModel.setFetchinglocation(false)
-                } else {
-                    fusedLocationClient.lastLocation
-                        .addOnSuccessListener { lastLocation ->
-                            lastLocation?.let {
-                                viewModel.updateLocation(it.latitude, it.longitude)
-                                Toast.makeText(context, "Ubicación aproximada obtenida", Toast.LENGTH_SHORT).show()
-                                viewModel.setFetchinglocation(false)
-                            } ?: Toast.makeText(
-                                context,
-                                "No se pudo obtener la ubicación. Activa el GPS y sal a cielo abierto",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            viewModel.setFetchinglocation(false)
-                        }
-                }
-            }
+    fun obtenerUbicacionActual() {
+        LocationHelper.obtenerUbicacionActual(
+            fusedLocationClient = fusedLocationClient,
+            onStart = { viewModel.setFetchinglocation(true) },
+            onSuccess = { lat, lon, msg ->
+                viewModel.updateLocation(lat, lon)
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            },
+            onError = { msg ->
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+            },
+            onFinish = { viewModel.setFetchinglocation(false) }
+        )
     }
 
 // Launcher para solicitar permisos
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val granted = permissions.values.all { it }
-        if (granted) {
-            // Si se conceden, obtenemos la ubicación
-            obtenerUbicacionActual(fusedLocationClient, viewModel, context)
+        if (permissions.values.all { it }) {
+            obtenerUbicacionActual()
         } else {
             Toast.makeText(context, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
         }

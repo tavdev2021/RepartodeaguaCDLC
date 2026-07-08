@@ -40,6 +40,9 @@ dependencies {
     api(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    //Google Maps
+    api(libs.play.services.location)
+
     // Jetpack Compose y navegación
     api("androidx.compose.animation:animation")
     api("androidx.compose.animation:animation-core:1.10.3")

@@ -14,7 +14,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.repartodeaguacdlc.data.ClientesUpdateViewModelFactory
 import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
-import com.example.repartodeaguacdlc.data.ProductosViewModelFactory
 import com.example.repartodeaguacdlc.view.AddNewClient
 import com.example.repartodeaguacdlc.view.ClientDetail
 import com.example.repartodeaguacdlc.view.ClientesList
@@ -27,9 +26,10 @@ import com.example.repartodeaguacdlc.view.SplashScreen
 import com.example.repartodeaguacdlc.view.UpdateClientScreen
 import com.example.repartodeaguacdlc.view.VentaScreen
 import com.example.common.viewmodel.AuthViewModel
+import com.example.repartodeaguacdlc.data.VentasViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
-import com.example.repartodeaguacdlc.viewmodel.ProductosViewModel
+import com.example.repartodeaguacdlc.viewmodel.VentasViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -87,8 +87,14 @@ fun AppNavHost()
             }
 
             composable("home") {
+                val context = LocalContext.current
+                val ventasViewModel: VentasViewModel = viewModel(
+                    factory = VentasViewModelFactory(context)
+                )
+
                 HomeScreen(
                     authViewModel,
+                    ventasViewModel,
                     onLogout = {
                         navController.navigate("login") {
                             popUpTo("home") { inclusive = true }
@@ -242,20 +248,19 @@ fun AppNavHost()
                     clientesViewModel.selectClient(clienteId)
                     true
                 }
-
-                val productosViewModel: ProductosViewModel = viewModel(
-                    factory = ProductosViewModelFactory(context)
+                val ventasViewModel: VentasViewModel = viewModel(
+                    factory = VentasViewModelFactory(context)
                 )
                 VentaScreen(
                     clientesViewModel = clientesViewModel,
-                    productosViewModel = productosViewModel,
+                    ventasViewModel = ventasViewModel,
                     clienteId = clienteId,
                     onBack = {
-                        productosViewModel.limpiarCarrito()
+                        ventasViewModel.limpiarCarrito()
                         navController.popBackStack()
                      },
                     onBackToClientList = {
-                        productosViewModel.limpiarCarrito()
+                        ventasViewModel.limpiarCarrito()
                         navController.navigate("clientes") {
                             popUpTo("clientes") { inclusive = true }
                             launchSingleTop = true

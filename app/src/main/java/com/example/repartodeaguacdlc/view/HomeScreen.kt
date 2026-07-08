@@ -12,13 +12,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -46,17 +50,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.common.model.VentaConDatos
 import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.AccionRapida
 import com.example.common.viewmodel.AuthViewModel
+import com.example.repartodeaguacdlc.viewmodel.VentasViewModel
 import java.text.DateFormat
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: AuthViewModel,
+               ventasViewModel: VentasViewModel,
                onAddNewClient:() -> Unit,
                onPedidos:() -> Unit,
                onClientes:() -> Unit,
@@ -67,6 +76,10 @@ fun HomeScreen(viewModel: AuthViewModel,
     val user by viewModel.currentUser.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val userProfile by viewModel.userProfile.collectAsState()
+    // Obtén la referencia al productosViewModel
+    val ventasHoy by ventasViewModel.ventasHoyCount.collectAsStateWithLifecycle()
+    val ingresosHoy by ventasViewModel.ingresosHoy.collectAsStateWithLifecycle()
+    val ultimas3ventas by ventasViewModel.ultimasVentas.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collect { event ->
@@ -254,7 +267,7 @@ fun HomeScreen(viewModel: AuthViewModel,
 
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    "42",
+                                    ventasHoy.toString(),
                                     fontSize = 32.sp,
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.bodyMedium,
@@ -301,7 +314,7 @@ fun HomeScreen(viewModel: AuthViewModel,
 
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    "$3,450",
+                                    text = "$${String.format(Locale.getDefault(), "%.2f", ingresosHoy)}",
                                     fontSize = 32.sp,
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.bodyMedium,
@@ -333,7 +346,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                             Card(modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
-                                .height(100.dp)
+                                .height(80.dp)
                                 .clickable(onClick = {
                                     Toast.makeText(
                                         context,
@@ -403,8 +416,8 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 items(acciones) { accion ->
                                     Card(
                                         modifier = Modifier
-                                            .width(150.dp)
-                                            .height(130.dp)
+                                            .width(120.dp)
+                                            .height(100.dp)
                                             .clickable(onClick = accion.action),
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.surface,
@@ -436,14 +449,37 @@ fun HomeScreen(viewModel: AuthViewModel,
                         }
                         // --- FIN DE LA IMPLEMENTACIÓN DE LAZYROW ---
 
+                        Text(
+                            text = "Últimas 3 Ventas",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
 
-                        Box(
+                        LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(16.dp)
+                                .padding(horizontal = 16.dp),
+                            contentPadding = PaddingValues(
+                                top = 16.dp,
+                                start = 8.dp,
+                                end = 8.dp,
+                                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 40.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
 
+                            if (ultimas3ventas.isEmpty()) {
+                                item {
+                                    Text(text = "No hay ventas registradas aún.")
+                                }
+                            } else {
+                                items(ultimas3ventas) { venta ->
+                                    VentaCard(venta = venta)
+                                }
+                            }
                         }
+
                     }
                 }
             }
@@ -455,4 +491,47 @@ fun HomeScreen(viewModel: AuthViewModel,
         visible = isLoading,
         message = stringResource(R.string.loading_cerrar_sesion)
     )
+}
+
+
+
+@Composable
+fun VentaCard(venta: VentaConDatos, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface,
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = venta.nombreCliente, // 👈 Ahora mostramos el nombre
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "${venta.totalProductos} productos", // 👈 Cantidad total
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Text(
+                text = "$${String.format(Locale.getDefault(), "%.2f", venta.total)}",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+    }
 }
