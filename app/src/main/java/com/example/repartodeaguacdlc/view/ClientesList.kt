@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.data.ClientesViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
@@ -188,7 +190,13 @@ fun SharedTransitionScope.ClientesList(
 
                                     // Asumiendo que tu objeto `cliente` tiene una propiedad `imagenUrl` con la URL de la imagen.
                                     AsyncImage(
-                                        model = cliente.imagenUrl, // Reemplaza con la URL de la imagen del cliente
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(cliente.imagenUrl) // Reemplaza con la URL de la imagen del cliente
+                                            .crossfade(true)
+                                            .diskCachePolicy(CachePolicy.ENABLED)
+                                        .placeholder(R.drawable.ic_downloading) // Icono de placeholder mientras carga
+                                        .error(R.drawable.ic_error) // Icono si hay error de carga
+                                        .build(),
                                         contentDescription = "Imagen del Cliente",
                                         modifier = Modifier
                                             .sharedElement(
@@ -203,8 +211,6 @@ fun SharedTransitionScope.ClientesList(
                                                 CircleShape
                                             ),// Pone un borde en la imagen
                                         contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                                        placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
-                                        error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
                                     )
                                     // --- FIN DEL CAMBIO ---
 

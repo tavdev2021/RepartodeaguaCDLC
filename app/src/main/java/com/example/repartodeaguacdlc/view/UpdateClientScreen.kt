@@ -215,7 +215,7 @@ fun UpdateClientScreen(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)// Hace la imagen circular
-                        .border(2.dp, MaterialTheme.colorScheme.secondary, CircleShape),// Pone un borde en la imagen
+                        .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),// Pone un borde en la imagen
                     contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
                     placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
                     error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga

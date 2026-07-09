@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.common.model.VentaConDatos
 import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
@@ -137,7 +139,13 @@ fun HomeScreen(viewModel: AuthViewModel,
                         val imageUrl = firebaseUser.photoUrl
                         if (imageUrl != null) {
                             AsyncImage(
-                                model = imageUrl,
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(imageUrl)
+                                    .crossfade(true)
+                                    .diskCachePolicy(CachePolicy.ENABLED)
+                                    .placeholder(R.drawable.ic_downloading)
+                                    .error(R.drawable.ic_error)
+                                    .build(),
                                 contentDescription = "Imagen de perfil",
                                 modifier = Modifier
                                     .size(60.dp)
@@ -148,8 +156,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                                         CircleShape
                                     ),
                                 contentScale = ContentScale.Crop,
-                                placeholder = painterResource(id = R.drawable.ic_downloading),
-                                error = painterResource(id = R.drawable.ic_error)
+
                                 )
                         } else {
                             Icon(
