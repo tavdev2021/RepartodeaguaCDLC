@@ -29,9 +29,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,7 +73,7 @@ fun SharedTransitionScope.ClientesList(
     )
 
     // 2. Recolecta los estados del ViewModel
-    val searchText by clientesViewModel.searchText.collectAsState()
+    val searchText by clientesViewModel.searchText.collectAsStateWithLifecycle()
     val searchResults by clientesViewModel.searchResults.collectAsStateWithLifecycle()
 
     //Estados de SearchBar sin ViewModel
@@ -106,53 +106,45 @@ fun SharedTransitionScope.ClientesList(
         ) {
 
             SearchBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                query = searchText,
-                onQueryChange = { newText ->
-                    // 3. Llama a la función del ViewModel para actualizar la búsqueda
-                    clientesViewModel.onSearchTextChanged(newText)
-
-                },
-                onSearch = {
-                    // Aquí puedes manejar la acción de búsqueda (ej. navegar a otra pantalla)
-                    active = false
-                },
-                active = active,
-                onActiveChange = { active = false },
-                placeholder = { Text(stringResource(R.string.searchbar_buscar_clientes)) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Icono de búsqueda"
+                inputField = {
+                    SearchBarDefaults.InputField(
+                        query = searchText,
+                        onQueryChange = { newText ->
+                            clientesViewModel.onSearchTextChanged(newText)
+                        },
+                        onSearch = { active = false },
+                        expanded = active,
+                        onExpandedChange = { active = it },
+                        placeholder = { Text(stringResource(R.string.searchbar_buscar_clientes)) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = "Icono de búsqueda")
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                val scanner = GmsBarcodeScanning.getClient(context)
+                                scanner.startScan()
+                                    .addOnSuccessListener { barcode ->
+                                        clientesViewModel.startQRScanner(barcode.rawValue)
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                            }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.qr_code),
+                                    contentDescription = "Icono Qr scan"
+                                )
+                            }
+                        }
                     )
                 },
-                trailingIcon = {
-
-                    IconButton(onClick = {
-                        val scanner = GmsBarcodeScanning.getClient(context)
-
-                        scanner.startScan()
-                            .addOnSuccessListener { barcode ->
-                                clientesViewModel.startQRScanner(barcode.rawValue)
-                            }
-                            .addOnFailureListener { e ->
-                                Toast.makeText(context, "Error al escanear: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
-                            .addOnCanceledListener {
-                                Toast.makeText(context, "Escaneo cancelado", Toast.LENGTH_SHORT).show()
-                            }
-                    })
-                    {
-                        Icon(
-                            painter = painterResource(id = R.drawable.qr_code),
-                            contentDescription = "Icono Qr scan"
-                        )
-                    }
-                }
+                expanded = active,
+                onExpandedChange = { active = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
             ) {
-
+                // Aquí puedes poner sugerencias si lo deseas en el futuro
             }
 
             // Contenido que se muestra cuando no hay resultados de búsqueda

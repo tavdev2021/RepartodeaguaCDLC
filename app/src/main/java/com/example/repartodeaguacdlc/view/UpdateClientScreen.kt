@@ -22,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Create
-import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material.icons.twotone.LocationOn
 import androidx.compose.material.icons.twotone.LocationSearching
 import androidx.compose.material.icons.twotone.Person
@@ -45,7 +44,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +64,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.common.util.LocationHelper
 import com.example.common.view.LoadingOverlay
@@ -91,31 +90,28 @@ fun UpdateClientScreen(
 
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
 
-    val cliente by clientesViewModel.selectedClient.collectAsState()
+    val cliente by clientesViewModel.selectedClient.collectAsStateWithLifecycle()
 
     LaunchedEffect(cliente) {
         viewModel.loadClientData(cliente)
     }
 
     // Observar los valores de los campos desde el ViewModel
-    val fullName by viewModel.fullName.collectAsState()
-    val phone by viewModel.phone.collectAsState()
-    val email by viewModel.emailRegisterClient.collectAsState()
-    val location by viewModel.locationClient.collectAsState()
-    val notasClient by viewModel.notasClient.collectAsState()
+    val fullName by viewModel.fullName.collectAsStateWithLifecycle()
+    val phone by viewModel.phone.collectAsStateWithLifecycle()
+    val location by viewModel.locationClient.collectAsStateWithLifecycle()
+    val notasClient by viewModel.notasClient.collectAsStateWithLifecycle()
 
     // Observar los errores de los campos desde el ViewModel
-    val fullNameError by viewModel.fullNameError.collectAsState()
-    val phoneError by viewModel.phoneError.collectAsState()
-    val emailError by viewModel.emailErrorRegister.collectAsState()
-    val locationError by viewModel.locationError.collectAsState()
-    val isFetchingLocation by viewModel.isFetchingLocation.collectAsState()
-    val notesClientError by viewModel.notesClientError.collectAsState()
+    val fullNameError by viewModel.fullNameError.collectAsStateWithLifecycle()
+    val phoneError by viewModel.phoneError.collectAsStateWithLifecycle()
+    val locationError by viewModel.locationError.collectAsStateWithLifecycle()
+    val isFetchingLocation by viewModel.isFetchingLocation.collectAsStateWithLifecycle()
 
-    val error by viewModel.error.collectAsState()
+    val error by viewModel.error.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
-    val isLoading by viewModel.isLoading.collectAsState()
-    val isSuccess by viewModel.isSuccess.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val isSuccess by viewModel.isSuccess.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -302,36 +298,6 @@ fun UpdateClientScreen(
 
                 Spacer(modifier = Modifier.height(if (phoneError != null) 4.dp else 8.dp)) // Menos espacio si hay error
 
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { viewModel.onEmailChangeRegister(it) },
-                    label = { Text(stringResource(R.string.email_register_cliente)) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
-                        Icon(Icons.TwoTone.Email, contentDescription = "Email Icon")
-                    },
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Email,
-                        showKeyboardOnFocus = true, imeAction = ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(onNext = {
-                        focusManager.moveFocus(FocusDirection.Down)
-                    }),
-                    isError = emailError != null,
-                    supportingText = {
-                        emailError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(if (emailError != null) 4.dp else 8.dp)) // Menos espacio si hay error
-
                 Text(
                     stringResource(R.string.ubicacion_detalles_cliente),
                     modifier = Modifier
@@ -422,10 +388,6 @@ fun UpdateClientScreen(
                                 onUpdateSuccess()
                             })
                     }),
-                    isError = notesClientError != null,
-                    supportingText = {
-                        notesClientError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
@@ -443,8 +405,8 @@ fun UpdateClientScreen(
                                 onUpdateSuccess()
                             })
                     },
-                    enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && email.isNotBlank() && location.isNotBlank() && notasClient.isNotBlank()
-                            && fullNameError == null && phoneError == null && emailError == null && locationError == null && notesClientError == null,
+                    enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && location.isNotBlank()
+                            && fullNameError == null && phoneError == null &&  locationError == null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),

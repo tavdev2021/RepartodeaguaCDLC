@@ -32,7 +32,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +51,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
@@ -65,19 +65,19 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    val generalError by viewModel.error.collectAsState()
+    val generalError by viewModel.error.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
 
     // Observar los valores de los campos desde el ViewModel
-    val email by viewModel.emailLogin.collectAsState()
-    val password by viewModel.passwordLogin.collectAsState()
+    val email by viewModel.emailLogin.collectAsStateWithLifecycle()
+    val password by viewModel.passwordLogin.collectAsStateWithLifecycle()
 
     // Observar los errores de los campos desde el ViewModel
-    val emailError by viewModel.emailErrorLogin.collectAsState()
-    val passwordError by viewModel.passwordErrorLogin.collectAsState()
+    val emailError by viewModel.emailErrorLogin.collectAsStateWithLifecycle()
+    val passwordError by viewModel.passwordErrorLogin.collectAsStateWithLifecycle()
     
-    val isLoading by viewModel.isLoading.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

@@ -39,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +59,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.admin_app.R
 import com.example.common.view.LoadingOverlay
@@ -74,32 +74,33 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit
 ) {
 
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
-    val availableRoutes by viewModel.availableRoutes.collectAsState()
-    val availableRoles by viewModel.availableRoles.collectAsState()
+    val isAuthenticated by viewModel.isAuthenticated.collectAsStateWithLifecycle()
+    val availableRoutes by viewModel.availableRoutes.collectAsStateWithLifecycle()
+    val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
 
     // Observar los valores de los campos desde el ViewModel
-    val fullName by viewModel.fullName.collectAsState()
-    val email by viewModel.emailRegister.collectAsState()
-    val password by viewModel.passwordRegister.collectAsState()
-    val confirmPassword by viewModel.confirmPasswordRegister.collectAsState()
-    val rutaAsignada by viewModel.rutaAsignada.collectAsState()
-    val rolAsignado by viewModel.rolAsignado.collectAsState()
+    val fullName by viewModel.fullName.collectAsStateWithLifecycle()
+    val email by viewModel.emailRegister.collectAsStateWithLifecycle()
+    val password by viewModel.passwordRegister.collectAsStateWithLifecycle()
+    val confirmPassword by viewModel.confirmPasswordRegister.collectAsStateWithLifecycle()
+    val rutaAsignada by viewModel.rutaAsignada.collectAsStateWithLifecycle()
+    val rolAsignado by viewModel.rolAsignado.collectAsStateWithLifecycle()
 
     // Observar los errores de los campos desde el ViewModel
-    val fullNameError by viewModel.fullNameError.collectAsState()
-    val emailError by viewModel.emailErrorRegister.collectAsState()
-    val passwordError by viewModel.passwordErrorRegister.collectAsState()
-    val confirmPasswordError by viewModel.confirmPasswordErrorRegister.collectAsState()
-    val rutaAsignadaError by viewModel.rutaAsignadaError.collectAsState()
-    val rolAsigndoError by viewModel.rolAsignadoError.collectAsState()
+    val fullNameError by viewModel.fullNameError.collectAsStateWithLifecycle()
+    val emailError by viewModel.emailErrorRegister.collectAsStateWithLifecycle()
+    val passwordError by viewModel.passwordErrorRegister.collectAsStateWithLifecycle()
+    val confirmPasswordError by viewModel.confirmPasswordErrorRegister.collectAsStateWithLifecycle()
+    val rutaAsignadaError by viewModel.rutaAsignadaError.collectAsStateWithLifecycle()
+    val rolAsigndoError by viewModel.rolAsignadoError.collectAsStateWithLifecycle()
 
 
-    val error by viewModel.error.collectAsState()
+    val error by viewModel.error.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    val isLoading by viewModel.isLoading.collectAsState()
     var expandedRol by remember { mutableStateOf(false) }
     var expandedRuta by remember { mutableStateOf(false) }
 
@@ -348,7 +349,7 @@ fun RegisterScreen(
                     )
                 )
 
-                // Este es el menú que aparece al hacer click
+                // Este es el menú que aparece al hacer clic
                 ExposedDropdownMenu(
                     expanded = expandedRol,
                     onDismissRequest = { expandedRol = false } // Se cierra si tocas fuera
@@ -415,7 +416,7 @@ fun RegisterScreen(
                         )
                     )
 
-                    // Este es el menú que aparece al hacer click
+                    // Este es el menú que aparece al hacer clic
                     ExposedDropdownMenu(
                         expanded = expandedRuta,
                         onDismissRequest = { expandedRuta = false } // Se cierra si tocas fuera

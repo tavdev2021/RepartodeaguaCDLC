@@ -1,6 +1,5 @@
 package com.example.repartodeaguacdlc.viewmodel
 
-import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.common.model.Clientes
@@ -10,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 class AddNewClientViewModel(
     private val clientesRepository: ClientesRepositoryRoom
@@ -29,9 +29,6 @@ class AddNewClientViewModel(
     private val _phone = MutableStateFlow("")
     val phone: StateFlow<String> = _phone.asStateFlow()
 
-    private val _emailRegisterClient = MutableStateFlow("")
-    val emailRegisterClient: StateFlow<String> = _emailRegisterClient.asStateFlow()
-
     private val _locationClient = MutableStateFlow("")
     val locationClient: StateFlow<String> = _locationClient.asStateFlow()
 
@@ -46,12 +43,8 @@ class AddNewClientViewModel(
     val fullNameError: StateFlow<String?> = _fullNameError.asStateFlow()
     private val _phoneError = MutableStateFlow<String?>(null)
     val phoneError: StateFlow<String?> = _phoneError.asStateFlow()
-    private val _emailErrorRegister = MutableStateFlow<String?>(null)
-    val emailErrorRegister: StateFlow<String?> = _emailErrorRegister.asStateFlow()
     private val _locationError = MutableStateFlow<String?>(null)
     val locationError: StateFlow<String?> = _locationError.asStateFlow()
-    private val _notesClientError = MutableStateFlow<String?>(null)
-    val notesClientError: StateFlow<String?> = _notesClientError.asStateFlow()
 
 
     // --- Funciones para actualizar los campos desde la UI
@@ -71,11 +64,6 @@ class AddNewClientViewModel(
         _phoneError.value = validatePhoneNumber(newPhone)
     }
 
-    fun onEmailChangeRegister(newEmailRegister: String) {
-        _emailRegisterClient.value = newEmailRegister
-        _emailErrorRegister.value = validateEmail(newEmailRegister)
-    }
-
     fun onLocationChangeClient(newLocation: String) {
         _locationClient.value = newLocation
         _locationError.value = validateLocationClient(newLocation)
@@ -83,7 +71,6 @@ class AddNewClientViewModel(
 
     fun onNotesClientChange(addNotesClient: String) {
         _notasClient.value = addNotesClient
-        _notesClientError.value = validateNotasClient(addNotesClient)
     }
 
     // --- Funciones de Validación ---
@@ -109,25 +96,9 @@ class AddNewClientViewModel(
         return null // Válido
     }
 
-    private fun validateEmail(email: String): String? {
-        if (email.isBlank()) {
-            return "El email no puede estar vacío."
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            return "Introduce un formato de email válido."
-        }
-        return null // Válido
-    }
-
     private fun validateLocationClient(location: String): String? {
         if (location.isBlank()) {
             return "La ubicación no puede estar vacía."
-        }
-        return null // Válido
-    }
-
-    private fun validateNotasClient(notas: String): String? {
-        if (notas.isBlank()) {
-            return "Las notas no pueden estar vacías."
         }
         return null // Válido
     }
@@ -143,18 +114,14 @@ class AddNewClientViewModel(
     private fun validateRegisterForm(): Boolean {
         val isFullNameValid = validateFullName(_fullName.value) == null
         val isPhoneValid = validatePhoneNumber(_phone.value) == null
-        val isEmailValid = validateEmail(_emailRegisterClient.value) == null
         val isLocationValid = validateLocationClient(_locationClient.value) == null
-        val isNotesValid = validateNotasClient(_notasClient.value) == null
 
         // Actualizar todos los errores para mostrarlos en la UI si es necesario
         _fullNameError.value = validateFullName(_fullName.value)
         _phoneError.value = validatePhoneNumber(_phone.value)
-        _emailErrorRegister.value = validateEmail(_emailRegisterClient.value)
         _locationError.value = validateLocationClient(_locationClient.value)
-        _notesClientError.value = validateNotasClient(_notasClient.value)
 
-        return isFullNameValid && isPhoneValid && isEmailValid && isLocationValid && isNotesValid
+        return isFullNameValid && isPhoneValid && isLocationValid
     }
 
     fun registerClient() {
@@ -168,14 +135,13 @@ class AddNewClientViewModel(
             _isSuccess.value = false
 
             try {
-                delay(1000)
+                delay(1.seconds)
                 // 1. Crear el objeto Cliente
                 val nuevoCliente = Clientes(
                     nombre = _fullName.value,
                     telefono = _phone.value,
-                    email = _emailRegisterClient.value,
                     ubicacion = _locationClient.value,
-                    notas = _notasClient.value,
+                    notas = _notasClient.value.ifBlank { "Sin notas" },
                     imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=random&length=2",
                     fechaRegistro = System.currentTimeMillis()
                 )
@@ -208,7 +174,6 @@ class AddNewClientViewModel(
     fun clearInputsRegister(){
         _fullName.value = ""
         _phone.value = ""
-        _emailRegisterClient.value = ""
         _locationClient.value = ""
         _notasClient.value = ""
     }
@@ -216,8 +181,6 @@ class AddNewClientViewModel(
     fun clearErrorRegister(){
         _fullNameError.value = null
         _phoneError.value = null
-        _emailErrorRegister.value = null
         _locationError.value = null
-        _notesClientError.value = null
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.common.viewmodel.AuthViewModel
 import com.example.admin_app.R
@@ -36,9 +37,9 @@ fun HomeScreen(
     authViewModel: AuthViewModel,
     onLogout: () -> Unit
 ) {
-    val user by authViewModel.currentUser.collectAsState()
-    val isLoading by authViewModel.isLoading.collectAsState()
-    val userProfile by authViewModel.userProfile.collectAsState()
+    val user by authViewModel.currentUser.collectAsStateWithLifecycle()
+    val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
+    val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         authViewModel.navigationEvent.collect { event ->

@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
@@ -44,8 +45,8 @@ fun SharedTransitionScope.ClientDetail(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val cliente by clientesViewModel.selectedClient.collectAsState()
-    val isLoading by clientesViewModel.isLoading.collectAsState()
+    val cliente by clientesViewModel.selectedClient.collectAsStateWithLifecycle()
+    val isLoading by clientesViewModel.isLoading.collectAsStateWithLifecycle()
 
     // Intents
     val mapIntent = remember(cliente?.ubicacion) {
@@ -274,7 +275,7 @@ fun DetailRow(icon: ImageVector, label: String, value: String) {
         Column {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
-                value.ifBlank { "Sin especificar" },
+                value.ifBlank { "Sin Notas" },
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
             )
         }

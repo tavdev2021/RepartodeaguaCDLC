@@ -38,8 +38,8 @@
     <string name="email_register_cliente">Correo electrónico</string>
     <string name="ubicacion_detalles_cliente">Ubicacion y Detalles</string>
     <string name="ubicacion_register_cliente">Calle, Numero, Colonia</string>
-    <string name="nota_register_cliente">Notas de la entrega (Referencias, Horarios, etc.)</string>
-    <string name="button_register_cliente">Registrar</string>>
+    <string name="nota_register_cliente">Notas de la entrega (Referencias, Horarios, etc.) Opcional.</string>
+    <string name="button_register_cliente">Registrar</string>
 
     //Textos de ClienteDetail
     <string name="appbar_title_details">Detalle de cliente</string>

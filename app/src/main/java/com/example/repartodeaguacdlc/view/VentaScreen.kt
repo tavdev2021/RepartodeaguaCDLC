@@ -44,7 +44,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +58,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -77,10 +77,10 @@ fun VentaScreen(
     onBack: () -> Unit,
     onBackToClientList: () -> Unit
 ) {
-    val cliente by clientesViewModel.selectedClient.collectAsState()
-    val listaProductos by ventasViewModel.productos.collectAsState()
-    val total by ventasViewModel.totalPagar.collectAsState(initial = 0.0)
-    val articulos by ventasViewModel.totalArticulos.collectAsState(initial = 0)
+    val cliente by clientesViewModel.selectedClient.collectAsStateWithLifecycle()
+    val listaProductos by ventasViewModel.productos.collectAsStateWithLifecycle()
+    val total by ventasViewModel.totalPagar.collectAsStateWithLifecycle()
+    val articulos by ventasViewModel.totalArticulos.collectAsStateWithLifecycle()
 
     var metodoSeleccionado by remember { mutableStateOf("Efectivo") }
     Scaffold(

@@ -87,7 +87,7 @@ class AuthViewModel(
     val rutaAsignadaError: StateFlow<String?> = _rutaAsignadaError.asStateFlow()
 
     private val _rolAsignadoError = MutableStateFlow<String?>(null)
-    val rolAsignadoError: StateFlow<String?> = _rutaAsignadaError.asStateFlow()
+    val rolAsignadoError: StateFlow<String?> = _rolAsignadoError.asStateFlow()
 
     private val _navigationEvent = MutableSharedFlow<AuthEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()

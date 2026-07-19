@@ -37,7 +37,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,9 +74,9 @@ fun HomeScreen(viewModel: AuthViewModel,
                onLogout: () -> Unit) {
 
     //val isAuthenticated by viewModel.isAuthenticated.collectAsState()
-    val user by viewModel.currentUser.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val userProfile by viewModel.userProfile.collectAsState()
+    val user by viewModel.currentUser.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
     // Obtén la referencia al productosViewModel
     val ventasHoy by ventasViewModel.ventasHoyCount.collectAsStateWithLifecycle()
     val ingresosHoy by ventasViewModel.ingresosHoy.collectAsStateWithLifecycle()
