@@ -1,4 +1,5 @@
 package com.example.repartodeaguacdlc.view
+
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -33,14 +34,12 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +65,7 @@ fun SharedTransitionScope.ClientesList(
 
     //Contexto de la App
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // 1. Instanciar el ViewModel usando el Factory
     val clientesViewModel: ClientesViewModel = viewModel(
@@ -75,10 +75,6 @@ fun SharedTransitionScope.ClientesList(
     // 2. Recolecta los estados del ViewModel
     val searchText by clientesViewModel.searchText.collectAsStateWithLifecycle()
     val searchResults by clientesViewModel.searchResults.collectAsStateWithLifecycle()
-
-    //Estados de SearchBar sin ViewModel
-    //var query by remember { mutableStateOf("") }
-    var active by remember { mutableStateOf(false) }
 
     // 2. Usamos Scaffold para estructurar la pantalla
     Scaffold(
@@ -112,9 +108,9 @@ fun SharedTransitionScope.ClientesList(
                         onQueryChange = { newText ->
                             clientesViewModel.onSearchTextChanged(newText)
                         },
-                        onSearch = { active = false },
-                        expanded = active,
-                        onExpandedChange = { active = it },
+                        onSearch = { keyboardController?.hide() },
+                        expanded = false,
+                        onExpandedChange = {  },
                         placeholder = { Text(stringResource(R.string.searchbar_buscar_clientes)) },
                         leadingIcon = {
                             Icon(Icons.Default.Search, contentDescription = "Icono de búsqueda")
@@ -138,8 +134,8 @@ fun SharedTransitionScope.ClientesList(
                         }
                     )
                 },
-                expanded = active,
-                onExpandedChange = { active = it },
+                expanded = false,
+                onExpandedChange = {  },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -165,7 +161,16 @@ fun SharedTransitionScope.ClientesList(
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp) // Añade un poco de espacio entre las tarjetas
                                     .clickable {
+                                        
                                         // Acción al hacer clic en la tarjeta, por ejemplo, navegar a los detalles del cliente
+                                        
+                                        // 1. Ocultar el teclado por precaucion
+                                        keyboardController?.hide()
+
+                                        // 2. Limpiar el texto de búsqueda en el ViewModel
+                                        clientesViewModel.onSearchTextChanged("")
+
+                                        // 3. Navegar a los detalles del cliente
                                         onClientClick(cliente.id) // Llama a la función de clic del cliente
                                     },
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Añade una sombra sutil
@@ -226,9 +231,6 @@ fun SharedTransitionScope.ClientesList(
                                             text = cliente.ubicacion,
                                             style = MaterialTheme.typography.bodySmall
                                         )
-
-                                        // Suponiendo que tu objeto 'cliente' tiene una propiedad 'email'
-                                        //Text(text = cliente.email, style = MaterialTheme.typography.bodySmall)
 
                                         // Suponiendo que tu objeto 'cliente' tiene una propiedad 'telefono'
                                         Text(

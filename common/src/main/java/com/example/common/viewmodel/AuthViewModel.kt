@@ -264,7 +264,7 @@ class AuthViewModel(
 
     private fun validateRolAsignado(rolAsignado: String): String? {
         if (rolAsignado.isBlank()) {
-            return "La ruta no puede estar vacía."
+            return "El rol no puede estar vacío."
         }
         return null
     }
