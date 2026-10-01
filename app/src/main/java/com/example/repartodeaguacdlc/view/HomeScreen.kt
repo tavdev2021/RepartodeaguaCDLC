@@ -4,6 +4,7 @@ import android.icu.util.Calendar
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,9 +39,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -58,7 +61,10 @@ import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.model.AccionRapida
 import com.example.common.viewmodel.AuthViewModel
+import com.example.repartodeaguacdlc.data.AppDatabase
 import com.example.repartodeaguacdlc.viewmodel.VentasViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.DateFormat
 import java.util.Locale
 
@@ -81,6 +87,7 @@ fun HomeScreen(viewModel: AuthViewModel,
     val ventasHoy by ventasViewModel.ventasHoyCount.collectAsStateWithLifecycle()
     val ingresosHoy by ventasViewModel.ingresosHoy.collectAsStateWithLifecycle()
     val ultimas3ventas by ventasViewModel.ultimasVentas.collectAsStateWithLifecycle()
+    val rutasDisponibles by viewModel.availableRoutes.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.navigationEvent.collect { event ->
@@ -149,6 +156,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 modifier = Modifier
                                     .size(60.dp)
                                     .clip(CircleShape)
+                                    .background(Color.White)
                                     .border(
                                         2.dp,
                                         MaterialTheme.colorScheme.secondary,
@@ -185,7 +193,17 @@ fun HomeScreen(viewModel: AuthViewModel,
                                 modifier = Modifier.padding(start = 8.dp)
                             )
 
-                            Text("Ruta: ${userProfile?.ruta ?: "Cargando..."}",
+                            val nombreRuta = remember(userProfile, rutasDisponibles) {
+                                val id = userProfile?.routeId
+                                if (id != null) {
+                                    // Buscamos la ruta cuyo ID coincida con el ID del usuario
+                                    rutasDisponibles.find { it.id == id }?.nombre ?: "Sin ruta asignada"
+                                } else {
+                                    "Cargando ruta..."
+                                }
+                            }
+
+                            Text("Ruta: $nombreRuta",
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontWeight = FontWeight.Light,
                                     fontSize = 16.sp
@@ -204,7 +222,15 @@ fun HomeScreen(viewModel: AuthViewModel,
                             modifier = Modifier
                                 .size(48.dp)
                                 .padding(end = 16.dp)
-                                .clickable(onClick = { viewModel.logout() }),
+                                .clickable(onClick = {
+                                    viewModel.logout(
+                                onClearLocalStorage = {
+                                    withContext(Dispatchers.IO) {
+                                        AppDatabase.getDatabase(context).clearAllTables()
+                                    }
+                                }
+                                    )
+                                }),
                         )
                     }
                 }

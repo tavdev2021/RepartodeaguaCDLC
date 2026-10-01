@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.common.model.Ruta
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -55,8 +56,11 @@ class AuthViewModel(
     private val _rutaAsignada = MutableStateFlow("")
     val rutaAsignada: StateFlow<String> = _rutaAsignada.asStateFlow()
 
-    private val _availableRoutes = MutableStateFlow<List<String>>(emptyList())
-    val availableRoutes: StateFlow<List<String>> = _availableRoutes.asStateFlow()
+    private val _availableRoutes = MutableStateFlow<List<Ruta>>(emptyList())
+    val availableRoutes: StateFlow<List<Ruta>> = _availableRoutes.asStateFlow()
+
+    private val _routeIdSelected = MutableStateFlow("")
+    val routeIdSelected: StateFlow<String> = _routeIdSelected.asStateFlow()
 
     private val _rolAsignado = MutableStateFlow("")
     val rolAsignado: StateFlow<String> = _rolAsignado.asStateFlow()
@@ -156,9 +160,10 @@ class AuthViewModel(
         }
     }
 
-    fun onRutaAsignadaChange(newRutaAsignada: String) {
-        _rutaAsignada.value = newRutaAsignada
-        _rutaAsignadaError.value = validateRutaAsignada(newRutaAsignada)
+    fun onRouteSelected(ruta: Ruta) {
+        _rutaAsignada.value = ruta.nombre // Para mostrar en el TextField
+        _routeIdSelected.value = ruta.id  // Para guardar en la DB
+        _rutaAsignadaError.value = validateRutaAsignada(ruta.nombre)   // Limpiar error
     }
 
     fun onRolAsignadoChange(newRolAsignado: String) {
@@ -168,23 +173,22 @@ class AuthViewModel(
         // Lógica condicional para la ruta
         if (newRolAsignado == "Administrador") {
             _rutaAsignada.value = "S/R" // "Sin Ruta" o "Administración"
+            _routeIdSelected.value = "S/R" // Asignar ID por defecto para Admin
             _rutaAsignadaError.value = null // Quitamos el error ya que el valor es válido
         } else {
             // Si vuelve a Repartidor, limpiamos para obligar a seleccionar una
             _rutaAsignada.value = ""
+            _routeIdSelected.value = ""
+            _rutaAsignadaError.value = validateRutaAsignada("")
         }
     }
 
     // --- NUEVO: Función para obtener rutas (por ahora estática) ---
     private fun fetchAvailableRoutes() {
         // En el futuro, aquí harás una llamada a repository o Firestore
-        _availableRoutes.value = listOf(
-            "Arroyo Grande - Centro",
-            "Arroyo Grande - Sur",
-            "La Laja - El Timbinal",
-            "La Cienega",
-            "La Cañada - El pinzan"
-        )
+        viewModelScope.launch {
+            repository.getRutasFlow().collect { _availableRoutes.value = it }
+        }
     }
 
     private fun fetchAvailableRoles() {
@@ -287,14 +291,17 @@ class AuthViewModel(
         val isEmailValid = validateEmail(_emailRegister.value) == null
         val isPasswordValid = validatePasswordRegister(_passwordRegister.value, _confirmPasswordRegister.value) == null
         val isConfirmPasswordValid = validateConfirmPassword(_passwordRegister.value, _confirmPasswordRegister.value) == null
+        val isRutaValid = validateRutaAsignada(_rutaAsignada.value) == null
+
 
         // Actualizar todos los errores para mostrarlos en la UI si es necesario
         _fullNameError.value = validateFullName(_fullName.value)
         _emailErrorRegister.value = validateEmail(_emailRegister.value)
         _passwordErrorRegister.value = validatePasswordRegister(_passwordRegister.value, _confirmPasswordRegister.value)
         _confirmPasswordErrorRegister.value = validateConfirmPassword(_passwordRegister.value, _confirmPasswordRegister.value)
+        _rutaAsignadaError.value = validateRutaAsignada(_rutaAsignada.value)
 
-        return isFullNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid
+        return isFullNameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid && isRutaValid
     }
 
     fun login(expectedRole: String) {
@@ -329,7 +336,7 @@ class AuthViewModel(
             _currentUser.value = repository.currentUser
         }
 
-    fun register() {
+    fun register(expectedRole: String) {
         if (!validateRegisterForm()) {
             // No intentar el registro si hay errores de validación
             return
@@ -337,18 +344,31 @@ class AuthViewModel(
         viewModelScope.launch {
             _isLoading.value = true
 
-            val imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=random&length=2"
+            val imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=E3F2FD&color=1976D2&bold=true&length=2"
 
-            val result = repository.register(_fullName.value,_emailRegister.value, _passwordRegister.value, imagenUrl = imagenUrl, _rutaAsignada.value, _rolAsignado.value)
+            val result = repository.register(
+                _fullName.value, _routeIdSelected.value, _emailRegister.value,
+                _passwordRegister.value, imagenUrl = imagenUrl, _rutaAsignada.value, _rolAsignado.value)
+
             result.onSuccess {
-                // 1. Forzar la actualización del usuario actual con los datos nuevos
-                _currentUser.value = repository.currentUser
 
-                // 2. Cargar los datos de Firestore inmediatamente
-                fetchUserData()
+                val user = repository.currentUser
+                val profile = repository.getUserProfile(user?.uid ?: "")
 
-                // 3. Marcar como autenticado
-                _isAuthenticated.value = true
+                if (profile?.role == expectedRole) {
+                    // Éxito: Es el rol esperado para esta app
+                    _userProfile.value = profile
+                    _currentUser.value = user
+                    _isAuthenticated.value = true
+                    _navigationEvent.emit(AuthEvent.NavigateToHome)
+                } else {
+                    // Error: El usuario existe pero no tiene el permiso para esta app
+                    repository.logout() // Lo sacamos de Firebase Auth
+                    _isAuthenticated.value = false
+                    //_error.value = "No tienes permisos para acceder a esta aplicación."
+                    _navigationEvent.emit(AuthEvent.NavigateToLogin) // Volvemos a la pantalla de login
+
+                }
             }.onFailure {
                 _error.value = it.message ?: "Error desconocido durante el registro"
             _passwordRegister.value = ""
@@ -369,11 +389,21 @@ class AuthViewModel(
         }
     }
 
-    fun logout() {
+    fun guardarRuta(ruta: Ruta) {
+        viewModelScope.launch {
+            repository.crearOActualizarRuta(ruta)
+        }
+    }
+
+    fun logout(onClearLocalStorage: (suspend() -> Unit)? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             delay(1000.milliseconds)
             try {
+
+                // Limpieza total de la base de datos local
+                onClearLocalStorage?.invoke()
+
                 repository.logout()
                 clearInputsLogin()
                 clearInputsRegister()

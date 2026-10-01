@@ -5,13 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
 import com.example.repartodeaguacdlc.viewmodel.AddNewClientViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Suppress("UNCHECKED_CAST")
 class AddNewClientViewModelFactory(private val context: Context) :
     ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val database = AppDatabase.getDatabase(context)
-        val repository = ClientesRepositoryRoom(database.clientesDao())
+        val repository = ClientesRepositoryRoom(database.clientesDao(),
+            context = context,
+            firestore = FirebaseFirestore.getInstance())
 
         if (modelClass.isAssignableFrom(AddNewClientViewModel::class.java)) {
         return AddNewClientViewModel(repository) as T

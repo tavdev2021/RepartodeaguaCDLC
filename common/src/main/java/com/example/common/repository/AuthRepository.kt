@@ -1,6 +1,7 @@
 package com.example.common.repository
 
 import androidx.core.net.toUri
+import com.example.common.model.Ruta
 import com.example.common.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -31,7 +32,7 @@ class AuthRepository (
         Result.failure(e)
     }
 
-    suspend fun register(fullName: String, email: String, password: String, imagenUrl: String,rutaAsignada: String, rolAsignado: String): Result<Unit> {
+    suspend fun register(fullName: String, routeId: String, email: String, password: String, imagenUrl: String,rutaAsignada: String, rolAsignado: String): Result<Unit> {
     return try {
         // 1. Crear el usuario con email y contraseña.
         val authResult = auth.createUserWithEmailAndPassword(email, password).await()
@@ -55,10 +56,11 @@ class AuthRepository (
             val userData = mapOf(
                 "uid" to user.uid,
                 "nombre" to fullName,
+                "routeId" to routeId, // Aquí guardamos el ID de la ruta UUID (abc-123)
                 "email" to email,
                 "imagenUrl" to imagenUrl,
                 "ruta" to rutaAsignada, // Aquí guardamos "Ruta-01"
-                "role" to rolAsignado
+                "role" to rolAsignado  // Aquí guardamos "Administrador" o "Repartidor"
             )
             db.collection("usuarios").document(user.uid).set(userData).await()
 
@@ -83,6 +85,27 @@ class AuthRepository (
         } catch (e: Exception) { null }
     }
 
+    // Obtener rutas en tiepo real
+    fun getRutasFlow(): Flow<List<Ruta>> = callbackFlow {
+        val subscription = db.collection("rutas")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    close(error); return@addSnapshotListener
+                }
+                val rutas = snapshots?.documents?.mapNotNull { it.toObject(Ruta::class.java) }
+                    ?: emptyList()
+                trySend(rutas)
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    //Crear o editar ruta
+    suspend fun crearOActualizarRuta(ruta: Ruta): Result<Unit> = try {
+        db.collection("rutas").document(ruta.id).set(ruta).await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
         fun logout() {
             auth.signOut()
         }

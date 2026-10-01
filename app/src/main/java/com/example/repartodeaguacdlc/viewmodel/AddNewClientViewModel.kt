@@ -1,9 +1,12 @@
 package com.example.repartodeaguacdlc.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.common.model.Clientes
+import com.example.common.util.LocationHelper
 import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
+import com.example.repartodeaguacdlc.util.SyncManager.programarSincronizacionDireccion
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,9 +34,6 @@ class AddNewClientViewModel(
 
     private val _locationClient = MutableStateFlow("")
     val locationClient: StateFlow<String> = _locationClient.asStateFlow()
-
-    private val _isFetchingLocation = MutableStateFlow(false)
-    val isFetchingLocation: StateFlow<Boolean> = _isFetchingLocation.asStateFlow()
 
     private val _notasClient = MutableStateFlow("")
     val notasClient: StateFlow<String> = _notasClient.asStateFlow()
@@ -106,11 +106,6 @@ class AddNewClientViewModel(
     fun updateLocation(latitude: Double, longitude: Double) {
         _locationClient.value = "$latitude, $longitude"
     }
-
-    fun setFetchinglocation(loading: Boolean) {
-        _isFetchingLocation.value = loading
-    }
-
     private fun validateRegisterForm(): Boolean {
         val isFullNameValid = validateFullName(_fullName.value) == null
         val isPhoneValid = validatePhoneNumber(_phone.value) == null
@@ -124,7 +119,7 @@ class AddNewClientViewModel(
         return isFullNameValid && isPhoneValid && isLocationValid
     }
 
-    fun registerClient() {
+    fun registerClient(context: Context, routeId: String) {
         if (!validateRegisterForm())
             // No intentar el registro si hay errores de validación
             return
@@ -135,19 +130,30 @@ class AddNewClientViewModel(
             _isSuccess.value = false
 
             try {
+                // 1. Intento inmediato de traducir coordenadas a dirección (Geocodificación)
+                val direccionTraducida = LocationHelper.obtenerDireccionLegible(context, _locationClient.value)
                 delay(1.seconds)
-                // 1. Crear el objeto Cliente
+                // 2. Crear el objeto Cliente
                 val nuevoCliente = Clientes(
                     nombre = _fullName.value,
+                    routeId = routeId,
                     telefono = _phone.value,
                     ubicacion = _locationClient.value,
+                    // Si hubo internet, guardamos la dirección. Si no, queda vacío ("").
+                    direccion = if (direccionTraducida != _locationClient.value) direccionTraducida else "",
                     notas = _notasClient.value.ifBlank { "Sin notas" },
-                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=random&length=2",
-                    fechaRegistro = System.currentTimeMillis()
+                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=E3F2FD&color=1976D2&bold=true&length=2",
+                    fechaRegistro = System.currentTimeMillis(),
+                    activo = true
                 )
 
-                // 2. Guardar en Room (Local)
+                // 3. Guardar en Room (Local)
                 clientesRepository.insertCliente(nuevoCliente)
+
+                // 4. Si falló la dirección inicial (sin internet), programamos WorkManager
+                if (nuevoCliente.direccion.isEmpty()) {
+                    programarSincronizacionDireccion(context)
+                }
 
                 // 3. Éxito: Limpiar los campos y errores de validación
                 clearInputsRegister()

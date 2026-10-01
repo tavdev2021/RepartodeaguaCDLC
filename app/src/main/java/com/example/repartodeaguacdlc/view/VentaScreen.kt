@@ -73,7 +73,6 @@ fun VentaScreen(
     clienteId: String,
     clientesViewModel: ClientesViewModel,
     ventasViewModel: VentasViewModel,
-    clienteDireccion: String = "Av. Libertador 1234, Centro",
     onBack: () -> Unit,
     onBackToClientList: () -> Unit
 ) {
@@ -112,6 +111,7 @@ fun VentaScreen(
 
                     ventasViewModel.finalizarVenta(
                         clienteId = clienteId,
+                        routeId = cliente!!.routeId,
                         metodoPago = metodoSeleccionado,
                         onSuccess = {
                             Toast.makeText(context, "Venta generada con exito", Toast.LENGTH_SHORT).show()
@@ -190,7 +190,15 @@ fun VentaScreen(
                             .weight(1f)) {
                             Text("Cliente Seleccionado", color = Color(0xFF1976D2), style = MaterialTheme.typography.labelSmall)
                             Text(cliente?.nombre ?: "Cargando...", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
-                            Text(clienteDireccion, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Text(
+                                text = when {
+                                    cliente == null -> "Cargando direccion..."
+                                    cliente!!.direccion.isNotBlank() -> cliente!!.direccion
+                                    else -> cliente!!.ubicacion
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray,
+                                maxLines = 2)
                         }
                         // Icono de gota de fondo (decorativo)
                         Icon(

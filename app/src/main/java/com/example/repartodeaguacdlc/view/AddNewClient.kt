@@ -1,6 +1,7 @@
 package com.example.repartodeaguacdlc.view
 
-import android.annotation.SuppressLint
+import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Create
 import androidx.compose.material.icons.twotone.LocationOn
-import androidx.compose.material.icons.twotone.LocationSearching
 import androidx.compose.material.icons.twotone.Person
 import androidx.compose.material.icons.twotone.Phone
 import androidx.compose.material3.Button
@@ -42,14 +42,19 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -61,6 +66,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.common.util.LocationHelper
@@ -68,12 +74,14 @@ import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.data.AddNewClientViewModelFactory
 import com.example.repartodeaguacdlc.viewmodel.AddNewClientViewModel
+import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddNewClient(
+    routeId: String,
     onNavigateToHomeFromAddNewClient: () -> Unit
 ) {
 
@@ -89,7 +97,6 @@ fun AddNewClient(
     val fullName by viewModel.fullName.collectAsStateWithLifecycle()
     val phone by viewModel.phone.collectAsStateWithLifecycle()
     val location by viewModel.locationClient.collectAsStateWithLifecycle()
-    val isFetchingLocation by viewModel.isFetchingLocation.collectAsStateWithLifecycle()
     val notasClient by viewModel.notasClient.collectAsStateWithLifecycle()
 
     // Observar los errores de los campos desde el ViewModel
@@ -106,30 +113,70 @@ fun AddNewClient(
     val scope = rememberCoroutineScope()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    @SuppressLint("MissingPermission")
-    fun obtenerUbicacionActual() {
-        LocationHelper.obtenerUbicacionActual(
-            fusedLocationClient = fusedLocationClient,
-            onStart = { viewModel.setFetchinglocation(true) },
-            onSuccess = { lat, lon, msg ->
-                viewModel.updateLocation(lat, lon)
-                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-            },
-            onError = { msg ->
-                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-            },
-            onFinish = { viewModel.setFetchinglocation(false) }
-        )
-    }
+    // Estados para la UI
+    var currentAccuracy by remember { mutableFloatStateOf(0f) }
+    var locationCallback by remember { mutableStateOf<LocationCallback?>(null) }
 
-// Launcher para solicitar permisos
+// 1. Launcher para solicitar permisos
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        if (permissions.values.all { it }) {
-            obtenerUbicacionActual()
+        val granted = permissions.values.all { it }
+        if (granted) {
+            // Permisos concedidos: Iniciamos el GPS
+            locationCallback = LocationHelper.iniciarSeguimientoPreciso(
+                fusedLocationClient,
+                onLocationReceived = {lat, lon, accuracy ->
+                    currentAccuracy = accuracy
+                    if (accuracy <= 15f) viewModel.updateLocation(lat, lon)
+                }
+            )
         } else {
             Toast.makeText(context, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 2. Control de inicio ()LaunchedEffect)
+    LaunchedEffect(Unit) {
+
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFineLocation && hasCoarseLocation) {
+
+            // Permisos concedidos: Iniciamos el GPS
+
+            locationCallback = LocationHelper.iniciarSeguimientoPreciso(
+                fusedLocationClient,
+                onLocationReceived = { lat, lon, accuracy ->
+                    currentAccuracy = accuracy
+                    // Si la precisión es mejor a 15 metros, actualizamos el ViewModel automáticamente
+                    if (accuracy <= 15f) {
+                        viewModel.updateLocation(lat, lon)
+                    }
+                }
+            )
+        } else {
+            // Si no hay permisos, lanzamos el launcher
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    // 3. Limpieza al salir de la pantalla
+    DisposableEffect(Unit) {
+        onDispose {
+            locationCallback?.let { LocationHelper.detenerSeguimiento(fusedLocationClient, it) }
         }
     }
 
@@ -292,47 +339,46 @@ fun AddNewClient(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
+                readOnly = true,
                 leadingIcon = {
                     Icon(Icons.TwoTone.LocationOn, contentDescription = "Location Icon")
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Text,
-                    showKeyboardOnFocus = true, imeAction = ImeAction.Next
+                    showKeyboardOnFocus = false,
+                    imeAction = ImeAction.Next
                 ),
                 keyboardActions = KeyboardActions(onNext = {
                     focusManager.moveFocus(FocusDirection.Down)
                 }),
                 isError = locationError != null,
                 supportingText = {
-                    locationError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    Text("Buscando señal GPS... Colocate en un lugar abierto", color = MaterialTheme.colorScheme.primary)
                 },
                 trailingIcon = {
-                    if (isFetchingLocation) {
-                        // INDICADOR DE CARGA
+
+                        Text(
+                            text = "${currentAccuracy.toInt()}m",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if(currentAccuracy > 0 && currentAccuracy <= 15f) Color(0xFF4CAF50) else Color.Red
+                        )
+
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(32.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.primary
                         )
-                    } else {
+
                         IconButton(onClick = {
                             locationPermissionLauncher.launch(
                                 arrayOf(
-                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
                                 )
                             )
                         }) {
-                            Icon(
-                                Icons.TwoTone.LocationSearching,
-                                contentDescription = "Map Icon",
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .padding(end = 8.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+
                         }
-                    }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -358,7 +404,7 @@ fun AddNewClient(
                 ),
                 keyboardActions = KeyboardActions(onDone = {
                     focusManager.clearFocus()
-                    viewModel.registerClient()
+                    viewModel.registerClient(context, routeId)
                 }),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -370,7 +416,7 @@ fun AddNewClient(
 
             Button(onClick = {
                 focusManager.clearFocus()
-                viewModel.registerClient()
+                viewModel.registerClient(context, routeId)
             },
                 enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && location.isNotBlank()
                         && fullNameError == null && phoneError == null && locationError == null,

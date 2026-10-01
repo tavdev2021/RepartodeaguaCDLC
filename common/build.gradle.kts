@@ -38,6 +38,7 @@ dependencies {
     //Room
     api(libs.room.runtime)
     api(libs.room.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
     ksp(libs.room.compiler)
 
     //Google Maps

@@ -57,6 +57,8 @@ dependencies {
     //Google Maps
 
     implementation(libs.androidx.runtime)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.material3)
     implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.play.services.location)

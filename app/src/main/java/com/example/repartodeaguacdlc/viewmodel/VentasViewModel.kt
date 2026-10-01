@@ -8,20 +8,30 @@ import com.example.common.model.VentaConDatos
 import com.example.common.model.VentaEntity
 import com.example.repartodeaguacdlc.repository.ProductosRepositoryRoom
 import com.example.repartodeaguacdlc.repository.VentasRepositoryRoom
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.collections.emptyList
 
 class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
                       productosRepository: ProductosRepositoryRoom): ViewModel() {
 
     init {
         productosRepository.sincronizarCatalogoFirebase()
+    }
+
+    private val _routeId = MutableStateFlow("")
+
+    fun setRouteId(routeId: String) {
+        _routeId.value = routeId
     }
 
     // 1. Solo guardamos los IDs y las cantidades seleccionadas (Memoria volatil)
@@ -53,21 +63,28 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
         return calendar.timeInMillis
     }
 
-    val ventasHoyCount: StateFlow<Int> = ventasRepository.getVentasHoyCount(getInicioDia())
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),
-            initialValue = 0)
 
-    val ingresosHoy: StateFlow<Double> = ventasRepository.getIngresosHoy(getInicioDia())
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),
-            initialValue = 0.0)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val ventasHoyCount: StateFlow<Int> = _routeId.flatMapLatest { routeId ->
+        if (routeId.isBlank()) flowOf(0)
+    else ventasRepository.getVentasHoyCount (routeId,getInicioDia())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = 0)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val ingresosHoy: StateFlow<Double> = _routeId.flatMapLatest { routeId ->
+        if (routeId.isBlank()) flowOf(0.0)
+        else ventasRepository.getIngresosHoy(routeId,getInicioDia())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = 0.0)
 
 
-    val ultimasVentas: StateFlow<List<VentaConDatos>> = ventasRepository.getUltimas3Ventas(getInicioDia())
-        .stateIn(
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val ultimasVentas: StateFlow<List<VentaConDatos>> = _routeId.flatMapLatest { routeId ->
+        if (routeId.isBlank()) flowOf(emptyList())
+        else ventasRepository.getUltimas3Ventas(routeId, getInicioDia())
+    }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+            initialValue = emptyList())
 
     // Transformamos el estado para obtener totales automáticamente
     val totalPagar: StateFlow<Double> = productos.map { lista ->
@@ -83,7 +100,13 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
         current[productoId] = nuevaCantidad
         _cantidades.value = current
     }
-    fun finalizarVenta(clienteId: String, metodoPago: String, onSuccess: () -> Unit) {
+    fun finalizarVenta(
+        clienteId: String,
+        routeId: String,
+        metodoPago: String,
+        onSuccess: () -> Unit
+    ) {
+
         viewModelScope.launch {
             val productosSeleccionados = productos.value.filter { it.cantidad > 0 }
             if (productosSeleccionados.isEmpty())
@@ -94,6 +117,7 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
             val venta = VentaEntity(
                 id = ventaId,
                 clienteId = clienteId,
+                routeId = routeId,
                 fecha = System.currentTimeMillis(),
                 total = productosSeleccionados.sumOf { producto ->
                     producto.precio * producto.cantidad },
@@ -116,6 +140,14 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
             limpiarCarrito()
             onSuccess()
         }
+    }
+
+    fun iniciarSincronizacionContinua(routeId: String) {
+        ventasRepository.iniciarSincronizacionContinua(routeId)
+    }
+
+    fun activarRespaldoPendiente() {
+        ventasRepository.scheduleSync()
     }
 
     fun limpiarCarrito() {

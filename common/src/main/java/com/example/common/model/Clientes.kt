@@ -8,12 +8,15 @@ import java.util.UUID
 data class Clientes(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val nombre: String,
-    val telefono: String,
-    val ubicacion: String,
+    val nombre: String = "",
+    val routeId: String = "",
+    val telefono: String = "",
+    val ubicacion: String = "",
+    val direccion: String = "",
     val notas: String = "",
     val imagenUrl: String? = null,
     val fechaRegistro: Long = System.currentTimeMillis(),
     val ultimaActualizacion: Long = System.currentTimeMillis(),
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val activo: Boolean = true
 )

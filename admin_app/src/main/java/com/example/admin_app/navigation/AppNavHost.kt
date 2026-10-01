@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.admin_app.view.HomeScreen
 import com.example.admin_app.view.LoginScreen
+import com.example.admin_app.view.ManageRoutesScreen
 import com.example.admin_app.view.RegisterScreen
 import com.example.admin_app.view.SplashScreen
 import com.example.common.viewmodel.AuthViewModel
@@ -88,8 +89,14 @@ fun AppNavHost()
                         navController.navigate("login") {
                             popUpTo("home") { inclusive = true }
                         }
+                    },
+                    onManageRoutes = {
+                        navController.navigate("manage_routes")
                     }
                 )
+            }
+            composable("manage_routes") {
+                ManageRoutesScreen(authViewModel, onBack = { navController.popBackStack() })
             }
         }
     }

@@ -1,9 +1,12 @@
 package com.example.repartodeaguacdlc.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.common.model.Clientes
+import com.example.common.util.LocationHelper
 import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
+import com.example.repartodeaguacdlc.util.SyncManager.programarSincronizacionDireccion
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,9 +32,6 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
 
     private val _locationClient = MutableStateFlow("")
     val locationClient: StateFlow<String> = _locationClient.asStateFlow()
-
-    private val _isFetchingLocation = MutableStateFlow(false)
-    val isFetchingLocation: StateFlow<Boolean> = _isFetchingLocation.asStateFlow()
 
     private val _notasClient = MutableStateFlow("")
     val notasClient: StateFlow<String> = _notasClient.asStateFlow()
@@ -105,10 +105,6 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
         _locationClient.value = "$latitude, $longitude"
     }
 
-    fun setFetchinglocation(loading: Boolean) {
-        _isFetchingLocation.value = loading
-    }
-
     private fun validateRegisterForm(): Boolean {
         val isFullNameValid = validateFullName(_fullName.value) == null
         val isPhoneValid = validatePhoneNumber(_phone.value) == null
@@ -122,8 +118,8 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
         return isFullNameValid && isPhoneValid && isLocationValid
     }
 
-    fun updateCliente(clienteId: String, onUpdateComplete: () -> Unit) {
-        if (!validateRegisterForm())
+    fun updateCliente(context: Context, clienteActual: Clientes?, onUpdateComplete: () -> Unit) {
+        if (!validateRegisterForm() || clienteActual == null)
         // No intentar la actualizacion si hay errores de validación
             return
 
@@ -134,22 +130,40 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
 
             try {
                 delay(1.seconds)
-                // 1. Crear el objeto Cliente
-                val updatedCliente = Clientes(
-                    id = clienteId,
+                // 1. Detectar si la ubicación cambió
+                val ubicacionCambio = clienteActual.ubicacion != _locationClient.value
+                var nuevaDireccion = clienteActual.direccion //Por defecto, mantenemos la que ya tiene
+
+                if (ubicacionCambio) {
+                    // 2. Si cambió, intentamos obtener la nueva dirección legible
+                    val dirResultado = LocationHelper.obtenerDireccionLegible(context, _locationClient.value)
+
+                    // Si la traducción fue exitosa (distinta a las coordenadas), la asignamos
+                    if (dirResultado != _locationClient.value) {
+                        nuevaDireccion = dirResultado
+                    } else {
+                        // Si la traducción fue exitosa (distinta a las coordenadas), la asignamos
+                        nuevaDireccion = ""
+                        programarSincronizacionDireccion(context)
+                    }
+                }
+
+                // 3. Crear el objeto actualizado usando .copy() del original
+                val updatedCliente = clienteActual.copy(
                     nombre = _fullName.value,
                     telefono = _phone.value,
                     ubicacion = _locationClient.value,
-                    notas = _notasClient.value.ifEmpty { "Sin notas" },
-                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&length=2",
-                    fechaRegistro = System.currentTimeMillis()
+                    direccion = nuevaDireccion, // 👈 Se actualiza solo si fue necesario
+                    notas = _notasClient.value.ifBlank { "Sin notas" },
+                    imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=E3F2FD&color=1976D2&bold=true&length=2",
+                    ultimaActualizacion = System.currentTimeMillis()
                 )
 
-                // 2. Guardar en Room (Local)
+                // 4. Guardar en Room (Local)
                 clientesRepository.updateCliente(updatedCliente)
 
 
-                // 3. Éxito: Mostrar mensaje de éxito
+                // 5. Éxito: Mostrar mensaje de éxito
                 _isSuccess.value = true
                 onUpdateComplete()
 

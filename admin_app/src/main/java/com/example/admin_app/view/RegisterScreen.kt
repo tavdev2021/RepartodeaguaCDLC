@@ -85,6 +85,7 @@ fun RegisterScreen(
     val confirmPassword by viewModel.confirmPasswordRegister.collectAsStateWithLifecycle()
     val rutaAsignada by viewModel.rutaAsignada.collectAsStateWithLifecycle()
     val rolAsignado by viewModel.rolAsignado.collectAsStateWithLifecycle()
+    val routeIdSelected by viewModel.routeIdSelected.collectAsStateWithLifecycle()
 
     // Observar los errores de los campos desde el ViewModel
     val fullNameError by viewModel.fullNameError.collectAsStateWithLifecycle()
@@ -119,9 +120,21 @@ fun RegisterScreen(
         }
     }
 
-    LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            onRegisterSuccess()
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                // Solo navegamos a Home si el ViewModel dice que el rol fue exitoso
+                is AuthViewModel.AuthEvent.NavigateToHome -> onRegisterSuccess()
+
+                //Si el rol no coincidio, el ViewModel mandara NavigateToLogin
+                // Y aqui simplemente mostramos el Snackbar de generalError
+
+                is AuthViewModel.AuthEvent.NavigateToLogin -> {
+                    onNavigateToLogin()
+                    //No navegamos a Home, nos quedamos aqui o vamos a Login
+                    //Depende de si quieres que el Admin vea el error ahi mismo
+                }
+            }
         }
     }
 
@@ -424,9 +437,9 @@ fun RegisterScreen(
                         // Iteramos sobre la lista que viene del ViewModel
                         availableRoutes.forEach { route ->
                             DropdownMenuItem(
-                                text = { Text(route) },
+                                text = { Text(route.nombre) },
                                 onClick = {
-                                    viewModel.onRutaAsignadaChange(route) // Avisamos al VM la ruta elegida
+                                    viewModel.onRouteSelected(route) // Avisamos al VM la ruta elegida
                                     expandedRuta = false // Cerramos el menú
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
@@ -440,9 +453,9 @@ fun RegisterScreen(
 
             Button(onClick = {
                 focusManager.clearFocus()
-                viewModel.register()
+                viewModel.register("Administrador")
             },
-                enabled = !isLoading && fullName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && rutaAsignada.isNotBlank() && fullNameError == null && emailError == null && passwordError == null && confirmPasswordError == null && rutaAsignadaError == null,
+                enabled = !isLoading && routeIdSelected.isNotBlank() && fullName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && rutaAsignada.isNotBlank() && fullNameError == null && emailError == null && passwordError == null && confirmPasswordError == null && rutaAsignadaError == null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),

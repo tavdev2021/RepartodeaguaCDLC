@@ -1,11 +1,13 @@
 package com.example.repartodeaguacdlc.view
 
-import android.annotation.SuppressLint
+import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,8 +45,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -64,6 +69,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.common.util.LocationHelper
@@ -71,6 +77,7 @@ import com.example.common.view.LoadingOverlay
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
+import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 
@@ -85,18 +92,20 @@ fun UpdateClientScreen(
     onClientDeleted: () -> Unit
 ) {
 
-    // 1. Obtener el contexto de Android
     val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val focusManager = LocalFocusManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
+    // Estados de control de GPS
+    var currentAccuracy by remember { mutableFloatStateOf(0f) }
+    var isSearchingGPS by remember { mutableStateOf(false) } // Control manual de busqueda
+    var locationCallback by remember { mutableStateOf<LocationCallback?>(null) }
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
 
-    val cliente by clientesViewModel.selectedClient.collectAsStateWithLifecycle()
-
-    LaunchedEffect(cliente) {
-        viewModel.loadClientData(cliente)
-    }
-
     // Observar los valores de los campos desde el ViewModel
+    val cliente by clientesViewModel.selectedClient.collectAsStateWithLifecycle()
     val fullName by viewModel.fullName.collectAsStateWithLifecycle()
     val phone by viewModel.phone.collectAsStateWithLifecycle()
     val location by viewModel.locationClient.collectAsStateWithLifecycle()
@@ -106,44 +115,75 @@ fun UpdateClientScreen(
     val fullNameError by viewModel.fullNameError.collectAsStateWithLifecycle()
     val phoneError by viewModel.phoneError.collectAsStateWithLifecycle()
     val locationError by viewModel.locationError.collectAsStateWithLifecycle()
-    val isFetchingLocation by viewModel.isFetchingLocation.collectAsStateWithLifecycle()
 
     val error by viewModel.error.collectAsStateWithLifecycle()
-    val focusManager = LocalFocusManager.current
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val isSuccess by viewModel.isSuccess.collectAsStateWithLifecycle()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-
-    @SuppressLint("MissingPermission")
-    fun obtenerUbicacionActual(){
-        LocationHelper.obtenerUbicacionActual(
-            fusedLocationClient = fusedLocationClient,
-            onStart = { viewModel.setFetchinglocation(true) },
-            onSuccess = { lat, lon, msg ->
-                viewModel.updateLocation(lat, lon)
-                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-            },
-            onError = { msg ->
-                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-            },
-            onFinish = { viewModel.setFetchinglocation(false) }
-        )
+    // Funcion interna para arancar el GPS (se llama tras validar permisos)
+    fun activarSeguimientoGPS() {
+        if (locationCallback == null) {
+            locationCallback = LocationHelper.iniciarSeguimientoPreciso(
+                fusedLocationClient = fusedLocationClient,
+                onLocationReceived = { lat, lon, accuracy ->
+                    currentAccuracy = accuracy
+                    // CRITICO: Solo actualiza si el usuario pulsó el botón y la precisión es <= 15m
+                    if (isSearchingGPS && accuracy <= 15f) {
+                        viewModel.updateLocation(lat, lon)
+                        isSearchingGPS = false // Apagamos la búsqueda automáticamente
+                        Toast.makeText(context, "Ubicación detectada con precision", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
+        }
     }
 
-// Launcher para solicitar permisos
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
+    // 1. Configuracion del lanzador de permisos
+    val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        if (permissions.values.all { it }) {
-            obtenerUbicacionActual()
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        if (fineGranted || coarseGranted) {
+            activarSeguimientoGPS()
         } else {
             Toast.makeText(context, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
         }
     }
 
+    // 2. Verificar al entrar si tenemos permisos
+    LaunchedEffect(Unit) {
+        val hasFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if(hasFineLocation) {
+            activarSeguimientoGPS()
+        } else {
+             // No hay permisos, los pedimos
+            Toast.makeText(context, "Se requiere ubicación exacta para esta función", Toast.LENGTH_SHORT).show()
+            permissionLauncher.launch(arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION)
+            )
+        }
+    }
+
+    // 3. Limpieza al salir de la pantalla
+    DisposableEffect(Unit) {
+        onDispose {
+            locationCallback?.let { LocationHelper.detenerSeguimiento(fusedLocationClient, it) }
+        }
+    }
+
+    // Carga de datos inicial del cliente
+    LaunchedEffect(cliente) {
+        viewModel.loadClientData(cliente)
+    }
+
+    LaunchedEffect(clienteId) {
+        clientesViewModel.selectClient(clienteId)
+    }
+
+    // 4. MANEJO DE ÉXITO Y ERROR
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             Toast.makeText(context, "Cliente actualizado exitosamente", Toast.LENGTH_SHORT).show()
@@ -184,12 +224,11 @@ fun UpdateClientScreen(
         if (cliente == null) {
             // Si el cliente es nulo, mostramos un indicador de carga en el centro.
             // Esto evita el crash.
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
@@ -316,40 +355,52 @@ fun UpdateClientScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
+                    readOnly = true,
                     leadingIcon = {
                         Icon(Icons.TwoTone.LocationOn, contentDescription = "Location Icon")
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Text,
-                        showKeyboardOnFocus = true, imeAction = ImeAction.Next
+                        showKeyboardOnFocus = false,
+                        imeAction = ImeAction.Next
                     ),
                     keyboardActions = KeyboardActions(onNext = {
                         focusManager.moveFocus(FocusDirection.Down)
                     }),
                     isError = locationError != null,
                     supportingText = {
-                        locationError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                        if (isSearchingGPS) Text("Buscando señal GPS... Colocate en un lugar abierto", color = MaterialTheme.colorScheme.primary)
+                        else locationError?.let {Text(it) }
                     },
                     trailingIcon = {
-                        if (isFetchingLocation) {
-                            // INDICADOR DE CARGA
+                        if (isSearchingGPS) {
+                            // Mostramos metros y cargador
+                            Text(
+                                text = "${currentAccuracy.toInt()}m",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (currentAccuracy > 0 && currentAccuracy <= 15f) Color(0xFF4CAF50) else Color.Red
+                            )
                             CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(32.dp),
                                 strokeWidth = 2.dp,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         } else {
                             IconButton(onClick = {
-                                locationPermissionLauncher.launch(
-                                    arrayOf(
-                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                                    )
-                                )
+                                val hasFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                                if (hasFineLocation) {
+                                    isSearchingGPS = true
+                                } else {
+                                    // Si no tiene la exacta, se la pedimos de nuevo explicando por qué
+                                    Toast.makeText(context, "Se requiere ubicación exacta para esta función", Toast.LENGTH_SHORT).show()
+                                    permissionLauncher.launch(arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION))
+                                }
                             }) {
                                 Icon(
                                     Icons.TwoTone.LocationSearching,
-                                    contentDescription = "Map Icon",
+                                    contentDescription = "Buscar Ubicacion",
                                     modifier = Modifier
                                         .size(28.dp)
                                         .padding(end = 8.dp),
@@ -364,7 +415,7 @@ fun UpdateClientScreen(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(if (locationError != null) 4.dp else 8.dp)) // Menos espacio si hay error
+                Spacer(modifier = Modifier.height(if (locationError != null) 4.dp else 16.dp)) // Menos espacio si hay error
 
                 OutlinedTextField(
                     value = notasClient,
@@ -383,7 +434,8 @@ fun UpdateClientScreen(
                     keyboardActions = KeyboardActions(onDone = {
                         focusManager.clearFocus()
                         viewModel.updateCliente(
-                            clienteId = clienteId,
+                            context = context,
+                            clienteActual = cliente,
                             onUpdateComplete = {
                                 onUpdateSuccess()
                             })
@@ -400,12 +452,13 @@ fun UpdateClientScreen(
                     onClick = {
                         focusManager.clearFocus()
                         viewModel.updateCliente(
-                            clienteId = clienteId,
+                            context = context,
+                            clienteActual = cliente,
                             onUpdateComplete = {
                                 onUpdateSuccess()
                             })
                     },
-                    enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && location.isNotBlank()
+                    enabled = !isSearchingGPS && !isLoading && fullName.isNotBlank() && phone.isNotBlank() && location.isNotBlank()
                             && fullNameError == null && phoneError == null &&  locationError == null,
                     modifier = Modifier
                         .fillMaxWidth()

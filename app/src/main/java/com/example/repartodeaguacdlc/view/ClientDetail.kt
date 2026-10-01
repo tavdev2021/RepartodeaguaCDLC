@@ -137,7 +137,7 @@ fun SharedTransitionScope.ClientDetail(
                             )
                         )
                         Text(
-                            text = "ID: ${currentCliente.id.take(8)}",
+                            text = currentCliente.direccion,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -218,7 +218,8 @@ fun SharedTransitionScope.ClientDetail(
 
                             DetailRow(Icons.Default.Phone, "Teléfono", currentCliente.telefono)
                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
-                            DetailRow(Icons.Default.Place, "Ubicación", currentCliente.ubicacion)
+                            DetailRow(Icons.Default.Place, "Ubicación",
+                                currentCliente.direccion.ifBlank { currentCliente.ubicacion })
                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
                             DetailRow(Icons.Default.Create, "Notas adicionales", currentCliente.notas)
                         }

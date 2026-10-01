@@ -35,11 +35,13 @@ import java.text.DateFormat
 @Composable
 fun HomeScreen(
     authViewModel: AuthViewModel,
+    onManageRoutes: () -> Unit,
     onLogout: () -> Unit
 ) {
     val user by authViewModel.currentUser.collectAsStateWithLifecycle()
     val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
+    val rutasReales by authViewModel.availableRoutes.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         authViewModel.navigationEvent.collect { event ->
@@ -58,7 +60,7 @@ fun HomeScreen(
         AccionRapida(R.drawable.lista_clientes, "Clientes"),
         AccionRapida(R.drawable.corte_caja, "Corte de caja"),
         AccionRapida(R.drawable.inventario, "Inventario"),
-        AccionRapida(R.drawable.ruta, "Ruta")
+        AccionRapida(R.drawable.ruta, "Rutas")
     )
 
     Box(modifier = Modifier
@@ -144,15 +146,20 @@ fun HomeScreen(
                         Column {
                             Text("Avance de Rutas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(10.dp))
-                            RouteProgressItem("Arroyo Grande - Centro", 0.75f, "75/100 Entregas")
-                            Spacer(Modifier.height(8.dp))
-                            RouteProgressItem("Arroyo Grande - Sur", 0.30f, "6/20 Entregas")
-                            Spacer(Modifier.height(8.dp))
-                            RouteProgressItem("La Laja - El Timbinal", 0.80f, "64/80 Entregas")
-                            Spacer(Modifier.height(8.dp))
-                            RouteProgressItem("La Cienega", 0.25f, "10/40 Entregas")
-                            Spacer(Modifier.height(8.dp))
-                            RouteProgressItem("La Cañada - El pinzan", 0.50f, "10/20 Entregas")
+
+                            if (rutasReales.isEmpty()) {
+                                Text(
+                                    "No hay rutas disponibles",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray
+                                )
+                            } else {
+                                rutasReales.forEach { ruta ->
+                                    // Usamos el nombre real de Firestore
+                                    RouteProgressItem(ruta.nombre, 0.50f, "0/0 Entregas")
+                                    Spacer(Modifier.height(8.dp))
+                                }
+                            }
                         }
                     }
 
@@ -163,7 +170,9 @@ fun HomeScreen(
                             Spacer(Modifier.height(10.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 items(acciones) { accion ->
-                                    QuickActionCard(accion)
+                                    QuickActionCard(accion) {
+                                        if (accion.text == "Rutas") onManageRoutes()
+                                    }
                                 }
                             }
                         }
@@ -238,9 +247,9 @@ fun RouteProgressItem(name: String, progress: Float, label: String) {
 }
 
 @Composable
-fun QuickActionCard(accion: AccionRapida) {
+fun QuickActionCard(accion: AccionRapida, onClick: () -> Unit ) {
     Card(
-        modifier = Modifier.size(110.dp).clickable { /* Acción */ },
+        modifier = Modifier.size(110.dp).clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(Modifier.fillMaxSize(),

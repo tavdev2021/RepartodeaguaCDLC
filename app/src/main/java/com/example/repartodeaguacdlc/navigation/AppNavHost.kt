@@ -4,8 +4,9 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -36,8 +37,45 @@ import com.example.repartodeaguacdlc.viewmodel.VentasViewModel
 fun AppNavHost()
 {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     val authViewModel: AuthViewModel = viewModel()
+    val globalClientesViewModel: ClientesViewModel = viewModel(
+        factory = ClientesViewModelFactory(context)
+    )
+
+    val globalVentasViewModel: VentasViewModel = viewModel(
+        factory = VentasViewModelFactory(context)
+    )
+
+    val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
+
+
+    // Sincronizacion global, se activa en cuanto el repartidor tiene un routeId
+    LaunchedEffect(userProfile?.routeId) {
+        userProfile?.routeId?.let { routeId ->
+            if (routeId.isNotBlank()) {
+
+                globalClientesViewModel.setRouteId(routeId)
+
+                // Ponemos el listener de clientes para bajar cambios de la nube
+                globalClientesViewModel.iniciarSincronizacion(routeId)
+
+                // Despertamos el worker para que suba a firestore los clientes que estan pendientes localmente
+                globalClientesViewModel.activarRespaldoPendiente()
+
+                globalVentasViewModel.setRouteId(routeId)
+
+                // Ponemos el listener de ventas para bajar cambios de la nube
+                globalVentasViewModel.iniciarSincronizacionContinua(routeId)
+
+                // Despertamos el worker para que suba a firestore las ventas que estan pendientes localmente
+                globalVentasViewModel.activarRespaldoPendiente()
+
+                println("Sincronización global iniciada por la ruta $routeId")
+            }
+        }
+    }
 
     SharedTransitionLayout {
 
@@ -87,14 +125,10 @@ fun AppNavHost()
             }
 
             composable("home") {
-                val context = LocalContext.current
-                val ventasViewModel: VentasViewModel = viewModel(
-                    factory = VentasViewModelFactory(context)
-                )
 
                 HomeScreen(
                     authViewModel,
-                    ventasViewModel,
+                    globalVentasViewModel,
                     onLogout = {
                         navController.navigate("login") {
                             popUpTo("home") { inclusive = true }
@@ -118,7 +152,10 @@ fun AppNavHost()
             }
 
             composable("addnewclient") {
+                val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
+
                 AddNewClient(
+                    routeId = userProfile?.routeId ?: "",
                     onNavigateToHomeFromAddNewClient = {
                         navController.navigate("home") {
                             popUpTo("addnewclient") { inclusive = true }
@@ -133,12 +170,9 @@ fun AppNavHost()
             }
 
             composable("clientes") {
-                val context = LocalContext.current
-                val clientesViewModel: ClientesViewModel = viewModel(
-                    factory = ClientesViewModelFactory(context)
-                )
 
                 this@SharedTransitionLayout.ClientesList(
+                    clientesViewModel = globalClientesViewModel,
                     animatedVisibilityScope = this,
                     onAddNewClient = {
                         navController.navigate("addnewclient") {
@@ -147,8 +181,13 @@ fun AppNavHost()
                     },
 
                     onClientClick = { clienteId ->
-                        clientesViewModel.selectClient(clienteId)
+                        globalClientesViewModel.selectClient(clienteId)
                         navController.navigate("clienteDetails/$clienteId")
+                    },
+                    // Navegacion directa a la venta
+                    onVentaClick = { clienteId ->
+                        globalClientesViewModel.selectClient(clienteId)
+                        navController.navigate("venta/$clienteId")
                     }
                 )
             }
@@ -158,22 +197,14 @@ fun AppNavHost()
                 arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val clienteId = backStackEntry.arguments?.getString("clienteId") ?: ""
-                val context = LocalContext.current
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry("clientes")
-                }
-                val clientesViewModel: ClientesViewModel = viewModel(
-                    viewModelStoreOwner = parentEntry,
-                    factory = ClientesViewModelFactory(context)
-                )
 
                 LaunchedEffect(clienteId) {
-                    clientesViewModel.selectClient(clienteId)
+                    globalClientesViewModel.selectClient(clienteId)
                 }
 
                 this@SharedTransitionLayout.ClientDetail(
                     animatedVisibilityScope = this,
-                    clientesViewModel = clientesViewModel,
+                    clientesViewModel = globalClientesViewModel,
                     onBack = { navController.popBackStack() },
                     onNavigateToEdit = { clienteId ->
                         navController.navigate("updateClient/$clienteId")
@@ -191,25 +222,16 @@ fun AppNavHost()
                 val clienteId = backStackEntry.arguments?.getString("clienteId") ?: ""
                 val context = LocalContext.current
 
-                // 1. Obtiene el ViewModel compartido desde el "padre" ("clientes")
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry("clientes")
-                }
-                val clientesViewModel: ClientesViewModel = viewModel(
-                    viewModelStoreOwner = parentEntry,
-                    factory = ClientesViewModelFactory(context)
-                )
-
-                val viewModel: ClientesUpdateViewModel = viewModel(
+                val updateViewModel: ClientesUpdateViewModel = viewModel(
                     factory = ClientesUpdateViewModelFactory(context)
                 )
 
                 UpdateClientScreen(
                     clienteId = clienteId,
-                    clientesViewModel = clientesViewModel,
-                    viewModel = viewModel,
+                    clientesViewModel = globalClientesViewModel,
+                    viewModel = updateViewModel,
                     onUpdateSuccess = {
-                        clientesViewModel.refreshSelectedClient()
+                        //clientesViewModel.refreshSelectedClient()
 
                         navController.navigate("clienteDetails/$clienteId") {
                             popUpTo("updateClient/$clienteId") { inclusive = true }
@@ -233,34 +255,20 @@ fun AppNavHost()
                 arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val clienteId = backStackEntry.arguments?.getString("clienteId") ?: ""
-                val context = LocalContext.current
 
-                // 1. Obtiene el ViewModel compartido desde el "padre" ("clientes")
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry("clientes")
+                LaunchedEffect(clienteId) {
+                    globalClientesViewModel.selectClient(clienteId)
                 }
-                val clientesViewModel: ClientesViewModel = viewModel(
-                    viewModelStoreOwner = parentEntry,
-                    factory = ClientesViewModelFactory(context)
-                )
-
-                remember(clienteId) {
-                    clientesViewModel.selectClient(clienteId)
-                    true
-                }
-                val ventasViewModel: VentasViewModel = viewModel(
-                    factory = VentasViewModelFactory(context)
-                )
                 VentaScreen(
-                    clientesViewModel = clientesViewModel,
-                    ventasViewModel = ventasViewModel,
+                    clientesViewModel = globalClientesViewModel,
+                    ventasViewModel = globalVentasViewModel,
                     clienteId = clienteId,
                     onBack = {
-                        ventasViewModel.limpiarCarrito()
+                        globalVentasViewModel.limpiarCarrito()
                         navController.popBackStack()
                      },
                     onBackToClientList = {
-                        ventasViewModel.limpiarCarrito()
+                        globalVentasViewModel.limpiarCarrito()
                         navController.navigate("clientes") {
                             popUpTo("clientes") { inclusive = true }
                             launchSingleTop = true

@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.1"
+agp = "9.4.1"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -16,13 +16,14 @@ playServicesCodeScanner = "16.1.0"
 foundationLayout = "1.10.0"
 playServicesLocation = "21.3.0"
 roomdb_version = "2.8.4"
-ksp = "2.3.2"
+ksp = "2.3.6"
 firebaseFirestoreKtx = "25.1.4"
-androidBuiltInKotlin = "9.3.1"
+androidBuiltInKotlin = "9.4.1"
 appcompat = "1.6.1"
 material = "1.10.0"
 concurrentFutures = "1.2.0"
 playServicesLocationVersion = "21.4.0"
+workRuntimeKtx = "2.11.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +54,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-concurrent-futures = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrentFutures" }
 gms-play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocationVersion" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="admin_app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-06-09T20:53:47.968506100Z">
+        <DropdownSelection timestamp="2026-09-10T04:38:24.341008400Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\octav\.android\avd\Pixel_7_Pro.avd" />
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-R5CR71E4Z0X-RVPoDQ" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -137,10 +137,10 @@
       </SelectionState>
       <SelectionState runConfigName="repartidor_app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-06-09T20:53:47.968506100Z">
+        <DropdownSelection timestamp="2026-10-01T18:03:21.531862Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\octav\.android\avd\Pixel_7_Pro.avd" />
+              <DeviceId pluginId="Wireless" identifier="serviceName=adb-R5CR71E4Z0X-RVPoDQ" />
             </handle>
           </Target>
         </DropdownSelection>
