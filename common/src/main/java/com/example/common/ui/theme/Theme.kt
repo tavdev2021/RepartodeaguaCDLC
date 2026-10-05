@@ -32,6 +32,12 @@ private val LightColorScheme = lightColorScheme(
     surface = surfaceLight,
     onSurface = onSurfaceLight,
 
+    // 🔴 AGREGADOS PARA MATERIAL 3 COMPLETO EN DÍA
+    surfaceVariant = surfaceVariantLight,
+    onSurfaceVariant = onSurfaceVariantLight,
+    outline = outlineLight,
+    outlineVariant = outlineVariantLight,
+
     error = errorLight,
     onError = onErrorLight,
     errorContainer = errorContainerLight,
@@ -60,21 +66,18 @@ private val DarkColorScheme = darkColorScheme(
     surface = surfaceDark,
     onSurface = onSurfaceDark,
 
+    // 🔴 AGREGADOS PARA MATERIAL 3 COMPLETO EN NOCHE
+    surfaceVariant = surfaceVariantDark,
+    onSurfaceVariant = onSurfaceVariantDark,
+    outline = outlineDark,
+    outlineVariant = outlineVariantDark,
+
     error = errorDark,
     onError = onErrorDark,
     errorContainer = errorContainerDark,
     onErrorContainer = onErrorContainerDark
 )
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
 
 @Composable
 fun RepartoDeAguaCDLCTheme(

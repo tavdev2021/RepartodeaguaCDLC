@@ -1,6 +1,5 @@
 package com.example.repartodeaguacdlc.navigation
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +31,7 @@ import com.example.repartodeaguacdlc.viewmodel.ClientesUpdateViewModel
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 import com.example.repartodeaguacdlc.viewmodel.VentasViewModel
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+
 @Composable
 fun AppNavHost()
 {
@@ -135,9 +134,7 @@ fun AppNavHost()
                         }
                     },
                     onAddNewClient = {
-                        navController.navigate("addnewclient") {
-                            popUpTo("home") { inclusive = true }
-                        }
+                        navController.navigate("addnewclient")
                     },
                     onPedidos = {
                         navController.navigate("pedidos")
@@ -175,9 +172,7 @@ fun AppNavHost()
                     clientesViewModel = globalClientesViewModel,
                     animatedVisibilityScope = this,
                     onAddNewClient = {
-                        navController.navigate("addnewclient") {
-                            popUpTo("clientes") { inclusive = true }
-                        }
+                        navController.navigate("addnewclient")
                     },
 
                     onClientClick = { clienteId ->

@@ -16,7 +16,7 @@ import com.example.common.model.DetalleVentaEntity
     VentaEntity::class,
     DetalleVentaEntity::class
                      ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 

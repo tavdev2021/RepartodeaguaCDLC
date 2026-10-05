@@ -78,9 +78,9 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val ultimasVentas: StateFlow<List<VentaConDatos>> = _routeId.flatMapLatest { routeId ->
+    val ultimaVenta: StateFlow<List<VentaConDatos>> = _routeId.flatMapLatest { routeId ->
         if (routeId.isBlank()) flowOf(emptyList())
-        else ventasRepository.getUltimas3Ventas(routeId, getInicioDia())
+        else ventasRepository.getUltimaVenta(routeId, getInicioDia())
     }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

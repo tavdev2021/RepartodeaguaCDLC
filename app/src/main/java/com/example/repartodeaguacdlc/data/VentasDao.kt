@@ -45,6 +45,8 @@ interface VentasDao {
     COALESCE(c.nombre, 'Cliente') AS nombreCliente,
     v.total, 
     v.fecha, 
+    v.metodoPago,
+    v.isSynced,
     COALESCE((SELECT SUM(cantidad) FROM detalle_ventas WHERE ventaId = v.id), 0) AS totalProductos 
     FROM ventas v 
     JOIN clientes c ON v.clienteId = c.id 
@@ -53,5 +55,5 @@ interface VentasDao {
     LIMIT 3 
     """)
 
-    fun getUltimas3VentasConDatos(routeId: String, inicioDia: Long): Flow<List<VentaConDatos>>
+    fun getUltimaVentaConDatos(routeId: String, inicioDia: Long): Flow<List<VentaConDatos>>
 }

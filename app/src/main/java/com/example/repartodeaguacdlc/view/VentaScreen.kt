@@ -95,7 +95,7 @@ fun VentaScreen(
                     TextButton(onClick = onBack) {
                         // Color azul similar al de la imagen
                         Text("Cancelar",
-                            color = Color(0xFF2196F3),
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium)
                     }
                 }
@@ -140,7 +140,8 @@ fun VentaScreen(
                 )
 
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)), // Azul muy claro
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer), // Azul muy claro
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -153,7 +154,7 @@ fun VentaScreen(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0xFFBBDEFB),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
                             modifier = Modifier.size(48.dp)
                         ) {
                             //Foto de perfil
@@ -181,14 +182,14 @@ fun VentaScreen(
                                     Icons.Default.Person,
                                     contentDescription = null,
                                     modifier = Modifier.padding(8.dp),
-                                    tint = Color(0xFF1976D2)
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
                         }
                         Column(modifier = Modifier
                             .padding(start = 12.dp)
                             .weight(1f)) {
-                            Text("Cliente Seleccionado", color = Color(0xFF1976D2), style = MaterialTheme.typography.labelSmall)
+                            Text("Cliente Seleccionado", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.labelSmall)
                             Text(cliente?.nombre ?: "Cargando...", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
                             Text(
                                 text = when {
@@ -197,14 +198,14 @@ fun VentaScreen(
                                     else -> cliente!!.ubicacion
                                 },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 2)
                         }
                         // Icono de gota de fondo (decorativo)
                         Icon(
                             Icons.Default.WaterDrop,
                             contentDescription = null,
-                            tint = Color.LightGray.copy(alpha = 0.4f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2f),
                             modifier = Modifier
                                 .size(48.dp)
                         )
@@ -263,8 +264,10 @@ fun VentaScreen(
                                 .height(80.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (esSeleccionado) Color(0xFF2196F3) else Color.White,
-                                contentColor = if (esSeleccionado) Color.White else Color.Gray
+                                containerColor = if (esSeleccionado) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surface,
+                                contentColor = if (esSeleccionado) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             elevation = CardDefaults.cardElevation(if (esSeleccionado) 4.dp else 1.dp)
                         ) {
@@ -277,7 +280,7 @@ fun VentaScreen(
                                     imageVector = icono,
                                     contentDescription = null,
                                     modifier = Modifier.size(24.dp),
-                                    tint = if (esSeleccionado) Color.White else Color(0xFF1976D2)
+                                    tint = if (esSeleccionado) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -305,7 +308,7 @@ fun ProductoItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -339,11 +342,18 @@ fun ProductoItem(
                 Text(
                     "$${producto.precio} c/u",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 if (producto.cantidad > 0) {
-                    Surface(color = Color(0xFFE8EAF6), shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(top = 4.dp)) {
-                        Text("Subtotal: $${String.format("%.2f", subtotal)}", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = Color(0xFF3F51B5), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Surface(color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text("Subtotal: $${String.format("%.2f", subtotal)}",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -353,7 +363,7 @@ fun ProductoItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color(0xFFF5F5F5)) // Fondo gris claro de la elipse
+                    .background(MaterialTheme.colorScheme.surfaceVariant) // Fondo gris claro de la elipse
                     .padding(6.dp)
                 ) {
 
@@ -362,8 +372,8 @@ fun ProductoItem(
                         .size(32.dp)
                         .clip(CircleShape) // Asegura ripple circular
                         .background(
-                            if (producto.cantidad > 0) Color.White
-                            else Color(0xFFF5F5F5) // Igual al fondo cuando está apagado
+                            if (producto.cantidad > 0) MaterialTheme.colorScheme.surface
+                            else MaterialTheme.colorScheme.surfaceVariant // Igual al fondo cuando está apagado
                         )
                         .clickable(enabled = producto.cantidad > 0) { onDecrement() },
                     contentAlignment = Alignment.Center
@@ -373,7 +383,8 @@ fun ProductoItem(
                         contentDescription = "Menos",
                         modifier = Modifier
                             .size(18.dp),
-                        tint = if (producto.cantidad > 0) Color(0xFF2196F3) else Color.LightGray
+                        tint = if (producto.cantidad > 0) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
                 }
 
@@ -382,21 +393,21 @@ fun ProductoItem(
                         .padding(horizontal = 12.dp),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 16.sp,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Box(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF2196F3)) // Fondo azul sólido
+                        .background(MaterialTheme.colorScheme.primary) // Fondo azul sólido
                         .clickable{ onIncrement() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Add,
                         contentDescription = "Mas",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier
                             .size(18.dp)
                     )
@@ -415,7 +426,7 @@ fun VentaBottomBar(
 ) {
     Surface(
         shadowElevation = 16.dp,
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(modifier = Modifier
@@ -427,27 +438,38 @@ fun VentaBottomBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("TOTAL A PAGAR", color = Color.Gray, style = MaterialTheme.typography.labelMedium)
-                    Text("$cantidadArticulos artículos", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                    Text("TOTAL A PAGAR", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                    Text("$cantidadArticulos artículos", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                 }
-                Text("$${String.format("%.2f", total)}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
+                Text("$${String.format("%.2f", total)}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.primary
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = /* Próximamente lógica Room */
+                onClick =
                     onFinalizar,
                 enabled = cantidadArticulos > 0,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
-                Text("Finalizar Venta", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Finalizar Venta",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp)
                 Spacer(Modifier.width(8.dp))
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                Icon(Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null)
             }
         }
     }

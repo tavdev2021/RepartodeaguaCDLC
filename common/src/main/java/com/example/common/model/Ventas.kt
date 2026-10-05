@@ -32,7 +32,9 @@ data class VentaConDatos(
     val nombreCliente: String,
     val total: Double,
     val totalProductos: Int,
-    val fecha: Long
+    val fecha: Long,
+    val metodoPago: String = "Efectivo",
+    val isSynced: Boolean = true
 )
 
 data class VentaFirestoreDto(

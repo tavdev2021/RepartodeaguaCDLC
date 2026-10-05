@@ -93,6 +93,6 @@ class VentasRepositoryRoom(
 
     fun getIngresosHoy(routeId: String, inicioDia: Long) = ventasDao.getIngresosHoy(routeId, inicioDia)
 
-    fun getUltimas3Ventas(routeId: String, inicioDia: Long) = ventasDao.getUltimas3VentasConDatos(routeId, inicioDia)
+    fun getUltimaVenta(routeId: String, inicioDia: Long) = ventasDao.getUltimaVentaConDatos(routeId, inicioDia)
 
 }
