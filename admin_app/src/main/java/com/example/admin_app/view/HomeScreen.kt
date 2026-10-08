@@ -36,6 +36,7 @@ import java.text.DateFormat
 fun HomeScreen(
     authViewModel: AuthViewModel,
     onManageRoutes: () -> Unit,
+    onRegisterRepartidor: () -> Unit,
     onLogout: () -> Unit
 ) {
     val user by authViewModel.currentUser.collectAsStateWithLifecycle()
@@ -56,7 +57,7 @@ fun HomeScreen(
     val dateFormat = DateFormat.getDateInstance(DateFormat.FULL).format(calendar)
 
     val acciones = listOf(
-        AccionRapida(R.drawable.nuevo_cliente, "Nuevo Cliente"),
+        AccionRapida(R.drawable.nuevo_cliente, "Nuevo Repartidor"),
         AccionRapida(R.drawable.lista_clientes, "Clientes"),
         AccionRapida(R.drawable.corte_caja, "Corte de caja"),
         AccionRapida(R.drawable.inventario, "Inventario"),
@@ -79,7 +80,8 @@ fun HomeScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 20.dp),
+                        modifier = Modifier.fillMaxSize()
+                            .padding(horizontal = 20.dp, vertical = 20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Foto de perfil
@@ -87,7 +89,9 @@ fun HomeScreen(
 
                         Column(modifier = Modifier.padding(start = 12.dp)) {
                             Text(
-                                text = "Hola, ${firebaseUser.displayName?.split(" ")?.firstOrNull() ?: "Admin"}",
+                                text = "Hola, ${
+                                    firebaseUser.displayName?.split(" ")?.firstOrNull() ?: "Admin"
+                                }",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
@@ -116,7 +120,11 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     item {
-                        Text(dateFormat, style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                        Text(
+                            dateFormat,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.Gray
+                        )
                     }
 
                     // 1. GRID DE INDICADORES (KPIs)
@@ -144,7 +152,11 @@ fun HomeScreen(
                     // 2. SECCIÓN: AVANCE DE RUTAS
                     item {
                         Column {
-                            Text("Avance de Rutas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Avance de Rutas",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                             Spacer(Modifier.height(10.dp))
 
                             if (rutasReales.isEmpty()) {
@@ -166,12 +178,19 @@ fun HomeScreen(
                     // 3. ACCIONES RÁPIDAS (LazyRow original)
                     item {
                         Column {
-                            Text("Gestión Rápida", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Gestión Rápida",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                             Spacer(Modifier.height(10.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 items(acciones) { accion ->
                                     QuickActionCard(accion) {
-                                        if (accion.text == "Rutas") onManageRoutes()
+                                        when (accion.text) {
+                                            "Nuevo Repartidor" -> onRegisterRepartidor()
+                                            "Rutas" -> onManageRoutes()
+                                        }
                                     }
                                 }
                             }

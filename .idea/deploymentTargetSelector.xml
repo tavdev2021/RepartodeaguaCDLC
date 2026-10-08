@@ -137,7 +137,7 @@
       </SelectionState>
       <SelectionState runConfigName="repartidor_app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-10-04T20:27:31.638210400Z">
+        <DropdownSelection timestamp="2026-10-07T05:28:42.634385900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="Wireless" identifier="serviceName=adb-R5CR71E4Z0X-RVPoDQ" />

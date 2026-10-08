@@ -22,7 +22,8 @@ import java.util.UUID
 import kotlin.collections.emptyList
 
 class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
-                      productosRepository: ProductosRepositoryRoom): ViewModel() {
+                      private val productosRepository: ProductosRepositoryRoom
+): ViewModel() {
 
     init {
         productosRepository.sincronizarCatalogoFirebase()
@@ -144,6 +145,7 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
 
     fun iniciarSincronizacionContinua(routeId: String) {
         ventasRepository.iniciarSincronizacionContinua(routeId)
+        productosRepository.sincronizarCatalogoFirebase()
     }
 
     fun activarRespaldoPendiente() {

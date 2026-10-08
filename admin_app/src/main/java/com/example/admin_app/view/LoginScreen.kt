@@ -17,9 +17,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material.icons.twotone.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,16 +58,16 @@ import com.example.common.view.LoadingOverlay
 import com.example.common.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = viewModel(),
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
 ) {
     val generalError by viewModel.error.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
+
+    var showContactInfoDialog by remember { mutableStateOf(false) }
 
     // Observar los valores de los campos desde el ViewModel
     val email by viewModel.emailLogin.collectAsStateWithLifecycle()
@@ -231,7 +231,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedButton(
-                    onClick = { onNavigateToRegister() },
+                    onClick = { showContactInfoDialog = true },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -247,6 +247,33 @@ fun LoginScreen(
                 }
             }
         }
+
+    // 🔴 DIÁLOGO INFORMATIVO AL TOCAR EL BOTÓN
+    if (showContactInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showContactInfoDialog = false },
+            title = {
+                Text(
+                    text = "Acceso de Administración",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Esta aplicación es de uso exclusivo para Administradores autorizados de la empresa.\n\nSi requieres credenciales de acceso, por favor ponte en contacto con el proveedor del servicio para que te asigne tu usuario y contraseña de Administrador.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showContactInfoDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Entendido")
+                }
+            }
+        )
+    }
 
     // Overlay con blur elegante
     LoadingOverlay(

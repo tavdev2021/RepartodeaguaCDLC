@@ -3,7 +3,6 @@ package com.example.repartodeaguacdlc.view
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -16,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material.icons.twotone.VerticalSplit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,7 +35,7 @@ import coil.compose.AsyncImage
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SharedTransitionScope.ClientDetail(
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -71,7 +71,7 @@ fun SharedTransitionScope.ClientDetail(
                 actions = {
                     cliente?.let {
                         IconButton(onClick = { onNavigateToEdit(it.id) }) {
-                            Icon(Icons.TwoTone.Edit, "Editar", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.TwoTone.VerticalSplit, "Editar", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 },

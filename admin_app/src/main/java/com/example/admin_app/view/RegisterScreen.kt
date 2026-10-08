@@ -1,6 +1,6 @@
 package com.example.admin_app.view
 
-import androidx.compose.foundation.BorderStroke
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +29,6 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -46,12 +45,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -71,12 +69,11 @@ import kotlinx.coroutines.launch
 fun RegisterScreen(
     viewModel: AuthViewModel = viewModel(),
     onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onBackNavigation: () -> Unit
 ) {
 
-    val isAuthenticated by viewModel.isAuthenticated.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val availableRoutes by viewModel.availableRoutes.collectAsStateWithLifecycle()
-    val availableRoles by viewModel.availableRoles.collectAsStateWithLifecycle()
 
     // Observar los valores de los campos desde el ViewModel
     val fullName by viewModel.fullName.collectAsStateWithLifecycle()
@@ -84,7 +81,6 @@ fun RegisterScreen(
     val password by viewModel.passwordRegister.collectAsStateWithLifecycle()
     val confirmPassword by viewModel.confirmPasswordRegister.collectAsStateWithLifecycle()
     val rutaAsignada by viewModel.rutaAsignada.collectAsStateWithLifecycle()
-    val rolAsignado by viewModel.rolAsignado.collectAsStateWithLifecycle()
     val routeIdSelected by viewModel.routeIdSelected.collectAsStateWithLifecycle()
 
     // Observar los errores de los campos desde el ViewModel
@@ -93,7 +89,6 @@ fun RegisterScreen(
     val passwordError by viewModel.passwordErrorRegister.collectAsStateWithLifecycle()
     val confirmPasswordError by viewModel.confirmPasswordErrorRegister.collectAsStateWithLifecycle()
     val rutaAsignadaError by viewModel.rutaAsignadaError.collectAsStateWithLifecycle()
-    val rolAsigndoError by viewModel.rolAsignadoError.collectAsStateWithLifecycle()
 
 
     val error by viewModel.error.collectAsStateWithLifecycle()
@@ -102,7 +97,6 @@ fun RegisterScreen(
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var expandedRol by remember { mutableStateOf(false) }
     var expandedRuta by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -120,24 +114,6 @@ fun RegisterScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.navigationEvent.collect { event ->
-            when (event) {
-                // Solo navegamos a Home si el ViewModel dice que el rol fue exitoso
-                is AuthViewModel.AuthEvent.NavigateToHome -> onRegisterSuccess()
-
-                //Si el rol no coincidio, el ViewModel mandara NavigateToLogin
-                // Y aqui simplemente mostramos el Snackbar de generalError
-
-                is AuthViewModel.AuthEvent.NavigateToLogin -> {
-                    onNavigateToLogin()
-                    //No navegamos a Home, nos quedamos aqui o vamos a Login
-                    //Depende de si quieres que el Admin vea el error ahi mismo
-                }
-            }
-        }
-    }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
@@ -145,7 +121,7 @@ fun RegisterScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.appbar_crearcuenta_register)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateToLogin) {
+                    IconButton(onClick = onBackNavigation) {
                         Icon(Icons.AutoMirrored.TwoTone.ArrowBack, contentDescription = "Volver a Login")
                     }
                 }
@@ -153,30 +129,15 @@ fun RegisterScreen(
         }
     ) { padding ->
 
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues = padding)
-            .padding(horizontal = 24.dp, vertical = 32.dp)
-            .verticalScroll(rememberScrollState()),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues = padding)
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
-        ){
-
-            /*Image(
-                painter = painterResource(id = R.drawable.logo_campana),
-                contentDescription = "App Logo",
-                modifier = Modifier
-                    .size(200.dp)
-                    .padding(bottom = 24.dp),
-                contentScale = ContentScale.Fit
-            )*/
-
-            Text(
-                stringResource(R.string.bienvenido_register), style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
-                )
-            )
+        ) {
 
             Text(
                 stringResource(R.string.ingresa_datos_register),
@@ -311,7 +272,8 @@ fun RegisterScreen(
                     val image = if (confirmPasswordVisible)
                         painterResource(R.drawable.visibility_on)
                     else (painterResource(R.drawable.visibility_off))
-                    val description = if (confirmPasswordVisible) "Hide password" else "Show password"
+                    val description =
+                        if (confirmPasswordVisible) "Hide password" else "Show password"
 
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(painter = image, description)
@@ -325,55 +287,45 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(if (confirmPasswordError != null) 8.dp else 16.dp)) // Menos espacio si hay error
 
-            // Contenedor principal del Dropdown Rol
+
             ExposedDropdownMenuBox(
-                expanded = expandedRol,
-                onExpandedChange = { expandedRol = !expandedRol }, // Abre/Cierra al tocar
+                expanded = expandedRuta,
+                onExpandedChange = { expandedRuta = !expandedRuta },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedTextField(
-                    value = rolAsignado,
-                    onValueChange = { }, // No permitimos escribir, se cambia vía el menú
-                    readOnly = true,    // Importante: Hace que el campo sea solo de selección
-                    label = { Text("Rol del usuario") },
+                    value = rutaAsignada,
+                    onValueChange = { },
+                    readOnly = true,
+                    label = { Text("Ruta Asignada") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        // .menuAnchor vincula el menú al TextField para que flote debajo
-                        .menuAnchor(
-                            ExposedDropdownMenuAnchorType.PrimaryNotEditable,
-                            true
-                        ),
-                    leadingIcon = {
-                        Icon(Icons.TwoTone.Person, contentDescription = "Role Icon")
-                    },
-                    // El icono de la flechita que gira (Material 3 standard)
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRol)
-                    },
-                    isError = rolAsigndoError != null,
+                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
+                    leadingIcon = { Icon(Icons.TwoTone.Route, contentDescription = null) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRuta) },
+                    isError = rutaAsignadaError != null,
                     supportingText = {
-                        rolAsigndoError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                    )
+                        rutaAsignadaError?.let {
+                            Text(
+                                it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 )
 
-                // Este es el menú que aparece al hacer clic
                 ExposedDropdownMenu(
-                    expanded = expandedRol,
-                    onDismissRequest = { expandedRol = false } // Se cierra si tocas fuera
+                    expanded = expandedRuta,
+                    onDismissRequest = { expandedRuta = false }
                 ) {
-                    // Iteramos sobre la lista que viene del ViewModel
-                    availableRoles.forEach { role ->
+                    availableRoutes.forEach { route ->
                         DropdownMenuItem(
-                            text = { Text(role) },
+                            text = { Text(route.nombre) },
                             onClick = {
-                                viewModel.onRolAsignadoChange(role) // Avisamos al VM la ruta elegida
-                                expandedRol = false // Cerramos el menú
+                                viewModel.onRouteSelected(route)
+                                expandedRuta = false
                             },
                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                         )
@@ -381,80 +333,23 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(if (rolAsigndoError != null) 8.dp else 16.dp)) // Menos espacio si hay error
-
-            //Mostrar el selector de Ruta SOLO si el rol es Repartidor
-            if (rolAsignado == "Repartidor") {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Contenedor principal del Dropdown
-                ExposedDropdownMenuBox(
-                    expanded = expandedRuta,
-                    onExpandedChange = { expandedRuta = !expandedRuta }, // Abre/Cierra al tocar
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = rutaAsignada,
-                        onValueChange = { }, // No permitimos escribir, se cambia vía el menú
-                        readOnly = true,    // Importante: Hace que el campo sea solo de selección
-                        label = { Text(stringResource(R.string.ruta_asignada)) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            // .menuAnchor vincula el menú al TextField para que flote debajo
-                            .menuAnchor(
-                                ExposedDropdownMenuAnchorType.PrimaryNotEditable,
-                                true
-                            ),
-                        leadingIcon = {
-                            Icon(Icons.TwoTone.Route, contentDescription = "Route Icon")
-                        },
-                        // El icono de la flechita que gira (Material 3 standard)
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRuta)
-                        },
-                        isError = rutaAsignadaError != null,
-                        supportingText = {
-                            rutaAsignadaError?.let {
-                                Text(
-                                    it,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        )
-                    )
-
-                    // Este es el menú que aparece al hacer clic
-                    ExposedDropdownMenu(
-                        expanded = expandedRuta,
-                        onDismissRequest = { expandedRuta = false } // Se cierra si tocas fuera
-                    ) {
-                        // Iteramos sobre la lista que viene del ViewModel
-                        availableRoutes.forEach { route ->
-                            DropdownMenuItem(
-                                text = { Text(route.nombre) },
-                                onClick = {
-                                    viewModel.onRouteSelected(route) // Avisamos al VM la ruta elegida
-                                    expandedRuta = false // Cerramos el menú
-                                },
-                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                            )
-                        }
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.height(if (rutaAsignadaError != null) 8.dp else 16.dp)) // Menos espacio si hay error
 
-            Button(onClick = {
-                focusManager.clearFocus()
-                viewModel.register("Administrador")
-            },
+            Button(
+                onClick = {
+                    focusManager.clearFocus()
+                    viewModel.registerUserByAdmin(
+                        context = context,
+                        onSuccess = {
+                            Toast.makeText(
+                                context,
+                                "Repartidor registrado exitosamente",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            onRegisterSuccess()
+                        }
+                    )
+                },
                 enabled = !isLoading && routeIdSelected.isNotBlank() && fullName.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && rutaAsignada.isNotBlank() && fullNameError == null && emailError == null && passwordError == null && confirmPasswordError == null && rutaAsignadaError == null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -464,28 +359,10 @@ fun RegisterScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
-                ) {
+            ) {
 
-                    Text(stringResource(R.string.button_register), fontSize = 16.sp)
+                Text(stringResource(R.string.button_register), fontSize = 16.sp)
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedButton(onClick = { onNavigateToLogin() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .shadow(4.dp, shape = RoundedCornerShape(12.dp)),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
-            ){
-                Text(stringResource(R.string.ya_tienes_cuenta))
-            }
-
         }
     }
 

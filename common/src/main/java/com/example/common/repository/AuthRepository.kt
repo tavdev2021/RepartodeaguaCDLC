@@ -1,8 +1,10 @@
 package com.example.common.repository
 
+import android.content.Context
 import androidx.core.net.toUri
 import com.example.common.model.Ruta
 import com.example.common.model.UserProfile
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,50 +34,63 @@ class AuthRepository (
         Result.failure(e)
     }
 
-    suspend fun register(fullName: String, routeId: String, email: String, password: String, imagenUrl: String,rutaAsignada: String, rolAsignado: String): Result<Unit> {
-    return try {
-        // 1. Crear el usuario con email y contraseña.
-        val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+    // 🔴 NUEVO MÉTODO: Registro de Trabajadores realizado por el Admin usando la Instancia Secundaria
+    suspend fun registerUserByAdmin(
+        context: Context,
+        fullName: String,
+        routeId: String,
+        email: String,
+        password: String,
+        imagenUrl: String,
+        rutaAsignada: String,
+        rolAsignado: String
+    ): Result<Unit> {
+        return try {
+            // 1. Inicializar o recuperar la instancia secundaria aislada de Firebase
+            val secondaryApp = FirebaseApp.getApps(context).find { it.name == "AdminSecondaryApp" }
+                ?: FirebaseApp.initializeApp(
+                    context,
+                    FirebaseApp.getInstance().options,
+                    "AdminSecondaryApp"
+                )
+            val secondaryAuth = FirebaseAuth.getInstance(secondaryApp)
 
-        // 2. Si la creación es exitosa (no lanza excepción), obtener el usuario...
-        val user = authResult.user
+            // 2. Crear las credenciales del repartidor en la instancia secundaria
+            val authResult = secondaryAuth.createUserWithEmailAndPassword(email, password).await()
+            val newUser = authResult.user
 
-        if (user != null) {
-            //... y crear una solicitud para actualizar su perfil.
-            val profileUpdates = UserProfileChangeRequest.Builder()
-                .setDisplayName(fullName)
-                // Aquí también podrías añadir una URL de foto de perfil por defecto si quisieras
-                .setPhotoUri(imagenUrl.toUri())
-                .build()
+            if (newUser != null) {
+                val profileUpdates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(fullName)
+                    .setPhotoUri(imagenUrl.toUri())
+                    .build()
 
-            // 3. Aplicar la actualización al perfil del usuario.
-            user.updateProfile(profileUpdates).await()
-            user.reload().await()
+                newUser.updateProfile(profileUpdates).await()
 
-            // 2. Guardar en Firestore la asociación Usuario <-> Ruta
-            val userData = mapOf(
-                "uid" to user.uid,
-                "nombre" to fullName,
-                "routeId" to routeId, // Aquí guardamos el ID de la ruta UUID (abc-123)
-                "email" to email,
-                "imagenUrl" to imagenUrl,
-                "ruta" to rutaAsignada, // Aquí guardamos "Ruta-01"
-                "role" to rolAsignado  // Aquí guardamos "Administrador" o "Repartidor"
-            )
-            db.collection("usuarios").document(user.uid).set(userData).await()
+                // 3. Crear el documento del nuevo repartidor en Firestore
+                val userData = mapOf(
+                    "uid" to newUser.uid,
+                    "nombre" to fullName,
+                    "routeId" to routeId,
+                    "email" to email,
+                    "imagenUrl" to imagenUrl,
+                    "ruta" to rutaAsignada,
+                    "role" to rolAsignado
+                )
+                db.collection("usuarios").document(newUser.uid).set(userData).await()
 
-            // 4. Si todo ha ido bien, devolvermos éxito.
-            Result.success(Unit)
-        } else {
-            Result.failure(Exception("Error al obtener el usuario después del registro"))
+                // 4. Limpiar la sesión secundaria para mantener la del Admin intacta
+                secondaryAuth.signOut()
+
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error al crear las credenciales del trabajador"))
+            }
+
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-    } catch (e: Exception)
-    {
-        // Si algo falla (email ya en uso, contraseña débil, etc.), capturamos el error
-        Result.failure(e)
     }
-}
 
     // 2. Nueva función para obtener el perfil y validar rol
     suspend fun getUserProfile(uid: String): UserProfile? {

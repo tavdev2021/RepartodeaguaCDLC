@@ -1,5 +1,6 @@
 package com.example.common.viewmodel
 
+import android.content.Context
 import android.util.Patterns
 import com.example.common.model.UserProfile
 import com.example.common.repository.AuthRepository
@@ -62,12 +63,6 @@ class AuthViewModel(
     private val _routeIdSelected = MutableStateFlow("")
     val routeIdSelected: StateFlow<String> = _routeIdSelected.asStateFlow()
 
-    private val _rolAsignado = MutableStateFlow("")
-    val rolAsignado: StateFlow<String> = _rolAsignado.asStateFlow()
-
-    private val _availableRoles = MutableStateFlow<List<String>>(emptyList())
-    val availableRoles: StateFlow<List<String>> = _availableRoles.asStateFlow()
-
     // Estados para los errores de los campos
     private val _fullNameError = MutableStateFlow<String?>(null)
     val fullNameError: StateFlow<String?> = _fullNameError.asStateFlow()
@@ -90,9 +85,6 @@ class AuthViewModel(
     private val _rutaAsignadaError = MutableStateFlow<String?>(null)
     val rutaAsignadaError: StateFlow<String?> = _rutaAsignadaError.asStateFlow()
 
-    private val _rolAsignadoError = MutableStateFlow<String?>(null)
-    val rolAsignadoError: StateFlow<String?> = _rolAsignadoError.asStateFlow()
-
     private val _navigationEvent = MutableSharedFlow<AuthEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
@@ -105,7 +97,6 @@ class AuthViewModel(
     init {
 
         fetchAvailableRoutes()
-        fetchAvailableRoles()
 
         viewModelScope.launch {
             repository.getAuthState().collect { loggedIn ->
@@ -166,36 +157,12 @@ class AuthViewModel(
         _rutaAsignadaError.value = validateRutaAsignada(ruta.nombre)   // Limpiar error
     }
 
-    fun onRolAsignadoChange(newRolAsignado: String) {
-        _rolAsignado.value = newRolAsignado
-        _rolAsignadoError.value = validateRolAsignado(newRolAsignado)
-
-        // Lógica condicional para la ruta
-        if (newRolAsignado == "Administrador") {
-            _rutaAsignada.value = "S/R" // "Sin Ruta" o "Administración"
-            _routeIdSelected.value = "S/R" // Asignar ID por defecto para Admin
-            _rutaAsignadaError.value = null // Quitamos el error ya que el valor es válido
-        } else {
-            // Si vuelve a Repartidor, limpiamos para obligar a seleccionar una
-            _rutaAsignada.value = ""
-            _routeIdSelected.value = ""
-            _rutaAsignadaError.value = validateRutaAsignada("")
-        }
-    }
-
     // --- NUEVO: Función para obtener rutas (por ahora estática) ---
     private fun fetchAvailableRoutes() {
         // En el futuro, aquí harás una llamada a repository o Firestore
         viewModelScope.launch {
             repository.getRutasFlow().collect { _availableRoutes.value = it }
         }
-    }
-
-    private fun fetchAvailableRoles() {
-        _availableRoles.value = listOf(
-            "Repartidor",
-            "Administrador"
-        )
     }
 
     // --- Funciones de Validación ---
@@ -266,13 +233,6 @@ class AuthViewModel(
         return null
     }
 
-    private fun validateRolAsignado(rolAsignado: String): String? {
-        if (rolAsignado.isBlank()) {
-            return "El rol no puede estar vacío."
-        }
-        return null
-    }
-
     private fun validateLoginForm(): Boolean {
         // Ejecutar todas las validaciones y actualizar los errores
         // Esto es útil si el usuario no ha interactuado con todos los campos
@@ -305,7 +265,7 @@ class AuthViewModel(
     }
 
     fun login(expectedRole: String) {
-    if (!validateLoginForm()) {
+        if (!validateLoginForm()) {
             // No intentar el login si hay errores de validación
             return
         }
@@ -332,11 +292,12 @@ class AuthViewModel(
                 _error.value = it.message ?: "Error desconocido durante el login"
             }
             _isLoading.value = false
-            _passwordLogin.value = ""}
+            _passwordLogin.value = ""
             _currentUser.value = repository.currentUser
         }
+    }
 
-    fun register(expectedRole: String) {
+    fun registerUserByAdmin(context: Context, onSuccess: () -> Unit) {
         if (!validateRegisterForm()) {
             // No intentar el registro si hay errores de validación
             return
@@ -346,29 +307,21 @@ class AuthViewModel(
 
             val imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=E3F2FD&color=1976D2&bold=true&length=2"
 
-            val result = repository.register(
-                _fullName.value, _routeIdSelected.value, _emailRegister.value,
-                _passwordRegister.value, imagenUrl = imagenUrl, _rutaAsignada.value, _rolAsignado.value)
+            val result = repository.registerUserByAdmin(
+                context = context,
+                _fullName.value,
+                _routeIdSelected.value,
+                _emailRegister.value,
+                _passwordRegister.value,
+                imagenUrl = imagenUrl,
+                rutaAsignada = _rutaAsignada.value,
+                rolAsignado = "Repartidor")
 
             result.onSuccess {
 
-                val user = repository.currentUser
-                val profile = repository.getUserProfile(user?.uid ?: "")
-
-                if (profile?.role == expectedRole) {
-                    // Éxito: Es el rol esperado para esta app
-                    _userProfile.value = profile
-                    _currentUser.value = user
-                    _isAuthenticated.value = true
-                    _navigationEvent.emit(AuthEvent.NavigateToHome)
-                } else {
-                    // Error: El usuario existe pero no tiene el permiso para esta app
-                    repository.logout() // Lo sacamos de Firebase Auth
-                    _isAuthenticated.value = false
-                    //_error.value = "No tienes permisos para acceder a esta aplicación."
-                    _navigationEvent.emit(AuthEvent.NavigateToLogin) // Volvemos a la pantalla de login
-
-                }
+                clearInputsRegister()
+                clearErrorRegister()
+                onSuccess()
             }.onFailure {
                 _error.value = it.message ?: "Error desconocido durante el registro"
             _passwordRegister.value = ""
@@ -421,29 +374,17 @@ class AuthViewModel(
         }
     }
 
-    fun clearError(){
-        _error.value = null
-    }
-
-    fun clearInputsLogin(){
-        _emailLogin.value = ""
-        _passwordLogin.value = ""
-    }
-
-    fun clearErrorLogin(){
-        _emailErrorLogin.value = null
-        _passwordErrorLogin.value = null
-    }
-
-    fun clearInputsRegister(){
+    fun clearError() { _error.value = null }
+    fun clearInputsLogin() { _emailLogin.value = ""; _passwordLogin.value = "" }
+    fun clearErrorLogin() { _emailErrorLogin.value = null; _passwordErrorLogin.value = null }
+    fun clearInputsRegister() {
         _fullName.value = ""
         _emailRegister.value = ""
         _passwordRegister.value = ""
         _confirmPasswordRegister.value = ""
         _rutaAsignada.value = ""
     }
-
-    fun clearErrorRegister(){
+    fun clearErrorRegister() {
         _fullNameError.value = null
         _emailErrorRegister.value = null
         _passwordErrorRegister.value = null

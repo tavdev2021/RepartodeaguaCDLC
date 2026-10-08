@@ -1,18 +1,11 @@
 package com.example.admin_app.navigation
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.admin_app.view.HomeScreen
 import com.example.admin_app.view.LoginScreen
 import com.example.admin_app.view.ManageRoutesScreen
@@ -20,7 +13,6 @@ import com.example.admin_app.view.RegisterScreen
 import com.example.admin_app.view.SplashScreen
 import com.example.common.viewmodel.AuthViewModel
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavHost()
 {
@@ -56,11 +48,6 @@ fun AppNavHost()
                             popUpTo("login") { inclusive = true }
                             launchSingleTop = true
                         }
-                    },
-                    onNavigateToRegister = {
-                        navController.navigate("register") {
-                            popUpTo("login") { inclusive = true }
-                        }
                     }
                 )
             }
@@ -69,15 +56,10 @@ fun AppNavHost()
                 RegisterScreen(
                     authViewModel,
                     onRegisterSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("register") { inclusive = true }
-                            launchSingleTop = true
-                        }
+                        navController.popBackStack()
                     },
-                    onNavigateToLogin = {
-                        navController.navigate("login") {
-                            popUpTo("register") { inclusive = true }
-                        }
+                    onBackNavigation = {
+                        navController.popBackStack()
                     }
                 )
             }
@@ -85,14 +67,18 @@ fun AppNavHost()
             composable("home") {
                 HomeScreen(
                     authViewModel,
+                    onManageRoutes = {
+                        navController.navigate("manage_routes")
+                    },
+                    onRegisterRepartidor = {
+                        navController.navigate("register")
+                    },
                     onLogout = {
                         navController.navigate("login") {
                             popUpTo("home") { inclusive = true }
                         }
                     },
-                    onManageRoutes = {
-                        navController.navigate("manage_routes")
-                    }
+
                 )
             }
             composable("manage_routes") {

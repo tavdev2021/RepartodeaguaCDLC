@@ -23,11 +23,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
@@ -251,7 +251,7 @@ fun VentaScreen(
                     val metodos = listOf(
                         "Efectivo" to Icons.Default.Payments,
                         "Tarjeta" to Icons.Default.CreditCard,
-                        "Transf." to Icons.Default.AccountBalance
+                        "Crédito" to Icons.Default.Receipt
                     )
 
                     metodos.forEach { (nombre, icono) ->

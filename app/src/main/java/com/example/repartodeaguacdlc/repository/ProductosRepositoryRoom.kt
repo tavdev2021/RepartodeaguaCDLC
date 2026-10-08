@@ -6,21 +6,38 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ProductosRepositoryRoom(
     private val productosDao: ProductosDao,
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-){
+) {
     val allProductos = productosDao.getAllProductos()
 
     fun sincronizarCatalogoFirebase() {
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val snapshot = firestore.collection("productos").get().await()
+                val productosFirebase = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Productos::class.java)?.copy(id = doc.id)
+                }
+
+                productosDao.sincronizarCatalogo(productosFirebase)
+
+            } catch (e: Exception) {
+                // Manejar el error
+                e.printStackTrace()
+            }
+        }
+
         // Escuchamos la colección de productos en Firebase
         firestore.collection("productos")
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null)
-                    // Manejar el error
+                // Manejar el error
                     return@addSnapshotListener
-                    // Convertimos los documentos de Firebase a nuestra lista de objetos Productos
+                // Convertimos los documentos de Firebase a nuestra lista de objetos Productos
 
                 val productosFirebase = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Productos::class.java)?.copy(id = doc.id)
@@ -29,12 +46,8 @@ class ProductosRepositoryRoom(
                 }
                 // Guardamos en Room (esto actualizará automáticamente los Flows de la UI)
                 CoroutineScope(Dispatchers.IO).launch {
-                    insertarCatalogoInicial(productosFirebase)
+                    productosDao.sincronizarCatalogo(productosFirebase)
                 }
             }
-    }
-
-    suspend fun insertarCatalogoInicial(productos: List<Productos>) {
-        productosDao.insertAll(productos)
     }
 }
