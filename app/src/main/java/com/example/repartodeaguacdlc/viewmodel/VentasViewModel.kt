@@ -2,10 +2,12 @@ package com.example.repartodeaguacdlc.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.common.model.AbonoEntity
 import com.example.common.model.DetalleVentaEntity
 import com.example.common.model.Productos
 import com.example.common.model.VentaConDatos
 import com.example.common.model.VentaEntity
+import com.example.repartodeaguacdlc.repository.AbonosRepositoryRoom
 import com.example.repartodeaguacdlc.repository.ProductosRepositoryRoom
 import com.example.repartodeaguacdlc.repository.VentasRepositoryRoom
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,13 +18,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.collections.emptyList
 
 class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
-                      private val productosRepository: ProductosRepositoryRoom
+                      private val productosRepository: ProductosRepositoryRoom,
+    private val abonosRepository: AbonosRepositoryRoom? = null
 ): ViewModel() {
 
     init {
@@ -71,11 +75,16 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
     else ventasRepository.getVentasHoyCount (routeId,getInicioDia())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = 0)
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val ingresosHoy: StateFlow<Double> = _routeId.flatMapLatest { routeId ->
-        if (routeId.isBlank()) flowOf(0.0)
-        else ventasRepository.getIngresosHoy(routeId,getInicioDia())
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = 0.0)
+    val ingresosHoy: StateFlow<Double> = combine(
+        ventasRepository.getIngresosHoy(getInicioDia()).onStart { emit(0.0) },
+        (abonosRepository?.getAbonosRecibidosHoy(getInicioDia()) ?: flowOf(0.0)).onStart { emit(0.0) }
+    ) { ventasEfectivo, abonosEfectivo ->
+        ventasEfectivo + abonosEfectivo
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0.0
+    )
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -105,6 +114,11 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
         clienteId: String,
         routeId: String,
         metodoPago: String,
+        montoPagado: Double,
+        montoCredito: Double,
+        nuevoSaldoPendiente: Double,
+        nuevoSaldoAFavor: Double,
+        montoAbonoAnterior: Double = 0.0,
         onSuccess: () -> Unit
     ) {
 
@@ -123,6 +137,8 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
                 total = productosSeleccionados.sumOf { producto ->
                     producto.precio * producto.cantidad },
                 metodoPago = metodoPago,
+                montoPagado = montoPagado,
+                montoCredito = montoCredito,
                 isSynced = false, // 👈 Nuevo: Indica que está pendiente de subir
                 ultimaActualizacion = System.currentTimeMillis() // 👈 Nuevo: Marca de tiempo
             )
@@ -137,7 +153,26 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
                 )
             }
 
-            ventasRepository.guardarVenta(venta, detalles)
+            if (montoAbonoAnterior > 0) {
+                val abono = AbonoEntity(
+                    clienteId = clienteId,
+                    routeId = routeId,
+                    fecha = System.currentTimeMillis(),
+                    montoAbono = montoAbonoAnterior,
+                    metodoPago = "Efectivo",
+                    notas = "Abono cobrado durante venta",
+                    isSynced = false
+                )
+                abonosRepository?.guardarAbono(abono)
+            }
+
+            ventasRepository.guardarVentaConAjusteSaldos(
+                venta = venta,
+                detalles = detalles,
+                clienteId = clienteId,
+                nuevoSaldoPendiente = nuevoSaldoPendiente,
+                nuevoSaldoAFavor = nuevoSaldoAFavor
+            )
             limpiarCarrito()
             onSuccess()
         }
@@ -146,6 +181,7 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
     fun iniciarSincronizacionContinua(routeId: String) {
         ventasRepository.iniciarSincronizacionContinua(routeId)
         productosRepository.sincronizarCatalogoFirebase()
+        abonosRepository?.iniciarSincronizacionContinua(routeId)
     }
 
     fun activarRespaldoPendiente() {

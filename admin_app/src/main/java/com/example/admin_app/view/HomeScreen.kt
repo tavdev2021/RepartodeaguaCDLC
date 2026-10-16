@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +38,6 @@ fun HomeScreen(
     onRegisterRepartidor: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val user by authViewModel.currentUser.collectAsStateWithLifecycle()
     val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
     val rutasReales by authViewModel.availableRoutes.collectAsStateWithLifecycle()
@@ -52,7 +50,6 @@ fun HomeScreen(
         }
     }
 
-    val context = LocalContext.current
     val calendar = Calendar.getInstance().time
     val dateFormat = DateFormat.getDateInstance(DateFormat.FULL).format(calendar)
 
@@ -67,7 +64,7 @@ fun HomeScreen(
     Box(modifier = Modifier
         .fillMaxSize()
         .navigationBarsPadding()) {
-        user?.let { firebaseUser ->
+        userProfile?.let { profile ->
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // --- HEADER (Tu diseño original refinado) ---
@@ -85,18 +82,21 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Foto de perfil
-                        ProfileImage(url = firebaseUser.photoUrl.toString())
+                        ProfileImage(url = profile.imagenUrl.ifBlank {
+                            "https://ui-avatars.com/api/?name=${profile.nombre}&size=512&background=1976D2&color=FFFFFF"
+                        }
+                        )
 
                         Column(modifier = Modifier.padding(start = 12.dp)) {
                             Text(
                                 text = "Hola, ${
-                                    firebaseUser.displayName?.split(" ")?.firstOrNull() ?: "Admin"
+                                    profile.nombre.split(" ").firstOrNull() ?: "Admin"
                                 }",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Text(
-                                text = userProfile?.role ?: "Administrador",
+                                text = profile.role.ifBlank { "Sin rol asignado" },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                             )

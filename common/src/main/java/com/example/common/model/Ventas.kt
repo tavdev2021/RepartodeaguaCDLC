@@ -13,6 +13,8 @@ data class VentaEntity(
     val fecha: Long = 0L,
     val total: Double = 0.0,
     val metodoPago: String = "",
+    val montoPagado: Double = 0.0, //Efectivo o dinero entregado en la mano
+    val montoCredito: Double = 0.0, // Importe fiado o crédito
     val isSynced: Boolean = false,
     val ultimaActualizacion: Long = System.currentTimeMillis()
 )
@@ -30,9 +32,9 @@ data class DetalleVentaEntity(
 data class VentaConDatos(
     val id: String,
     val nombreCliente: String,
-    val total: Double,
+    val total: Double = 0.0,
     val totalProductos: Int,
-    val fecha: Long,
+    val fecha: Long = 0L,
     val metodoPago: String = "Efectivo",
     val isSynced: Boolean = true
 )
@@ -44,6 +46,8 @@ data class VentaFirestoreDto(
     val fecha: Long = 0L,
     val total: Double = 0.0,
     val metodoPago: String = "",
+    val montoPagado: Double = 0.0, //Efectivo o dinero entregado en la mano
+    val montoCredito: Double = 0.0, // Importe fiado o crédito
     val isSynced: Boolean = true,
     val ultimaActualizacion: Long = 0L,
     val detalles: List<DetalleVentaEntity> = emptyList()

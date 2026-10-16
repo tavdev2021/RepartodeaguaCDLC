@@ -54,5 +54,12 @@ interface ClientesDao {
     @Query("UPDATE clientes SET isSynced = 1 WHERE id = :id")
     suspend fun markAsSynced(id: String)
 
-    //
+    // Actualizacion atómica de saldos (Deuda y saldo a favor)
+    @Query("UPDATE clientes SET saldoPendiente = :nuevoSaldoPendiente, saldoAFavor = :nuevoSaldoAFavor, isSynced = 0, ultimaActualizacion = :timestamp WHERE id = :clienteId")
+    suspend fun actualizarSaldosCliente
+                (clienteId: String,
+                 nuevoSaldoPendiente: Double,
+                 nuevoSaldoAFavor: Double,
+                 timestamp: Long = System.currentTimeMillis()
+    )
 }

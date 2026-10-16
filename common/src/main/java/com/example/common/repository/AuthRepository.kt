@@ -100,6 +100,29 @@ class AuthRepository (
         } catch (e: Exception) { null }
     }
 
+    // 🔴 NUEVO MÉTODO: Escucha en tiempo real cambios en el perfil del usuario activo en Firestore
+    fun getUserProfileFlow(uid: String): Flow<UserProfile?> = callbackFlow {
+        if (uid.isBlank()) {
+            trySend(null)
+            close()
+            return@callbackFlow
+        }
+
+        val listener = db.collection("usuarios")
+            .document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+
+                val profile = snapshot?.toObject(UserProfile::class.java)
+                trySend(profile)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
     // Obtener rutas en tiepo real
     fun getRutasFlow(): Flow<List<Ruta>> = callbackFlow {
         val subscription = db.collection("rutas")

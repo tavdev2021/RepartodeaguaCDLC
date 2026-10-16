@@ -33,6 +33,8 @@ class SyncVentasWorker(
                     fecha = venta.fecha,
                     total = venta.total,
                     metodoPago = venta.metodoPago,
+                    montoPagado = venta.montoPagado,
+                    montoCredito = venta.montoCredito,
                     isSynced = true,
                     ultimaActualizacion = venta.ultimaActualizacion,
                     detalles = detalles

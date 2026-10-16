@@ -65,8 +65,12 @@ class ClientesRepositoryRoom(
                     // 2. Solo procesamos si el cliente NO es nulo
                     clienteRemoto?.let { cliente ->
                         CoroutineScope(Dispatchers.IO).launch {
+                            val clienteLocal = clientesDao.getClienteById(cliente.id)
                             // 3. Lo guardamos en Room marcándolo como sincronizado
-                            clientesDao.insertCliente(cliente.copy(isSynced = true))
+
+                            if (clienteLocal == null || clienteLocal.isSynced || cliente.ultimaActualizacion > clienteLocal.ultimaActualizacion) {
+                                clientesDao.insertCliente(cliente.copy(isSynced = true))
+                            }
                         }
                     }
                 }

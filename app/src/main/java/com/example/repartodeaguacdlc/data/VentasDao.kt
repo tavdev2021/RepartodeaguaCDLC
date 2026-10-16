@@ -24,6 +24,21 @@ interface VentasDao {
         insertDetalleVenta(detalles)
     }
 
+    // Guarda venta, productos y actualiza saldos de credito en un solo paso
+    @Transaction
+    suspend fun registrarVentaConAjusteSaldos(
+        venta: VentaEntity,
+        detalles: List<DetalleVentaEntity>,
+        clienteId: String,
+        nuevoSaldoPendiente: Double,
+        nuevoSaldoAFavor: Double,
+        clientesDao: ClientesDao
+    ) {
+        insertVenta(venta)
+        insertDetalleVenta(detalles)
+        clientesDao.actualizarSaldosCliente(clienteId, nuevoSaldoPendiente, nuevoSaldoAFavor)
+    }
+
     @Query("SELECT * FROM ventas WHERE isSynced = 0")
     suspend fun getUnsyncedVentas(): List<VentaEntity>
 
@@ -36,8 +51,8 @@ interface VentasDao {
     @Query("SELECT COUNT(*) FROM ventas WHERE routeId = :routeId AND fecha >= :inicioDia")
     fun getVentasHoyCount(routeId: String, inicioDia: Long): Flow<Int>
 
-    @Query("SELECT COALESCE(SUM(total), 0.0) FROM ventas WHERE routeId = :routeId AND fecha >= :inicioDia")
-    fun getIngresosHoy(routeId: String, inicioDia: Long): Flow<Double>
+    @Query("SELECT COALESCE(SUM(montoPagado), 0.0) FROM ventas WHERE fecha >= :inicioDia AND montoPagado > 0")
+    fun getIngresosHoy(inicioDia: Long): Flow<Double>
 
     @Query(""" 
     SELECT 

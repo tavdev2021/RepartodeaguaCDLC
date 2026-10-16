@@ -334,10 +334,11 @@ class AuthViewModel(
     fun fetchUserData() {
         viewModelScope.launch {
             val uid = repository.currentUser?.uid
-            if (uid != null) {
+            if (!uid.isNullOrBlank()) {
                 // 👇 Usamos el método que trae el perfil completo (con rol) desde Firestore
-                val profile = repository.getUserProfile(uid)
-                _userProfile.value = profile
+                repository.getUserProfileFlow(uid).collect { profile ->
+                    _userProfile.value = profile
+                }
             }
         }
     }
