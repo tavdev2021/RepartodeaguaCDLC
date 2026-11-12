@@ -71,9 +71,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.example.common.domain.PaymentCalculator
 import com.example.common.model.Clientes
-import com.example.repartodeaguacdlc.R
 import com.example.common.model.Productos
+import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 import com.example.repartodeaguacdlc.viewmodel.VentasViewModel
 import java.util.Locale
@@ -95,6 +96,7 @@ fun VentaScreen(
     var metodoSeleccionado by remember { mutableStateOf("Efectivo") }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Realizar Venta", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
@@ -105,7 +107,6 @@ fun VentaScreen(
                 },
                 actions = {
                     TextButton(onClick = onBack) {
-                        // Color azul similar al de la imagen
                         Text("Cancelar",
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium)
@@ -117,8 +118,6 @@ fun VentaScreen(
             val context = LocalContext.current
 
             cliente?.let { currentCliente ->
-
-                // Barra inferior con el total y botón finalizar
                 VentaBottomBar(
                     total = total,
                     cantidadArticulos = articulos,
@@ -137,13 +136,12 @@ fun VentaScreen(
                             onSuccess = {
                                 Toast.makeText(
                                     context,
-                                    "Venta generada con exito",
+                                    "Venta generada con éxito",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                onBackToClientList() // Regresa a la lista de clientes
+                                onBackToClientList()
                             }
                         )
-
                     }
                 )
             }
@@ -161,21 +159,23 @@ fun VentaScreen(
                 Text("Cliente",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp)
                 )
 
                 Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer), // Azul muy claro
-                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .padding(16.dp),
+                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
@@ -183,9 +183,7 @@ fun VentaScreen(
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             modifier = Modifier.size(48.dp)
                         ) {
-                            //Foto de perfil
                             val imageUrl = cliente?.imagenUrl
-                            //val imageUrl = "https://i.pravatar.cc/300"
                             if (imageUrl != null) {
                                 AsyncImage(
                                     model = imageUrl,
@@ -193,17 +191,12 @@ fun VentaScreen(
                                     modifier = Modifier
                                         .size(60.dp)
                                         .clip(CircleShape)
-                                        .border(
-                                            2.dp,
-                                            MaterialTheme.colorScheme.secondary,
-                                            CircleShape
-                                        ),
+                                        .border(2.dp, MaterialTheme.colorScheme.secondary, CircleShape),
                                     contentScale = ContentScale.Crop,
                                     placeholder = painterResource(id = R.drawable.ic_downloading),
                                     error = painterResource(id = R.drawable.ic_error)
                                 )
                             } else {
-
                                 Icon(
                                     Icons.Default.Person,
                                     contentDescription = null,
@@ -219,21 +212,20 @@ fun VentaScreen(
                             Text(cliente?.nombre ?: "Cargando...", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
                             Text(
                                 text = when {
-                                    cliente == null -> "Cargando direccion..."
+                                    cliente == null -> "Cargando dirección..."
                                     cliente!!.direccion.isNotBlank() -> cliente!!.direccion
                                     else -> cliente!!.ubicacion
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2)
+                                maxLines = 2
+                            )
                         }
-                        // Icono de gota de fondo (decorativo)
                         Icon(
                             Icons.Default.WaterDrop,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2f),
-                            modifier = Modifier
-                                .size(48.dp)
+                            modifier = Modifier.size(48.dp)
                         )
                     }
                 }
@@ -264,10 +256,8 @@ fun VentaScreen(
                 Text("Método de Pago",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold)
-                // Espacio para los selectores de pago
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Selector de pago (Simulado)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -288,12 +278,17 @@ fun VentaScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(80.dp),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (esSeleccionado) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.surface,
                                 contentColor = if (esSeleccionado) MaterialTheme.colorScheme.onPrimary
                                 else MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (esSeleccionado) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                             ),
                             elevation = CardDefaults.cardElevation(if (esSeleccionado) 4.dp else 1.dp)
                         ) {
@@ -326,7 +321,7 @@ fun VentaScreen(
 @SuppressLint("DefaultLocale")
 @Composable
 fun ProductoItem(
-    producto: Productos, // Tu Data Class
+    producto: Productos,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit
 ) {
@@ -334,14 +329,15 @@ fun ProductoItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(2.dp),
-        shape = RoundedCornerShape(12.dp)
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(modifier = Modifier
-            .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(producto.imagenUrl)
@@ -360,46 +356,42 @@ fun ProductoItem(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 12.dp)) {
-                Text(
-                    producto.nombre,
-                    fontWeight = FontWeight.Bold)
-
-                Text(
-                    "$${producto.precio} c/u",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    .padding(horizontal = 12.dp)
+            ) {
+                Text(producto.nombre, fontWeight = FontWeight.Bold)
+                Text("$${producto.precio} c/u", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 if (producto.cantidad > 0) {
-                    Surface(color = MaterialTheme.colorScheme.primaryContainer,
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
                         shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        Text("Subtotal: $${String.format("%.2f", subtotal)}",
+                        Text(
+                            "Subtotal: $${String.format("%.2f", subtotal)}",
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold)
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
-            // Botones conectados a las lambdas
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant) // Fondo gris claro de la elipse
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(6.dp)
-                ) {
-
+            ) {
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(CircleShape) // Asegura ripple circular
+                        .clip(CircleShape)
                         .background(
                             if (producto.cantidad > 0) MaterialTheme.colorScheme.surface
-                            else MaterialTheme.colorScheme.surfaceVariant // Igual al fondo cuando está apagado
+                            else MaterialTheme.colorScheme.surfaceVariant
                         )
                         .clickable(enabled = producto.cantidad > 0) { onDecrement() },
                     contentAlignment = Alignment.Center
@@ -407,16 +399,15 @@ fun ProductoItem(
                     Icon(
                         Icons.Default.Remove,
                         contentDescription = "Menos",
-                        modifier = Modifier
-                            .size(18.dp),
+                        modifier = Modifier.size(18.dp),
                         tint = if (producto.cantidad > 0) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
                 }
 
-                Text("${producto.cantidad}",
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp),
+                Text(
+                    "${producto.cantidad}",
+                    modifier = Modifier.padding(horizontal = 12.dp),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -426,16 +417,15 @@ fun ProductoItem(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary) // Fondo azul sólido
-                        .clickable{ onIncrement() },
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable { onIncrement() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = "Mas",
+                        contentDescription = "Más",
                         tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier
-                            .size(18.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -458,78 +448,27 @@ fun VentaBottomBar(
         montoAbonoAnterior: Double
     ) -> Unit
 ) {
-
-    val LIMITE_CREDITO_MAXIMO = 1000.0
     val esEfectivo = metodoPago == "Efectivo"
     val esCredito = metodoPago == "Crédito"
 
-    // 1. Estado para el dinero recibido o pago parcial
+    // 1. Estado local de entradas de usuario en la UI
     var montoEntregadoText by remember(total, metodoPago) { mutableStateOf("") }
-    var aplicarSaldoAFavor by remember (total, metodoPago) { mutableStateOf(false) }
-    var aplicarSobranteADeuda by remember (total, metodoPago) { mutableStateOf(false) }
-    var guardarCambioComoSaldoAFavor by remember (total, metodoPago) { mutableStateOf(false) }
+    var aplicarSaldoAFavor by remember(total, metodoPago) { mutableStateOf(false) }
+    var aplicarSobranteADeuda by remember(total, metodoPago) { mutableStateOf(false) }
+    var guardarCambioComoSaldoAFavor by remember(total, metodoPago) { mutableStateOf(false) }
 
-    // 1. Saldo a favor usado
-    val saldoAFavorUsado = if (aplicarSaldoAFavor && cliente.saldoAFavor > 0) minOf(cliente.saldoAFavor, total) else 0.0
-    val saldoAFavorRemanente = cliente.saldoAFavor - saldoAFavorUsado
-    val totalDespuesDeSaldoAFavor = total - saldoAFavorUsado
-
-    val montoEntregadoDouble = if (montoEntregadoText.isBlank()) {
-        if (esEfectivo) totalDespuesDeSaldoAFavor else 0.0
-    } else {
-        montoEntregadoText.toDoubleOrNull() ?: 0.0
-    }
-
-    val efectivoPagoConfirmado = (totalDespuesDeSaldoAFavor == 0.0) || (
-            montoEntregadoText.isNotBlank() && montoEntregadoDouble >= totalDespuesDeSaldoAFavor
-            )
-
-    // 🔴 2. CÁLCULOS INTELIGENTES EN EFECTIVO CON DEUDA ANTERIOR
-    val excedenteEfectivo = if (esEfectivo && montoEntregadoDouble > totalDespuesDeSaldoAFavor) {
-        montoEntregadoDouble - totalDespuesDeSaldoAFavor
-    } else 0.0
-
-    // 🔴 2. ABONO POTENCIAL (Muestra la cantidad disponible aunque el chip aún no esté seleccionado)
-    val abonoPotencial = if (esEfectivo && cliente.saldoPendiente > 0) {
-        minOf(excedenteEfectivo, cliente.saldoPendiente)
-    } else 0.0
-
-    // Si el cliente entrega más dinero del total de hoy y debe dinero anterior:
-    val abonoADeudaAutocobrado = if (aplicarSobranteADeuda) abonoPotencial else 0.0
-
-    val cambioRemanenteSobrante = maxOf(0.0, excedenteEfectivo - abonoADeudaAutocobrado)
-
-    val cambioEfectivoFinal = if (esEfectivo && !guardarCambioComoSaldoAFavor) {
-        cambioRemanenteSobrante
-    } else 0.0
-
-    val faltanteEfectivo = if (esEfectivo && montoEntregadoDouble < totalDespuesDeSaldoAFavor) {
-        totalDespuesDeSaldoAFavor - montoEntregadoDouble
-    } else 0.0
-
-    // 🔴 3. DEUDA PROYECTADA
-    val montoCreditoGeneradoHoy = if (esCredito) maxOf(0.0, totalDespuesDeSaldoAFavor - montoEntregadoDouble) else 0.0
-
-    val nuevaDeudaProyectada = if (esEfectivo) {
-        maxOf(0.0, cliente.saldoPendiente - abonoADeudaAutocobrado)
-    } else {
-        maxOf(0.0, cliente.saldoPendiente + montoCreditoGeneradoHoy)
-    }
-        val excedeLimiteCredito = esCredito && nuevaDeudaProyectada > LIMITE_CREDITO_MAXIMO
-
-    // 🔴 4. MONTO TOTAL EN EFECTIVO RECIBIDO HOY (Para el Corte de Caja)
-    val montoPagadoEfectivoHoy = if (esEfectivo) {
-        minOf(montoEntregadoDouble, totalDespuesDeSaldoAFavor) + if (guardarCambioComoSaldoAFavor) cambioRemanenteSobrante else 0.0
-    } else {
-        minOf(montoEntregadoDouble, totalDespuesDeSaldoAFavor)
-    }
-
-    // 🔴 5. NUEVO SALDO A FAVOR PROYECTADO
-    val nuevoSaldoAFavorProyectado = saldoAFavorRemanente + if (esEfectivo && guardarCambioComoSaldoAFavor) cambioRemanenteSobrante else 0.0
-
-    val esPagoValido = cantidadArticulos > 0 && !excedeLimiteCredito && (
-            (esEfectivo && efectivoPagoConfirmado) || (esCredito)
-            )
+    // 🔴 2. Delegación completa de cálculos matemáticos al PaymentCalculator
+    val calc = PaymentCalculator.calculate(
+        total = total,
+        cantidadArticulos = cantidadArticulos,
+        metodoPago = metodoPago,
+        clienteSaldoPendiente = cliente.saldoPendiente,
+        clienteSaldoAFavor = cliente.saldoAFavor,
+        montoEntregadoText = montoEntregadoText,
+        aplicarSaldoAFavor = aplicarSaldoAFavor,
+        aplicarSobranteADeuda = aplicarSobranteADeuda,
+        guardarCambioComoSaldoAFavor = guardarCambioComoSaldoAFavor
+    )
 
     Surface(
         shadowElevation = 12.dp,
@@ -538,27 +477,33 @@ fun VentaBottomBar(
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 24.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
     ) {
-        Column(modifier = Modifier
-            .navigationBarsPadding()
-            .padding(20.dp)) {
+        Column(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .padding(20.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("TOTAL A PAGAR", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-
-
+                    Text(
+                        "TOTAL A PAGAR",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                     if (cantidadArticulos == 1)
                         Text("$cantidadArticulos artículo", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
                     else
-                    Text("$cantidadArticulos artículos", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
+                        Text("$cantidadArticulos artículos", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
                 }
-                Text("$${String.format("%.2f", total)}",
+                Text(
+                    "$${String.format("%.2f", total)}",
                     style = MaterialTheme.typography.headlineMedium.copy(fontSize = 24.sp),
                     fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -567,7 +512,9 @@ fun VentaBottomBar(
                 Spacer(modifier = Modifier.height(10.dp))
                 FilterChip(
                     selected = aplicarSaldoAFavor,
-                    onClick = { aplicarSaldoAFavor = !aplicarSaldoAFavor },
+                    onClick = { aplicarSaldoAFavor = !aplicarSaldoAFavor
+                    montoEntregadoText = ""
+                    },
                     label = {
                         Text(
                             "Usar Saldo a Favor disponible ($${String.format(Locale.getDefault(), "%.2f", cliente.saldoAFavor)})",
@@ -586,9 +533,47 @@ fun VentaBottomBar(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     )
                 )
+
+                // 🟢 NUEVA TARJETA: MUESTRA EL REMANENTE A FAVOR O EL MONTO APLICADO
+                if (aplicarSaldoAFavor && calc.saldoAFavorRemanente > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        color = Color(0xFFE8F5E9), // Verde claro
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, Color(0xFFA5D6A7)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = Color(0xFF2E7D32),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Saldo a favor restante:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF2E7D32)
+                                )
+                            }
+                            Text(
+                                text = "$${String.format(Locale.getDefault(), "%.2f", calc.saldoAFavorRemanente)}",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 13.sp,
+                                color = Color(0xFF2E7D32)
+                            )
+                        }
+                    }
+                }
             }
 
-            // 🔴 Modo 1: Calculos y herramientas en efectivo
+            // 🔴 Modo 1: Herramientas en efectivo
             if (esEfectivo && cantidadArticulos > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(
@@ -609,12 +594,16 @@ fun VentaBottomBar(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Deuda anterior pendiente:",
+                            Text(
+                                "Deuda anterior pendiente:",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer)
-                            Text("$${String.format(Locale.getDefault(), "%.2f", cliente.saldoPendiente)}",
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                "$${String.format(Locale.getDefault(), "%.2f", cliente.saldoPendiente)}",
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onErrorContainer)
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
                         }
                     }
                 }
@@ -624,7 +613,6 @@ fun VentaBottomBar(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Campo para ingresar la cantidad recibida
                     OutlinedTextField(
                         value = montoEntregadoText,
                         onValueChange = { input ->
@@ -640,9 +628,6 @@ fun VentaBottomBar(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
 
-                    val hayCambioValido =
-                        montoEntregadoDouble >= totalDespuesDeSaldoAFavor && montoEntregadoText.isNotBlank()
-
                     // Tarjeta con el cambio calculado
                     Surface(
                         modifier = Modifier
@@ -651,13 +636,13 @@ fun VentaBottomBar(
                         shape = RoundedCornerShape(14.dp),
                         color = if (guardarCambioComoSaldoAFavor)
                             Color(0xFFE8F5E9)
-                        else if (hayCambioValido)
+                        else if (calc.hayCambioValido)
                             MaterialTheme.colorScheme.tertiaryContainer
                         else
                             MaterialTheme.colorScheme.surfaceContainerHigh,
                         border = BorderStroke(
                             1.dp,
-                            if (hayCambioValido) MaterialTheme.colorScheme.tertiary else Color.Transparent
+                            if (calc.hayCambioValido) MaterialTheme.colorScheme.tertiary else Color.Transparent
                         )
                     ) {
                         Column(
@@ -670,7 +655,7 @@ fun VentaBottomBar(
                                 text = if (guardarCambioComoSaldoAFavor) "A FAVOR HOY" else "CAMBIO",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (guardarCambioComoSaldoAFavor || hayCambioValido)
+                                color = if (guardarCambioComoSaldoAFavor || calc.hayCambioValido)
                                     MaterialTheme.colorScheme.onTertiaryContainer
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -678,13 +663,13 @@ fun VentaBottomBar(
 
                             Text(
                                 text = if (guardarCambioComoSaldoAFavor)
-                                "$${String.format(Locale.getDefault(), "%.2f", cambioRemanenteSobrante)}"
-                                else "$${String.format(Locale.getDefault(), "%.2f", cambioEfectivoFinal)}",
+                                    "$${String.format(Locale.getDefault(), "%.2f", calc.cambioRemanenteSobrante)}"
+                                else
+                                    "$${String.format(Locale.getDefault(), "%.2f", calc.cambioEfectivoFinal)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = if (guardarCambioComoSaldoAFavor || hayCambioValido) MaterialTheme.colorScheme.onTertiaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurface
+                                color = if (guardarCambioComoSaldoAFavor || calc.hayCambioValido) MaterialTheme.colorScheme.onTertiaryContainer
+                                else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -697,18 +682,13 @@ fun VentaBottomBar(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val billetes = listOf(
-                        "Exacto" to String.format(
-                            Locale.getDefault(),
-                            "%.2f",
-                            totalDespuesDeSaldoAFavor
-                        ),
+                        "Exacto" to String.format(Locale.getDefault(), "%.2f", calc.totalDespuesDeSaldoAFavor),
                         "$100" to "100.00",
                         "$200" to "200.00",
                         "$500" to "500.00"
                     )
 
                     billetes.forEach { (etiqueta, valor) ->
-
                         val seleccionado = montoEntregadoText == valor
                         FilterChip(
                             selected = seleccionado,
@@ -726,13 +706,13 @@ fun VentaBottomBar(
                     }
                 }
 
-                // Si entregó dinero extra y tiene deuda previa: Opción de Abonar el excedente
-                if (abonoPotencial > 0) {
+                // Opción de Abonar el excedente si entregó más dinero
+                if (calc.abonoPotencial > 0) {
                     Spacer(modifier = Modifier.height(8.dp))
                     FilterChip(
                         selected = aplicarSobranteADeuda,
                         onClick = { aplicarSobranteADeuda = !aplicarSobranteADeuda },
-                        label = { Text("Abonar $${String.format(Locale.getDefault(), "%.2f", abonoPotencial)} a la deuda anterior", fontSize = 11.sp) },
+                        label = { Text("Abonar $${String.format(Locale.getDefault(), "%.2f", calc.abonoPotencial)} a la deuda anterior", fontSize = 11.sp) },
                         leadingIcon = { if (aplicarSobranteADeuda) Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
@@ -740,7 +720,7 @@ fun VentaBottomBar(
                 }
 
                 // Caso Guardar el cambio como saldo a favor
-                val hayCambioParaGuardar = (cambioRemanenteSobrante > 0) || guardarCambioComoSaldoAFavor
+                val hayCambioParaGuardar = (calc.cambioRemanenteSobrante > 0) || guardarCambioComoSaldoAFavor
 
                 if (hayCambioParaGuardar) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -749,13 +729,8 @@ fun VentaBottomBar(
                         onClick = { guardarCambioComoSaldoAFavor = !guardarCambioComoSaldoAFavor },
                         label = {
                             Text(
-                                "Guardar cambio ($${
-                                    String.format(
-                                        Locale.getDefault(),
-                                        "%.2f",
-                                        cambioRemanenteSobrante
-                                    )
-                                }) como saldo a favor", fontSize = 11.sp
+                                "Guardar cambio ($${String.format(Locale.getDefault(), "%.2f", calc.cambioRemanenteSobrante)}) como saldo a favor",
+                                fontSize = 11.sp
                             )
                         },
                         leadingIcon = {
@@ -771,31 +746,26 @@ fun VentaBottomBar(
                 }
             }
 
-                // Advertencia si la cantidad ingresada es menor al total
-                if (montoEntregadoText.isNotBlank() && montoEntregadoDouble < totalDespuesDeSaldoAFavor) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            text = "Faltan $${
-                                String.format(
-                                    Locale.getDefault(),
-                                    "%.2f",
-                                    faltanteEfectivo
-                                )
-                            } para completar el pago",
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
+            // Advertencia si la cantidad ingresada es menor al total
+            if (esEfectivo && calc.faltanteEfectivo > 0 && cantidadArticulos > 0) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = "Faltan $${String.format(Locale.getDefault(), "%.2f", calc.faltanteEfectivo)} para completar el pago",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
                 }
+            }
 
-            // 🔴 MODO 2: CÁLCULOS Y HERRAMIENTAS EN CRÉDITO (Casos #1, #2 y #4)
+            // 🔴 MODO 2: CÁLCULOS Y HERRAMIENTAS EN CRÉDITO
             if (esCredito && cantidadArticulos > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -806,7 +776,6 @@ fun VentaBottomBar(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Campo de Pago Parcial Hoy
                     OutlinedTextField(
                         value = montoEntregadoText,
                         onValueChange = { input ->
@@ -823,7 +792,6 @@ fun VentaBottomBar(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
 
-                    // Tarjeta de Deuda de esta compra
                     Surface(
                         modifier = Modifier.weight(1f).height(56.dp),
                         shape = RoundedCornerShape(14.dp),
@@ -833,30 +801,32 @@ fun VentaBottomBar(
                             modifier = Modifier.fillMaxSize().padding(horizontal = 14.dp),
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Text("A CRÉDITO HOY",
+                            Text(
+                                "A CRÉDITO HOY",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onErrorContainer)
-                            Text("$${String.format(Locale.getDefault(), "%.2f", montoCreditoGeneradoHoy)}",
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                "$${String.format(Locale.getDefault(), "%.2f", calc.montoCreditoGeneradoHoy)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onErrorContainer)
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Resumen de Deuda Acumulada del Cliente
                 Text(
-                    text = "Deuda total proyectada: $${String.format(Locale.getDefault(), "%.2f", nuevaDeudaProyectada)} " +
+                    text = "Deuda total proyectada: $${String.format(Locale.getDefault(), "%.2f", calc.nuevaDeudaProyectada)} " +
                             "(Anterior: $${String.format(Locale.getDefault(), "%.2f", cliente.saldoPendiente)})",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (excedeLimiteCredito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (calc.excedeLimiteCredito) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // 🔴 ADVERTENCIA DE LÍMITE DE CRÉDITO DE $1,000 EXCEDIDO
-                if (excedeLimiteCredito) {
+                if (calc.excedeLimiteCredito) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
                         shape = RoundedCornerShape(10.dp),
@@ -869,7 +839,7 @@ fun VentaBottomBar(
                             Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                text = "Límite de crédito superado ($${String.format("%.2f", nuevaDeudaProyectada)} de $1,000.00 máx). El cliente debe abonar primero o pagar en efectivo.",
+                                text = "Límite de crédito superado ($${String.format("%.2f", calc.nuevaDeudaProyectada)} de $1,000.00 máx). El cliente debe abonar primero o pagar en efectivo.",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -880,18 +850,17 @@ fun VentaBottomBar(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-
             Button(
                 onClick = {
                     onFinalizarVentaCalculada(
-                        montoPagadoEfectivoHoy,
-                        montoCreditoGeneradoHoy,
-                        nuevaDeudaProyectada,
-                        nuevoSaldoAFavorProyectado,
-                        abonoADeudaAutocobrado
+                        calc.montoPagadoEfectivoHoy,
+                        calc.montoCreditoGeneradoHoy,
+                        calc.nuevaDeudaProyectada,
+                        calc.nuevoSaldoAFavorProyectado,
+                        calc.abonoADeudaAutocobrado
                     )
                 },
-                enabled = esPagoValido,
+                enabled = calc.esPagoValido,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -904,11 +873,14 @@ fun VentaBottomBar(
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
-                Text("Finalizar Venta",
+                Text(
+                    "Finalizar Venta",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp)
+                    fontSize = 16.sp
+                )
                 Spacer(Modifier.width(8.dp))
-                Icon(Icons.AutoMirrored.Filled.ArrowForward,
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null
                 )
             }

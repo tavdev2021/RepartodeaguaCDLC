@@ -3,6 +3,7 @@ package com.example.common.util
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
+import android.os.Build
 import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -10,10 +11,15 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import kotlin.coroutines.resume
 
-object LocationHelper {
+object
+
+
+LocationHelper {
 
     @SuppressLint("MissingPermission")
     fun iniciarSeguimientoPreciso(
@@ -50,30 +56,83 @@ object LocationHelper {
         fusedLocationClient.removeLocationUpdates(callback)
     }
 
-    suspend fun obtenerDireccionLegible(context: Context, coordenadas: String): String {
+    suspend fun obtenerDireccionLegible(context: Context, coordenadas: String): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val partes = coordenadas.split(",")
-                val lat = partes[0].trim().toDouble()
-                val lng = partes[1].trim().toDouble()
+                if (partes.size < 2) return@withContext null
+                val lat = partes[0].trim().toDoubleOrNull() ?: return@withContext null
+                val lng = partes[1].trim().toDoubleOrNull() ?: return@withContext null
 
                 val geocoder = Geocoder(context, Locale.getDefault())
-                val direcciones = geocoder. getFromLocation(lat, lng, 1)
 
-                if (!direcciones.isNullOrEmpty()) {
-                    val direccion = direcciones[0]
-                    // Construimos un formato amigable: Calle Número, Colonia
-                    val calle = direccion.thoroughfare ?: ""
-                    val num = direccion.subThoroughfare ?: ""
-                    val colonia = direccion.subLocality ?: ""
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    // API 33+ (Android 13+): Uso asíncrono moderno con GeocodeListener
+                    suspendCancellableCoroutine { continuation ->
+                        geocoder.getFromLocation(lat, lng, 1, object : Geocoder.GeocodeListener {
+                            override fun onGeocode(direcciones: MutableList<android.location.Address>) {
+                                if (direcciones.isNotEmpty()) {
+                                    val dir = direcciones[0]
 
-                    if (calle.isNotEmpty()) "$calle $num, $colonia".trim().trimEnd(',')
-                    else direccion.getAddressLine(0) // Fallback si no hay nombre de calle
+                                    val calle = dir.thoroughfare ?: ""
+                                    val num = dir.subThoroughfare ?: ""
+                                    val colonia = dir.subLocality ?: ""
+                                    val puebloOComunidad = dir.locality ?: dir.subAdminArea ?: "" // 👈 Nombre del Pueblo / Municipio
+                                    val estado = dir.adminArea ?: "" // 👈 Estado (ej. Guerrero)
+
+                                    val resultado = when {
+                                        // 1. Ciudad / Calle con nombre registrado
+                                        calle.isNotBlank() -> {
+                                            val numeroTexto = if (num.isNotBlank() && num != "SN") " $num" else ""
+                                            val sectorTexto = if (colonia.isNotBlank()) ", $colonia" else if (puebloOComunidad.isNotBlank()) ", $puebloOComunidad" else ""
+                                            "$calle$numeroTexto$sectorTexto".trim()
+                                        }
+
+                                        // 2. Pueblo / Zona Rural sin nombre de calle (Limpio de Plus Codes)
+                                        puebloOComunidad.isNotBlank() -> {
+                                            if (estado.isNotBlank()) "$puebloOComunidad, $estado" else puebloOComunidad
+                                        }
+
+                                        // 3. Fallback limpiando códigos extra
+                                        else -> {
+                                            val lineaCompleta = dir.getAddressLine(0) ?: ""
+                                            // Remueve Plus Codes como "M8F6+FV," si vinieran en el texto
+                                            lineaCompleta.replace(Regex("^[A-Z0-9]+\\+[A-Z0-9]+,?\\s*"), "")
+                                        }
+                                    }
+
+                                    continuation.resume(resultado.ifBlank { null })
+                                } else {
+                                    continuation.resume(null)
+                                }
+                            }
+
+                            override fun onError(errorMessage: String?) {
+                                continuation.resume(null)
+                            }
+                        })
+                    }
                 } else {
-                    coordenadas // Si Google no encuentra nada, devolvemos los números
+                    // Dispositivos anteriores a Android 13 (Síncrono tradicional)
+                    @Suppress("DEPRECATION")
+                    val direcciones = geocoder.getFromLocation(lat, lng, 1)
+
+                    if (!direcciones.isNullOrEmpty()) {
+                        val dir = direcciones[0]
+                        val calle = dir.thoroughfare ?: ""
+                        val num = dir.subThoroughfare ?: ""
+                        val colonia = dir.subLocality ?: ""
+
+                        val resultado = if (calle.isNotBlank()) "$calle $num, $colonia".trim().trimEnd(',')
+                        else dir.getAddressLine(0) ?: ""
+
+                        resultado.ifBlank { null }
+                    } else {
+                        null
+                    }
                 }
             } catch (e: Exception) {
-                coordenadas // Si no hay internet, devolvemos los números para no crashear
+                null // Si no hay internet o falla el Geocoder, retorna NULL para reintentar
             }
         }
     }

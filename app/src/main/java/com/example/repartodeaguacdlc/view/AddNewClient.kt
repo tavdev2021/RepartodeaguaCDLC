@@ -41,6 +41,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -115,6 +116,7 @@ fun AddNewClient(
 
     // Estados para la UI
     var currentAccuracy by remember { mutableFloatStateOf(0f) }
+    var bestAccuracy by remember { mutableFloatStateOf(Float.MAX_VALUE) }
     var locationCallback by remember { mutableStateOf<LocationCallback?>(null) }
 
 // 1. Launcher para solicitar permisos
@@ -128,7 +130,10 @@ fun AddNewClient(
                 fusedLocationClient,
                 onLocationReceived = {lat, lon, accuracy ->
                     currentAccuracy = accuracy
-                    if (accuracy <= 15f) viewModel.updateLocation(lat, lon)
+                    if (accuracy <= 15f && accuracy < bestAccuracy) {
+                        bestAccuracy = accuracy
+                        viewModel.updateLocation(lat, lon)
+                    }
                 }
             )
         } else {
@@ -204,6 +209,7 @@ fun AddNewClient(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.appbar_regstrarnuevocliente)) },
@@ -212,7 +218,10 @@ fun AddNewClient(
                     {
                         Icon(Icons.AutoMirrored.TwoTone.ArrowBack, contentDescription = "Volver a Home")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                )
             )
         }
     ) { padding ->

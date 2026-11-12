@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import com.example.common.model.DetalleVentaEntity
+import com.example.common.model.VentaConDatos
 import com.example.common.model.VentaEntity
 import com.example.common.model.VentaFirestoreDto
 import com.example.repartodeaguacdlc.data.ClientesDao
@@ -18,6 +19,7 @@ import com.example.repartodeaguacdlc.data.worker.SyncVentasWorker
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class VentasRepositoryRoom(
@@ -122,5 +124,9 @@ class VentasRepositoryRoom(
     fun getIngresosHoy(inicioDia: Long) = ventasDao.getIngresosHoy(inicioDia)
 
     fun getUltimaVenta(routeId: String, inicioDia: Long) = ventasDao.getUltimaVentaConDatos(routeId, inicioDia)
+
+    fun getUltimasVentasPorCliente(clienteId: String): Flow<List<VentaConDatos>> {
+        return ventasDao.getUltimasVentasPorCliente(clienteId)
+    }
 
 }

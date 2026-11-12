@@ -41,9 +41,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -100,6 +102,7 @@ fun UpdateClientScreen(
 
     // Estados de control de GPS
     var currentAccuracy by remember { mutableFloatStateOf(0f) }
+    var bestAccuracy by remember { mutableFloatStateOf(Float.MAX_VALUE)}
     var isSearchingGPS by remember { mutableStateOf(false) } // Control manual de busqueda
     var locationCallback by remember { mutableStateOf<LocationCallback?>(null) }
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
@@ -127,11 +130,10 @@ fun UpdateClientScreen(
                 fusedLocationClient = fusedLocationClient,
                 onLocationReceived = { lat, lon, accuracy ->
                     currentAccuracy = accuracy
-                    // CRITICO: Solo actualiza si el usuario pulsó el botón y la precisión es <= 15m
-                    if (isSearchingGPS && accuracy <= 15f) {
+                    // CRITICO: Solo actualiza si el usuario pulsó el botón y la precisión es <= 15m y la precision es menor a la ultima obtenida
+                    if (isSearchingGPS && accuracy <= 15f && accuracy < bestAccuracy) {
+                        bestAccuracy = accuracy
                         viewModel.updateLocation(lat, lon)
-                        isSearchingGPS = false // Apagamos la búsqueda automáticamente
-                        Toast.makeText(context, "Ubicación detectada con precision", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -208,6 +210,7 @@ fun UpdateClientScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             TopAppBar(
                 title = { Text("Actualizar datos del cliente") },
@@ -216,7 +219,10 @@ fun UpdateClientScreen(
                     {
                         Icon(Icons.AutoMirrored.TwoTone.ArrowBack, contentDescription = "Volver a Home")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                )
             )
         }
     ) { padding ->
@@ -244,17 +250,29 @@ fun UpdateClientScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                AsyncImage(
-                    model = cliente!!.imagenUrl,
-                    contentDescription = "Imagen del Cliente",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)// Hace la imagen circular
-                        .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),// Pone un borde en la imagen
-                    contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                    placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
-                    error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
-                )
+                // Surface para darle elevación/sombra real a la foto
+                Surface(
+                    shape = CircleShape,
+                    shadowElevation = 6.dp, // 👈 Eleva la foto del fondo
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+
+                    AsyncImage(
+                        model = cliente!!.imagenUrl,
+                        contentDescription = "Imagen del Cliente",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)// Hace la imagen circular
+                            .border(
+                                3.dp,
+                                MaterialTheme.colorScheme.primary,
+                                CircleShape
+                            ),// Pone un borde en la imagen
+                        contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
+                        placeholder = painterResource(id = R.drawable.ic_downloading), // Icono de placeholder mientras carga
+                        error = painterResource(id = R.drawable.ic_error) // Icono si hay error de carga
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -389,7 +407,9 @@ fun UpdateClientScreen(
                             IconButton(onClick = {
                                 val hasFineLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                                 if (hasFineLocation) {
+                                    bestAccuracy = Float.MAX_VALUE
                                     isSearchingGPS = true
+                                    Toast.makeText(context, "Afinando ubicación GPS...", Toast.LENGTH_SHORT).show()
                                 } else {
                                     // Si no tiene la exacta, se la pedimos de nuevo explicando por qué
                                     Toast.makeText(context, "Se requiere ubicación exacta para esta función", Toast.LENGTH_SHORT).show()
@@ -450,15 +470,17 @@ fun UpdateClientScreen(
 
                 Button(
                     onClick = {
+                        isSearchingGPS = false
                         focusManager.clearFocus()
                         viewModel.updateCliente(
                             context = context,
                             clienteActual = cliente,
                             onUpdateComplete = {
+                                Toast.makeText(context, "Cliente actualizado exitosamente", Toast.LENGTH_SHORT).show()
                                 onUpdateSuccess()
                             })
                     },
-                    enabled = !isSearchingGPS && !isLoading && fullName.isNotBlank() && phone.isNotBlank() && location.isNotBlank()
+                    enabled = !isLoading && fullName.isNotBlank() && phone.isNotBlank() && location.isNotBlank()
                             && fullNameError == null && phoneError == null &&  locationError == null,
                     modifier = Modifier
                         .fillMaxWidth()

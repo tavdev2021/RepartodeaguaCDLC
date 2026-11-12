@@ -200,6 +200,7 @@ fun AppNavHost()
                 this@SharedTransitionLayout.ClientDetail(
                     animatedVisibilityScope = this,
                     clientesViewModel = globalClientesViewModel,
+                    ventasViewModel = globalVentasViewModel,
                     onBack = { navController.popBackStack() },
                     onNavigateToEdit = { clienteId ->
                         navController.navigate("updateClient/$clienteId")

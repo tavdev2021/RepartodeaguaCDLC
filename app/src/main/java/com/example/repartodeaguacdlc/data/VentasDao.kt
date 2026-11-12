@@ -71,4 +71,22 @@ interface VentasDao {
     """)
 
     fun getUltimaVentaConDatos(routeId: String, inicioDia: Long): Flow<List<VentaConDatos>>
+
+    // 🔴 NUEVO: Consulta para obtener las últimas 3 ventas de un cliente específico
+    @Query(""" 
+    SELECT 
+    v.id, 
+    COALESCE(c.nombre, 'Cliente') AS nombreCliente,
+    v.total, 
+    v.fecha, 
+    v.metodoPago,
+    v.isSynced,
+    COALESCE((SELECT SUM(cantidad) FROM detalle_ventas WHERE ventaId = v.id), 0) AS totalProductos 
+    FROM ventas v 
+    JOIN clientes c ON v.clienteId = c.id 
+    WHERE v.clienteId = :clienteId 
+    ORDER BY v.fecha DESC 
+    LIMIT 3 
+    """)
+    fun getUltimasVentasPorCliente(clienteId: String): Flow<List<VentaConDatos>>
 }

@@ -5,34 +5,49 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.common.util.LocationHelper
 import com.example.repartodeaguacdlc.data.AppDatabase
+import com.example.repartodeaguacdlc.repository.ClientesRepositoryRoom
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class UpdateAddressWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val db = AppDatabase.getDatabase(applicationContext)
-        val pendientes = db.clientesDao().getClientesSinDireccion()
+        val database = AppDatabase.getDatabase(applicationContext)
+        val dao = database.clientesDao()
+        val pendientes = dao.getClientesSinDireccion()
 
         if (pendientes.isEmpty()) {
             return@withContext Result.success()
         }
 
-            try {
+        var huboAlMenosUnError = false
 
-                pendientes.forEach { cliente ->
-                    val direccionResult = LocationHelper.obtenerDireccionLegible(
-                        applicationContext,
-                        cliente.ubicacion
-                    )
+        val repository = ClientesRepositoryRoom(
+            clientesDao = dao,
+            context = applicationContext,
+            firestore = FirebaseFirestore.getInstance()
+        )
 
-                    // Si obtuvimos una dirección real (distinta a las coordenadas numéricas)
-                    if (direccionResult != cliente.ubicacion) {
-                        db.clientesDao().updateCliente(cliente.copy(direccion = direccionResult))
-                    }
-                }
-                return@withContext Result.success()
-            } catch (e: Exception) {
-                return@withContext Result.retry()
+        for (cliente in pendientes) {
+            val direccionResult = LocationHelper.obtenerDireccionLegible(
+                applicationContext,
+                cliente.ubicacion
+            )
+
+            if (!direccionResult.isNullOrBlank()) {
+                // 🟢 Se obtuvo la dirección real: Actualizamos localmente y marcamos para subir a Firestore
+                repository.updateCliente(cliente.copy(direccion = direccionResult))
+            } else {
+                // 🔴 No había internet o falló la geocodificación
+                huboAlMenosUnError = true
             }
+        }
+
+        if (huboAlMenosUnError) {
+            Result.retry() // 👈 Reintentar cuando vuelva el internet
+        } else {
+            Result.success()
+        }
     }
 }

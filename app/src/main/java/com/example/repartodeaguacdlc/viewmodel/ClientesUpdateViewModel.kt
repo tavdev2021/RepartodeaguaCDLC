@@ -139,10 +139,10 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
                     val dirResultado = LocationHelper.obtenerDireccionLegible(context, _locationClient.value)
 
                     // Si la traducción fue exitosa (distinta a las coordenadas), la asignamos
-                    if (dirResultado != _locationClient.value) {
+                    // 🟢 Evaluamos si la traducción fue exitosa (no nula ni vacía)
+                    if (!dirResultado.isNullOrBlank()) {
                         nuevaDireccion = dirResultado
                     } else {
-                        // Si la traducción fue exitosa (distinta a las coordenadas), la asignamos
                         nuevaDireccion = ""
                         programarSincronizacionDireccion(context)
                     }
@@ -154,7 +154,7 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
                     telefono = _phone.value,
                     ubicacion = _locationClient.value,
                     direccion = nuevaDireccion, // 👈 Se actualiza solo si fue necesario
-                    notas = _notasClient.value.ifBlank { "Sin notas" },
+                    notas = _notasClient.value.trim(),
                     imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=E3F2FD&color=1976D2&bold=true&length=2",
                     ultimaActualizacion = System.currentTimeMillis()
                 )

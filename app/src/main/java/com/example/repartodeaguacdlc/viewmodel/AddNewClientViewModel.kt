@@ -133,6 +133,9 @@ class AddNewClientViewModel(
                 // 1. Intento inmediato de traducir coordenadas a dirección (Geocodificación)
                 val direccionTraducida = LocationHelper.obtenerDireccionLegible(context, _locationClient.value)
                 delay(1.seconds)
+
+                val nuevaDireccion = if (!direccionTraducida.isNullOrBlank()) direccionTraducida else ""
+
                 // 2. Crear el objeto Cliente
                 val nuevoCliente = Clientes(
                     nombre = _fullName.value,
@@ -140,8 +143,8 @@ class AddNewClientViewModel(
                     telefono = _phone.value,
                     ubicacion = _locationClient.value,
                     // Si hubo internet, guardamos la dirección. Si no, queda vacío ("").
-                    direccion = if (direccionTraducida != _locationClient.value) direccionTraducida else "",
-                    notas = _notasClient.value.ifBlank { "Sin notas" },
+                    direccion = nuevaDireccion,
+                    notas = _notasClient.value.trim(),
                     imagenUrl = "https://ui-avatars.com/api/?name=${_fullName.value}&size=512&background=E3F2FD&color=1976D2&bold=true&length=2",
                     fechaRegistro = System.currentTimeMillis(),
                     activo = true

@@ -11,6 +11,7 @@ import com.example.repartodeaguacdlc.repository.AbonosRepositoryRoom
 import com.example.repartodeaguacdlc.repository.ProductosRepositoryRoom
 import com.example.repartodeaguacdlc.repository.VentasRepositoryRoom
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,9 +25,10 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.collections.emptyList
 
-class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
-                      private val productosRepository: ProductosRepositoryRoom,
-    private val abonosRepository: AbonosRepositoryRoom? = null
+class VentasViewModel(
+    private val ventasRepository: VentasRepositoryRoom,
+    private val productosRepository: ProductosRepositoryRoom,
+    private val abonosRepository: AbonosRepositoryRoom
 ): ViewModel() {
 
     init {
@@ -77,7 +79,7 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
 
     val ingresosHoy: StateFlow<Double> = combine(
         ventasRepository.getIngresosHoy(getInicioDia()).onStart { emit(0.0) },
-        (abonosRepository?.getAbonosRecibidosHoy(getInicioDia()) ?: flowOf(0.0)).onStart { emit(0.0) }
+        (abonosRepository.getAbonosRecibidosHoy(getInicioDia())).onStart { emit(0.0) }
     ) { ventasEfectivo, abonosEfectivo ->
         ventasEfectivo + abonosEfectivo
     }.stateIn(
@@ -95,6 +97,11 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList())
+
+    fun getUltimasVentasPorCliente(clienteId: String): Flow<List<VentaConDatos>> {
+        if (clienteId.isBlank()) return flowOf(emptyList())
+        return ventasRepository.getUltimasVentasPorCliente(clienteId)
+    }
 
     // Transformamos el estado para obtener totales automáticamente
     val totalPagar: StateFlow<Double> = productos.map { lista ->
@@ -163,7 +170,7 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
                     notas = "Abono cobrado durante venta",
                     isSynced = false
                 )
-                abonosRepository?.guardarAbono(abono)
+                abonosRepository.guardarAbono(abono)
             }
 
             ventasRepository.guardarVentaConAjusteSaldos(
@@ -181,7 +188,7 @@ class VentasViewModel(private val ventasRepository: VentasRepositoryRoom,
     fun iniciarSincronizacionContinua(routeId: String) {
         ventasRepository.iniciarSincronizacionContinua(routeId)
         productosRepository.sincronizarCatalogoFirebase()
-        abonosRepository?.iniciarSincronizacionContinua(routeId)
+        abonosRepository.iniciarSincronizacionContinua(routeId)
     }
 
     fun activarRespaldoPendiente() {

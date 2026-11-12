@@ -1,9 +1,10 @@
 package com.example.repartodeaguacdlc.view
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.filled.Search
@@ -24,7 +25,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -32,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +51,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -62,8 +69,9 @@ import coil.request.ImageRequest
 import com.example.repartodeaguacdlc.R
 import com.example.repartodeaguacdlc.viewmodel.ClientesViewModel
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SharedTransitionScope.ClientesList(
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -92,15 +100,19 @@ fun SharedTransitionScope.ClientesList(
 
     // 2. Usamos Scaffold para estructurar la pantalla
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onAddNewClient() }, // 3. Acción al pulsar
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 6.dp
+                ),
                 shape = CircleShape
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = Icons.Default.PersonAdd,
                     contentDescription = "Agregar nuevo cliente"
                 )
             }
@@ -294,10 +306,16 @@ fun SharedTransitionScope.ClientesList(
                                     // 3. Navegar a los detalles del cliente
                                     onClientClick(cliente.id) // Llama a la función de clic del cliente
                                 },
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Añade una sombra sutil
+                            shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surface, // Usa un color del tema
-                            )
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            ), // 👈 Borde sutil elegante
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Añade una sombra sutil
+
                         ) {
                             Row(
                                 modifier = Modifier
@@ -306,30 +324,37 @@ fun SharedTransitionScope.ClientesList(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
 
-                                // Asumiendo que tu objeto `cliente` tiene una propiedad `imagenUrl` con la URL de la imagen.
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(cliente.imagenUrl) // Reemplaza con la URL de la imagen del cliente
-                                        .crossfade(true)
-                                        .diskCachePolicy(CachePolicy.ENABLED)
-                                        .placeholder(R.drawable.ic_downloading) // Icono de placeholder mientras carga
-                                        .error(R.drawable.ic_error) // Icono si hay error de carga
-                                        .build(),
-                                    contentDescription = "Imagen del Cliente",
-                                    modifier = Modifier
-                                        .sharedElement(
-                                            sharedContentState = rememberSharedContentState(key = "image-${cliente.id}"),
-                                            animatedVisibilityScope = animatedVisibilityScope
-                                        )
-                                        .size(40.dp)
-                                        .clip(CircleShape) // Hace la imagen circular
-                                        .border(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.secondary,
-                                            CircleShape
-                                        ),// Pone un borde en la imagen
-                                    contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
-                                )
+                                Surface(
+                                    shape = CircleShape,
+                                    shadowElevation = 6.dp, // 👈 Eleva la foto del fondo
+                                    color = MaterialTheme.colorScheme.surface
+                                ) {
+
+                                    // Asumiendo que tu objeto `cliente` tiene una propiedad `imagenUrl` con la URL de la imagen.
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(cliente.imagenUrl) // Reemplaza con la URL de la imagen del cliente
+                                            .crossfade(true)
+                                            .diskCachePolicy(CachePolicy.ENABLED)
+                                            .placeholder(R.drawable.ic_downloading) // Icono de placeholder mientras carga
+                                            .error(R.drawable.ic_error) // Icono si hay error de carga
+                                            .build(),
+                                        contentDescription = "Imagen del Cliente",
+                                        modifier = Modifier
+                                            .sharedElement(
+                                                sharedContentState = rememberSharedContentState(key = "image-${cliente.id}"),
+                                                animatedVisibilityScope = animatedVisibilityScope
+                                            )
+                                            .size(40.dp)
+                                            .clip(CircleShape) // Hace la imagen circular
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.primary,
+                                                CircleShape
+                                            ),// Pone un borde en la imagen
+                                        contentScale = ContentScale.Crop, // Escala la imagen para llenar el espacio
+                                    )
+                                }
                                 // --- FIN DEL CAMBIO ---
 
                                 Spacer(modifier = Modifier.width(16.dp))
@@ -354,15 +379,18 @@ fun SharedTransitionScope.ClientesList(
                                         maxLines = 1
                                     )
 
-                                    // Suponiendo que tu objeto 'cliente' tiene una propiedad 'telefono'
-                                    if (cliente.telefono.isNotBlank()) {
-                                        Text(
-                                            text = cliente.telefono,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                                    // 🔴 ETIQUETA INVOCADA CORRECTAMENTE
+                                    EstadoCuentaBadge(
+                                        saldoPendiente = cliente.saldoPendiente,
+                                        saldoAFavor = cliente.saldoAFavor
+                                    )
+
                                 }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+
+
                                 // Ejemplo de icono adicional a la derecha
                                 Button(
                                     onClick = {
@@ -375,6 +403,9 @@ fun SharedTransitionScope.ClientesList(
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.primary,
                                         contentColor = MaterialTheme.colorScheme.onPrimary
+                                    ),
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 4.dp
                                     ),
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                     modifier = Modifier.height(36.dp)
@@ -397,6 +428,85 @@ fun SharedTransitionScope.ClientesList(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Modelo de datos interno para definir el estilo visual del estado de cuenta.
+ */
+private data class EstadoCuentaStyle(
+    val backgroundColor: Color,
+    val textColor: Color,
+    val labelText: String,
+    val icon: ImageVector
+)
+
+/**
+ * Componente que renderiza una etiqueta tipo Semáforo de Cobro según el estado de la cuenta.
+ */
+@SuppressLint("DefaultLocale")
+@Composable
+fun EstadoCuentaBadge(
+    saldoPendiente: Double,
+    saldoAFavor: Double
+) {
+    val style = when {
+        saldoPendiente <= 0 && saldoAFavor > 0 -> {
+            EstadoCuentaStyle(
+                backgroundColor = Color(0xFFE8F5E9), // Verde claro
+                textColor = Color(0xFF2E7D32), // Verde oscuro
+                labelText = "A Favor: $${String.format(Locale.getDefault(), "%.2f", saldoAFavor)}",
+                icon = Icons.Default.Check
+            )
+        }
+        saldoPendiente <= 0 -> {
+            EstadoCuentaStyle(
+                backgroundColor = Color(0xFFE8F5E9), // Verde claro
+                textColor = Color(0xFF2E7D32), // Verde oscuro
+                labelText = "Al corriente",
+                icon = Icons.Default.Check
+            )
+        }
+        saldoPendiente <= 200.0 -> {
+            EstadoCuentaStyle(
+                backgroundColor = Color(0xFFFFF3E0), // Naranja claro
+                textColor = Color(0xFFE65100), // Naranja oscuro
+                labelText = "Deuda: $${String.format(Locale.getDefault(), "%.2f", saldoPendiente)}",
+                icon = Icons.Default.Info
+            )
+        }
+        else -> {
+            EstadoCuentaStyle(
+                backgroundColor = Color(0xFFFFEBEE), // Rojo claro
+                textColor = Color(0xFFC62828), // Rojo oscuro
+                labelText = "Deuda: $${String.format(Locale.getDefault(), "%.2f", saldoPendiente)}",
+                icon = Icons.Default.Warning
+            )
+        }
+    }
+
+    Surface(
+        color = style.backgroundColor,
+        shape = RoundedCornerShape(6.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = style.icon,
+                contentDescription = null,
+                tint = style.textColor,
+                modifier = Modifier.size(12.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = style.labelText,
+                color = style.textColor,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

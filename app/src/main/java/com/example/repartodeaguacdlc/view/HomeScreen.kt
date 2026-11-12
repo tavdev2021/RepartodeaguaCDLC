@@ -1,9 +1,9 @@
 package com.example.repartodeaguacdlc.view
 
 import android.icu.util.Calendar
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -126,37 +125,43 @@ fun HomeScreen(viewModel: AuthViewModel,
 
                         //Foto de perfil
                         val imageUrl = firebaseUser.photoUrl
-                        if (imageUrl != null) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(imageUrl)
-                                    .crossfade(true)
-                                    .diskCachePolicy(CachePolicy.ENABLED)
-                                    .placeholder(R.drawable.ic_downloading)
-                                    .error(R.drawable.ic_error)
-                                    .build(),
-                                contentDescription = "Imagen de perfil",
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White)
-                                    .border(
-                                        2.dp,
-                                        MaterialTheme.colorScheme.secondary,
-                                        CircleShape
-                                    ),
-                                contentScale = ContentScale.Crop,
+                        // Surface para darle elevación/sombra real a la foto
+                        Surface(
+                            shape = CircleShape,
+                            shadowElevation = 6.dp, // 👈 Eleva la foto del fondo
+                            color = MaterialTheme.colorScheme.surface
+                        ) {
+                            if (imageUrl != null) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(imageUrl)
+                                        .crossfade(true)
+                                        .diskCachePolicy(CachePolicy.ENABLED)
+                                        .placeholder(R.drawable.ic_downloading)
+                                        .error(R.drawable.ic_error)
+                                        .build(),
+                                    contentDescription = "Imagen de perfil",
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(CircleShape)
+                                        .border(
+                                            1.5.dp,
+                                            MaterialTheme.colorScheme.secondary,
+                                            CircleShape
+                                        ),
+                                    contentScale = ContentScale.Crop,
 
+                                    )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = "Imagen de perfil",
+                                    modifier = Modifier
+                                        .size(50.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Imagen de perfil",
-                                modifier = Modifier
-                                    .size(50.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
 
+                            }
                         }
 
                         Column(
@@ -227,7 +232,7 @@ fun HomeScreen(viewModel: AuthViewModel,
                         .fillMaxWidth()
                         .fillMaxHeight(0.88f),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
 
@@ -254,13 +259,19 @@ fun HomeScreen(viewModel: AuthViewModel,
                             modifier = Modifier
                                 .width(160.dp)
                                 .height(120.dp)
-                                .clickable(onClick = { }),
+                                .clickable(onClick = {
+                                    Toast.makeText(context, "Ventas de hoy", Toast.LENGTH_SHORT).show()
+                                }),
+                            shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surface,
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(4.dp)
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -304,13 +315,19 @@ fun HomeScreen(viewModel: AuthViewModel,
                             modifier = Modifier
                                 .width(160.dp)
                                 .height(120.dp)
-                                .clickable(onClick = { }),
+                                .clickable(onClick = {
+                                    Toast.makeText(context, "Ingresos de hoy", Toast.LENGTH_SHORT).show()
+                                }),
+                            shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surface,
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(4.dp)
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -382,10 +399,14 @@ fun HomeScreen(viewModel: AuthViewModel,
                                     .padding(horizontal = 24.dp)
                                     .height(80.dp)
                                     .clickable { onClientes() },
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(20.dp),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                border = BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                 ),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                             ) {
@@ -531,12 +552,16 @@ private fun AccionCardGrid(
         modifier = modifier
             .height(90.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -588,12 +613,15 @@ fun VentaCard(venta: VentaConDatos, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
 
         Column(
