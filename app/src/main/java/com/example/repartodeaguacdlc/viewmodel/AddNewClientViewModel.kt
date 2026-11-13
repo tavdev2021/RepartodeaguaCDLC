@@ -64,11 +64,6 @@ class AddNewClientViewModel(
         _phoneError.value = validatePhoneNumber(newPhone)
     }
 
-    fun onLocationChangeClient(newLocation: String) {
-        _locationClient.value = newLocation
-        _locationError.value = validateLocationClient(newLocation)
-    }
-
     fun onNotesClientChange(addNotesClient: String) {
         _notasClient.value = addNotesClient
     }
@@ -105,6 +100,7 @@ class AddNewClientViewModel(
     
     fun updateLocation(latitude: Double, longitude: Double) {
         _locationClient.value = "$latitude, $longitude"
+        _locationError.value = validateLocationClient(_locationClient.value)
     }
     private fun validateRegisterForm(): Boolean {
         val isFullNameValid = validateFullName(_fullName.value) == null

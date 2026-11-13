@@ -62,11 +62,6 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
         _phoneError.value = validatePhoneNumber(newPhone)
     }
 
-    fun onLocationChangeClient(newLocation: String) {
-        _locationClient.value = newLocation
-        _locationError.value = validateLocationClient(newLocation)
-    }
-
     fun onNotesClientChange(addNotesClient: String) {
         _notasClient.value = addNotesClient
     }
@@ -103,6 +98,7 @@ class ClientesUpdateViewModel(private val clientesRepository: ClientesRepository
 
     fun updateLocation(latitude: Double, longitude: Double) {
         _locationClient.value = "$latitude, $longitude"
+        _locationError.value = validateLocationClient(_locationClient.value)
     }
 
     private fun validateRegisterForm(): Boolean {

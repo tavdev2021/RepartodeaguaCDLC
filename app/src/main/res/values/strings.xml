@@ -32,12 +32,13 @@
     //Textos de AddNewClient
     <string name="appbar_regstrarnuevocliente">Registrar nuevo cliente</string>
     <string name="ingresa_datos_cliente">Por favor ingresa los datos del cliente</string>
+    <string name="actualiza_datos_cliente">Modifica los datos del cliente</string>
     <string name="informacion_personal_cliente">Informacion Personal</string>
     <string name="nombre_completo_cliente">Nombre Completo</string>
     <string name="telefono_cliente">Telefono</string>
     <string name="email_register_cliente">Correo electrónico</string>
     <string name="ubicacion_detalles_cliente">Ubicacion y Detalles</string>
-    <string name="ubicacion_register_cliente">Calle, Numero, Colonia</string>
+    <string name="ubicacion_register_cliente">Ubicación GPS</string>
     <string name="nota_register_cliente">Notas de la entrega (Referencias, Horarios, etc.) Opcional.</string>
     <string name="button_register_cliente">Registrar</string>
 
